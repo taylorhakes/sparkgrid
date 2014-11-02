@@ -1,9 +1,9 @@
-# Welcome to SlickGrid
+# SparkGrid
+
+SparkGrid is based on [SlickGrid](https://github.com/mleibman/SlickGrid)
 
 Find documentation and examples in [the wiki](https://github.com/mleibman/SlickGrid/wiki).
 
-
-**UPDATE:  March 5th, 2014 - I have too many things going on in my life right now to really give SlickGrid support and development the time and attention it deserves.  I am not stopping it, but I will most likely be unresponsive for some time.  Sorry.**
 
 ## SlickGrid is an advanced JavaScript grid/spreadsheet component
 
@@ -11,7 +11,6 @@ Some highlights:
 
 * Adaptive virtual scrolling (handle hundreds of thousands of rows with extreme responsiveness)
 * Extremely fast rendering speed
-* Supports jQuery UI Themes
 * Background post-rendering for richer cells
 * Configurable & customizable
 * Full keyboard navigation
