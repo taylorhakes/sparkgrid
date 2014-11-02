@@ -5,7 +5,7 @@ SparkGrid is based on [SlickGrid](https://github.com/mleibman/SlickGrid)
 Find documentation and examples in [the wiki](https://github.com/mleibman/SlickGrid/wiki).
 
 
-## SlickGrid is an advanced JavaScript grid/spreadsheet component
+## SparkGrid is an advanced JavaScript grid/spreadsheet component
 
 Some highlights:
 
