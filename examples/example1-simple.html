@@ -3,8 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   <title>SlickGrid example 1: Basic grid</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/slick.css" type="text/css"/>
   <link rel="stylesheet" href="examples.css" type="text/css"/>
 </head>
 <body>
@@ -26,11 +25,7 @@
   </tr>
 </table>
 
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../slick.grid.js"></script>
+<script src="../build/bundle.js"></script>
 
 <script>
   var grid;
@@ -48,21 +43,19 @@
     enableColumnReorder: false
   };
 
-  $(function () {
-    var data = [];
-    for (var i = 0; i < 500; i++) {
-      data[i] = {
-        title: "Task " + i,
-        duration: "5 days",
-        percentComplete: Math.round(Math.random() * 100),
-        start: "01/01/2009",
-        finish: "01/05/2009",
-        effortDriven: (i % 5 == 0)
-      };
-    }
+  var data = [];
+  for (var i = 0; i < 500; i++) {
+	  data[i] = {
+		  title: "Task " + i,
+		  duration: "5 days",
+		  percentComplete: Math.round(Math.random() * 100),
+		  start: "01/01/2009",
+		  finish: "01/05/2009",
+		  effortDriven: (i % 5 == 0)
+	  };
+  }
 
-    grid = new Slick.Grid("#myGrid", data, columns, options);
-  })
+  grid = new SparkGrid.Grid("#myGrid", data, columns, options);
 </script>
 </body>
 </html>
