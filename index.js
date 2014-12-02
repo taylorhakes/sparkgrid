@@ -1,12 +1,16 @@
 var Grid = require('./src/Grid');
 var DataView = require('./src/DataView');
+var core = require('./src/core');
+var formatters = require('./src/formatters');
 
 var exportObj = {
   Grid: Grid,
-  View: DataView
+  View: DataView,
+  core: core,
+  formatters: formatters
 };
 
-window.SparkGrid = exportObj;
+window.Spark = exportObj;
 
 //if (typeof module !== 'undefined' && module.exports) {
 //  module.exports = exportObj;

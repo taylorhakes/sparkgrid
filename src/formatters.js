@@ -9,6 +9,8 @@
  */
 
 (function () {
+  'use strict';
+
   function PercentCompleteFormatter(row, cell, value, columnDef, dataContext) {
     if (value == null || value === "") {
       return "-";
@@ -45,7 +47,7 @@
     return value ? "<img src='../images/tick.png'>" : "";
   }
 
-	module.exports = {
+	Spark.formatters = {
 		"PercentComplete": PercentCompleteFormatter,
 		"PercentCompleteBar": PercentCompleteBarFormatter,
 		"YesNo": YesNoFormatter,

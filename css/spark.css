@@ -5,20 +5,20 @@ No built-in (selected, editable, highlight, flashing, invalid, loading, :focus) 
 classes should alter those!
 */
 
-.slick-header.ui-state-default, .slick-headerrow.ui-state-default {
+.spark-header.ui-state-default, .spark-headerrow.ui-state-default {
   width: 100%;
   overflow: hidden;
   border-left: 0px;
 }
 
-.slick-header-columns, .slick-headerrow-columns {
+.spark-header-columns, .spark-headerrow-columns {
   position: relative;
   white-space: nowrap;
   cursor: default;
   overflow: hidden;
 }
 
-.slick-header-column.ui-state-default {
+.spark-header-column.ui-state-default {
   position: relative;
   display: inline-block;
   overflow: hidden;
@@ -35,15 +35,15 @@ classes should alter those!
   float: left;
 }
 
-.slick-headerrow-column.ui-state-default {
+.spark-headerrow-column.ui-state-default {
   padding: 4px;
 }
 
-.slick-header-column-sorted {
+.spark-header-column-sorted {
   font-style: italic;
 }
 
-.slick-sort-indicator {
+.spark-sort-indicator {
   display: inline-block;
   width: 8px;
   height: 5px;
@@ -52,15 +52,15 @@ classes should alter those!
   float: left;
 }
 
-.slick-sort-indicator-desc {
+.spark-sort-indicator-desc {
   background: url(../images/sort-desc.gif);
 }
 
-.slick-sort-indicator-asc {
+.spark-sort-indicator-asc {
   background: url(../images/sort-asc.gif);
 }
 
-.slick-resizable-handle {
+.spark-resizable-handle {
   position: absolute;
   font-size: 0.1px;
   display: block;
@@ -71,7 +71,7 @@ classes should alter those!
   height: 100%;
 }
 
-.slick-sortable-placeholder {
+.spark-sortable-placeholder {
   background: silver;
 }
 
@@ -80,13 +80,13 @@ classes should alter those!
   outline: 0;
 }
 
-.slick-row.ui-widget-content, .slick-row.ui-state-active {
+.spark-row.ui-widget-content, .spark-row.ui-state-active {
   position: absolute;
   border: 0px;
   width: 100%;
 }
 
-.slick-cell, .slick-headerrow-column {
+.spark-cell, .spark-headerrow-column {
   position: absolute;
   border: 1px solid transparent;
   border-right: 1px dotted silver;
@@ -102,14 +102,14 @@ classes should alter those!
   cursor: default;
 }
 
-.slick-group {
+.spark-group {
 }
 
-.slick-group-toggle {
+.spark-group-toggle {
   display: inline-block;
 }
 
-.slick-cell.highlighted {
+.spark-cell.highlighted {
   background: lightskyblue;
   background: rgba(0, 0, 255, 0.2);
   -webkit-transition: all 0.5s;
@@ -118,11 +118,11 @@ classes should alter those!
   transition: all 0.5s;
 }
 
-.slick-cell.flashing {
+.spark-cell.flashing {
   border: 1px solid red !important;
 }
 
-.slick-cell.editable {
+.spark-cell.editable {
   z-index: 11;
   overflow: visible;
   background: white;
@@ -130,11 +130,11 @@ classes should alter those!
   border-style: solid;
 }
 
-.slick-cell:focus {
+.spark-cell:focus {
   outline: none;
 }
 
-.slick-reorder-proxy {
+.spark-reorder-proxy {
   display: inline-block;
   background: blue;
   opacity: 0.15;
@@ -142,7 +142,7 @@ classes should alter those!
   cursor: move;
 }
 
-.slick-reorder-guide {
+.spark-reorder-guide {
   display: inline-block;
   height: 2px;
   background: blue;
@@ -150,7 +150,7 @@ classes should alter those!
   filter: alpha(opacity = 70);
 }
 
-.slick-selection {
+.spark-selection {
   z-index: 10;
   position: absolute;
   border: 2px dashed black;

@@ -111,17 +111,17 @@
     });
 
 
-    $(grid.getHeaderRow()).delegate(":input", "change keyup", function (e) {
-      var columnId = $(this).data("columnId");
+    SparkGrid.core.delegate(grid.getHeaderRow(), "change keyup", '.input', function (e) {
+      var columnId = e.target.dataset.columnId;
       if (columnId != null) {
-        columnFilters[columnId] = $.trim($(this).val());
+        columnFilters[columnId] = this.value.trim();
         dataView.refresh();
       }
     });
 
     grid.onHeaderRowCellRendered.subscribe(function(e, args) {
-        $(args.node).empty();
-        $("<input type='text'>")
+       	args.node.innerHTML = '';
+        $("<input type='text' class='input'">")
            .data("columnId", args.column.id)
            .val(columnFilters[args.column.id])
            .appendTo(args.node);

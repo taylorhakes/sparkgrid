@@ -1,3 +1,5 @@
+'use stict';
+
 var matchesSelector = null,
   selectors = ['matches', 'mozMatchesSelector', 'webkitMatchesSelector', 'msMatchesSelector'],
   i = 0,
@@ -42,12 +44,43 @@ function closest(el, className, lastEl) {
 }
 
 function delegate(elem, className, event, fn) {
-  elem.addEventListener(event, function(e) {
-    if (closest(elem, className, e.target)) {
-      fn(e);
-    }
-  });
+  var events = event.split(' '),
+    i = 0,
+    len = events.length;
+
+  for (; i < len; i++) {
+    var ev = events[i];
+    elem.addEventListener(ev, function(e) {
+      if (closest(elem, className, e.target)) {
+        fn(e);
+      }
+    });
+  }
 }
+
+function createEl(options) {
+  var el = document.createElement(options.tag);
+  if (options.style) {
+    setStyle(el, options.style);
+  }
+  delete options.style;
+  delete options.tag;
+
+  extend(el, options);
+
+  return el;
+}
+function setStyle(el, styles) {
+  return extend(el.style, styles);
+}
+
+function removeEl(el) {
+  if (el.parentNode) {
+    el.parentNode.removeChild(el);
+  }
+}
+
+var slice = Function.prototype.call.bind(Array.prototype.slice);
 
 function setCss(el, prop, val) {
   el.style[prop] = val + 'px';
@@ -55,10 +88,6 @@ function setCss(el, prop, val) {
 
 function getCss(el, prop) {
   return parseFloat(el.style[prop] || 0);
-}
-
-function getStyleHeight(el) {
-  return parseFloat(el.style.height || 0);
 }
 
 /***
@@ -490,9 +519,12 @@ function EditorLock() {
 }
 
 module.exports = {
+  slice: slice,
+  createEl: createEl,
+  setStyle: setStyle,
   setCss: setCss,
   getCss: getCss,
-  getStyleHeight: getStyleHeight,
+  removeEl: removeEl,
   delegate: delegate,
   closest: closest,
   extend: extend,
