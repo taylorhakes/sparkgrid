@@ -3,8 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   <title>SlickGrid example 6: AJAX Load</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
   <link rel="stylesheet" href="examples.css" type="text/css"/>
   <style>
     .cell-story {
@@ -65,107 +64,108 @@
     </ul>
 </div>
 
-<script src="../lib/firebugx.js"></script>
 
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-<script src="../lib/jquery.jsonp-2.4.min.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../slick.remotemodel.js"></script>
-<script src="../src/slick.grid.js"></script>
+<script src="../build/bundle.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
 <script>
-  var grid;
-  var loader = new Slick.Data.RemoteModel();
+	var grid;
+	var loader = new Spark.RemoteModel();
 
-  var storyTitleFormatter = function (row, cell, value, columnDef, dataContext) {
-    s ="<b><a href='" + dataContext["url"] + "' target=_blank>" +
-              dataContext["title"] + "</a></b><br/>";
-    desc = dataContext["text"];
-    if (desc) { // on Hackernews many stories don't have a description
-        s += desc;
-    }
-    return s;
-  };
+	var storyTitleFormatter = function (row, cell, value, columnDef, dataContext) {
+		s = "<b><a href='" + dataContext["url"] + "' target=_blank>" + dataContext["title"] + "</a></b><br/>";
+		desc = dataContext["text"];
+		if (desc) { // on Hackernews many stories don't have a description
+			s += desc;
+		}
+		return s;
+	};
 
-  var dateFormatter = function (row, cell, value, columnDef, dataContext) {
-    return (value.getMonth()+1) + "/" + value.getDate() + "/" + value.getFullYear();
-  };
+	var dateFormatter = function (row, cell, value, columnDef, dataContext) {
+		return (value.getMonth() + 1) + "/" + value.getDate() + "/" + value.getFullYear();
+	};
 
+	var columns = [
+		{id: "num", name: "#", field: "index", width: 40},
+		{id: "story", name: "Story", width: 520, formatter: storyTitleFormatter, cssClass: "cell-story"},
+		{id: "date", name: "Date", field: "create_ts", width: 60, formatter: dateFormatter, sortable: true},
+		{id: "points", name: "Points", field: "points", width: 60, sortable: true}
+	];
 
-  var columns = [
-    {id: "num", name: "#", field: "index", width: 40},
-    {id: "story", name: "Story", width: 520, formatter: storyTitleFormatter, cssClass: "cell-story"},
-    {id: "date", name: "Date", field: "create_ts", width: 60, formatter: dateFormatter, sortable: true},
-    {id: "points", name: "Points", field: "points", width: 60, sortable: true}
-  ];
+	var options = {
+		rowHeight: 64,
+		editable: false,
+		enableAddRow: false,
+		enableCellNavigation: false
+	};
 
-  var options = {
-    rowHeight: 64,
-    editable: false,
-    enableAddRow: false,
-    enableCellNavigation: false
-  };
+	var loadingIndicator = null, label;
 
-  var loadingIndicator = null;
+	grid = new Spark.Grid("#myGrid", loader.data, columns, options);
 
+	grid.onViewportChanged.subscribe(function (e, args) {
+		var vp = grid.getViewport();
+		loader.ensureData(vp.top, vp.bottom);
+	});
 
-  $(function () {
-    grid = new Slick.Grid("#myGrid", loader.data, columns, options);
+	grid.onSort.subscribe(function (e, args) {
+		loader.setSort(args.sortCol.field, args.sortAsc ? 1 : -1);
+		var vp = grid.getViewport();
+		loader.ensureData(vp.top, vp.bottom);
+	});
 
-    grid.onViewportChanged.subscribe(function (e, args) {
-      var vp = grid.getViewport();
-      loader.ensureData(vp.top, vp.bottom);
-    });
+	loader.onDataLoading.subscribe(function () {
+		if (!loadingIndicator) {
+			loadingIndicator = Spark.createEl({
+				tag: 'span',
+				className: 'loading-indicator'
+			});
+			label = Spark.createEl({
+				tag: 'label',
+				textContent: 'Buffering...'
+			});
+			loadingIndicator.appendChild(label);
+			document.body.appendChild(loadingIndicator);
 
-    grid.onSort.subscribe(function (e, args) {
-      loader.setSort(args.sortCol.field, args.sortAsc ? 1 : -1);
-      var vp = grid.getViewport();
-      loader.ensureData(vp.top, vp.bottom);
-    });
+			var g = document.getElementById("myGrid");
 
-    loader.onDataLoading.subscribe(function () {
-      if (!loadingIndicator) {
-        loadingIndicator = $("<span class='loading-indicator'><label>Buffering...</label></span>").appendTo(document.body);
-        var $g = $("#myGrid");
+			Spark.setStyle(loadingIndicator, {
+				"position": "absolute",
+				"top": g.offsetTop + g.clientHeight / 2 - loadingIndicator.clientHeight / 2,
+				"left": g.offsetLeft + g.clientWidth / 2 - loadingIndicator.clientHeight / 2
+			});
+		}
 
-        loadingIndicator
-            .css("position", "absolute")
-            .css("top", $g.position().top + $g.height() / 2 - loadingIndicator.height() / 2)
-            .css("left", $g.position().left + $g.width() / 2 - loadingIndicator.width() / 2);
-      }
+		loadingIndicator.style.display = '';
+	});
 
-      loadingIndicator.show();
-    });
+	loader.onDataLoaded.subscribe(function (e, args) {
+		for (var i = args.from; i <= args.to; i++) {
+			grid.invalidateRow(i);
+		}
 
-    loader.onDataLoaded.subscribe(function (e, args) {
-      for (var i = args.from; i <= args.to; i++) {
-        grid.invalidateRow(i);
-      }
+		grid.updateRowCount();
+		grid.render();
 
-      grid.updateRowCount();
-      grid.render();
+		loadingIndicator.fadeOut();
+	});
 
-      loadingIndicator.fadeOut();
-    });
+	var txtSearch = document.getElementById("txtSearch")
 
-    $("#txtSearch").keyup(function (e) {
-      if (e.which == 13) {
-        loader.setSearch($(this).val());
-        var vp = grid.getViewport();
-        loader.ensureData(vp.top, vp.bottom);
-      }
-    });
+	txtSearch.addEventListener('keyup', function (e) {
+		if (e.which == 13) {
+			loader.setSearch(e.target.value);
+			var vp = grid.getViewport();
+			loader.ensureData(vp.top, vp.bottom);
+		}
+	});
 
-    loader.setSearch($("#txtSearch").val());
-    loader.setSort("create_ts", -1);
-    grid.setSortColumn("date", false);
+	loader.setSearch(txtSearch.value);
+	loader.setSort("create_ts", -1);
+	grid.setSortColumn("date", false);
 
-    // load the first page
-    grid.onViewportChanged.notify();
-  })
+	// load the first page
+	grid.onViewportChanged.notify();
 </script>
 </body>
 </html>

@@ -1,11 +1,6 @@
-(function ($) {
-  // register namespace
-  $.extend(true, window, {
-    "Slick": {
-      "CellRangeSelector": CellRangeSelector
-    }
-  });
-
+(function () {
+  var core = require('../src/core'),
+    CellRangeDecorator = require('./CellRangeDecorator');
 
   function CellRangeSelector(options) {
     var _grid;
@@ -13,7 +8,7 @@
     var _dragging;
     var _decorator;
     var _self = this;
-    var _handler = new Slick.EventHandler();
+    var _handler = new core.EventHandler();
     var _defaults = {
       selectionCss: {
         "border": "2px dashed blue"
@@ -22,8 +17,8 @@
 
 
     function init(grid) {
-      options = $.extend(true, {}, _defaults, options);
-      _decorator = new Slick.CellRangeDecorator(grid, options);
+      options = core.extend({}, _defaults, options);
+      _decorator = new CellRangeDecorator(grid, options);
       _grid = grid;
       _canvas = _grid.getCanvasNode();
       _handler
@@ -102,12 +97,14 @@
       });
     }
 
-    $.extend(this, {
+    return {
       "init": init,
       "destroy": destroy,
 
-      "onBeforeCellRangeSelected": new Slick.Event(),
-      "onCellRangeSelected": new Slick.Event()
-    });
+      "onBeforeCellRangeSelected": new core.Event(),
+      "onCellRangeSelected": new core.Event()
+    };
   }
-})(jQuery);
+
+  module.exports = CellRangeSelector;
+})();

@@ -2,12 +2,12 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>SlickGrid example 4: Model</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="../controls/slick.pager.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+  <title>SparkGrid example 4: Model</title>
+  <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
+  <link rel="stylesheet" href="../controls/pager.css" type="text/css"/>
   <link rel="stylesheet" href="examples.css" type="text/css"/>
-  <link rel="stylesheet" href="../controls/slick.columnpicker.css" type="text/css"/>
+  <link rel="stylesheet" href="../controls/columnpicker.css" type="text/css"/>
   <style>
     .cell-title {
       font-weight: bold;
@@ -26,7 +26,7 @@
       font-size: 10px;
     }
 
-    .slick-row.selected .cell-selection {
+    .Spark-row.selected .cell-selection {
       background-color: transparent; /* show default selected row background */
     }
   </style>
@@ -35,8 +35,8 @@
 <div style="position:relative">
   <div style="width:600px;">
     <div class="grid-header" style="width:100%">
-      <label>SlickGrid</label>
-      <span style="float:right" class="ui-icon ui-icon-search" title="Toggle search panel"
+      <label>SparkGrid</label>
+      <span style="float:right;color:white;" class="spark-icon-search" title="Toggle search panel"
             onclick="toggleFilterRow()"></span>
     </div>
     <div id="myGrid" style="width:100%;height:500px;"></div>
@@ -79,7 +79,7 @@
       </ul>
         <h2>View Source:</h2>
         <ul>
-            <li><A href="https://github.com/mleibman/SlickGrid/blob/gh-pages/examples/example4-model.html" target="_sourcewindow"> View the source for this example on Github</a></li>
+            <li><A href="https://github.com/mleibman/SparkGrid/blob/gh-pages/examples/example4-model.html" target="_sourcewindow"> View the source for this example on Github</a></li>
         </ul>
 
     </div>
@@ -93,10 +93,6 @@
 </div>
 
 <script src="../build/bundle.js"></script>
-<script src="../src/slick.editors.js"></script>
-<script src="../plugins/slick.rowselectionmodel.js"></script>
-<script src="../controls/slick.pager.js"></script>
-<script src="../controls/slick.columnpicker.js"></script>
 
 <script>
 var dataView;
@@ -104,12 +100,12 @@ var grid;
 var data = [];
 var columns = [
   {id: "sel", name: "#", field: "num", behavior: "select", cssClass: "cell-selection", width: 40, cannotTriggerInsert: true, resizable: false, selectable: false },
-  {id: "title", name: "Title", field: "title", width: 120, minWidth: 120, cssClass: "cell-title", editor: Slick.Editors.Text, validator: requiredFieldValidator, sortable: true},
-  {id: "duration", name: "Duration", field: "duration", editor: Slick.Editors.Text, sortable: true},
-  {id: "%", defaultSortAsc: false, name: "% Complete", field: "percentComplete", width: 80, resizable: false, formatter: Slick.Formatters.PercentCompleteBar, editor: Slick.Editors.PercentComplete, sortable: true},
-  {id: "start", name: "Start", field: "start", minWidth: 60, editor: Slick.Editors.Date, sortable: true},
-  {id: "finish", name: "Finish", field: "finish", minWidth: 60, editor: Slick.Editors.Date, sortable: true},
-  {id: "effort-driven", name: "Effort Driven", width: 80, minWidth: 20, maxWidth: 80, cssClass: "cell-effort-driven", field: "effortDriven", formatter: Slick.Formatters.Checkmark, editor: Slick.Editors.Checkbox, cannotTriggerInsert: true, sortable: true}
+  {id: "title", name: "Title", field: "title", width: 120, minWidth: 120, cssClass: "cell-title", editor: Spark.editors.Text, validator: requiredFieldValidator, sortable: true},
+  {id: "duration", name: "Duration", field: "duration", editor: Spark.editors.Text, sortable: true},
+  {id: "%", defaultSortAsc: false, name: "% Complete", field: "percentComplete", width: 80, resizable: false, formatter: Spark.formatters.PercentCompleteBar, editor: Spark.editors.PercentComplete, sortable: true},
+  {id: "start", name: "Start", field: "start", minWidth: 60, editor: Spark.editors.Date, sortable: true},
+  {id: "finish", name: "Finish", field: "finish", minWidth: 60, editor: Spark.editors.Date, sortable: true},
+  {id: "effort-driven", name: "Effort Driven", width: 80, minWidth: 20, maxWidth: 80, cssClass: "cell-effort-driven", field: "effortDriven", formatter: Spark.formatters.Checkmark, editor: Spark.editors.Checkbox, cannotTriggerInsert: true, sortable: true}
 ];
 
 var options = {
@@ -140,7 +136,7 @@ function myFilter(item, args) {
     return false;
   }
 
-  if (args.searchString != "" && item["title"].indexOf(args.searchString) == -1) {
+  if (args.searchString != "" && item["title"].toLowerCase().indexOf(args.searchString.toLowerCase()) == -1) {
     return false;
   }
 
@@ -160,14 +156,19 @@ function toggleFilterRow() {
   grid.setTopPanelVisibility(!grid.getOptions().showTopPanel);
 }
 
-$(".grid-header .ui-icon")
-        .addClass("ui-state-default ui-corner-all")
-        .mouseover(function (e) {
-          $(e.target).addClass("ui-state-hover")
-        })
-        .mouseout(function (e) {
-          $(e.target).removeClass("ui-state-hover")
-        });
+var uiIcons = document.querySelectorAll(".grid-header .ui-icon"), uiIcon;
+
+for (var i = 0; i < uiIcons.length; i++) {
+	uiIcon = uiIcons[i];
+	uiIcon.classList.add('ui-state-default', 'ui-corner-all');
+	uiIcon.addEventListener('mousover', function (e) {
+		e.target.classList.add("ui-state-hover")
+	});
+	uiIcon.addEventListener('mouseout', function (e) {
+		e.target.classList.remove("ui-state-hover")
+	});
+}
+
 
 // prepare the data
 for (var i = 0; i < 50000; i++) {
@@ -184,18 +185,17 @@ for (var i = 0; i < 50000; i++) {
 }
 
 
-dataView = new Slick.Data.DataView({ inlineFilters: true });
-grid = new Slick.Grid("#myGrid", dataView, columns, options);
-grid.setSelectionModel(new Slick.RowSelectionModel());
+dataView = new Spark.Data.DataView({ inlineFilters: true });
+grid = new Spark.Grid("#myGrid", dataView, columns, options);
+grid.setSelectionModel(new Spark.RowSelectionModel());
 
-var pager = new Slick.Controls.Pager(dataView, grid, $("#pager"));
-var columnpicker = new Slick.Controls.ColumnPicker(columns, grid, options);
-
+var pager = new Spark.Pager(dataView, grid, document.getElementById('pager'));
+var columnpicker = new Spark.ColumnPicker(columns, grid, options);
 
 // move the filter panel defined in a hidden div into grid top panel
-$("#inlineFilterPanel")
-		.appendTo(grid.getTopPanel())
-		.show();
+var inlineFilter = document.getElementById("inlineFilterPanel");
+grid.getTopPanel().appendChild(inlineFilter);
+inlineFilter.style.display = '';
 
 grid.onCellChange.subscribe(function (e, args) {
 	dataView.updateItem(args.item.id, args.item);
@@ -203,7 +203,7 @@ grid.onCellChange.subscribe(function (e, args) {
 
 grid.onAddNewRow.subscribe(function (e, args) {
 	var item = {"num": data.length, "id": "new_" + (Math.round(Math.random() * 10000)), "title": "New task", "duration": "1 day", "percentComplete": 0, "start": "01/01/2009", "finish": "01/01/2009", "effortDriven": false};
-	$.extend(item, args.item);
+	Spark.core.extend(item, args.item);
 	dataView.addItem(item);
 });
 
@@ -275,23 +275,21 @@ dataView.onPagingInfoChanged.subscribe(function (e, pagingInfo) {
 var h_runfilters = null;
 
 // wire up the slider to apply the filter to the model
-$("#pcSlider,#pcSlider2").slider({
-	"range": "min",
-	"slide": function (event, ui) {
-		Slick.GlobalEditorLock.cancelCurrentEdit();
+//$("#pcSlider,#pcSlider2").slider({
+//	"range": "min",
+//	"slide": function (event, ui) {
+//		Spark.GlobalEditorLock.cancelCurrentEdit();
+//
+//		if (percentCompleteThreshold != ui.value) {
+//			window.clearTimeout(h_runfilters);
+//			h_runfilters = window.setTimeout(updateFilter, 10);
+//			percentCompleteThreshold = ui.value;
+//		}
+//	}
+//});
 
-		if (percentCompleteThreshold != ui.value) {
-			window.clearTimeout(h_runfilters);
-			h_runfilters = window.setTimeout(updateFilter, 10);
-			percentCompleteThreshold = ui.value;
-		}
-	}
-});
-
-
-// wire up the search textbox to apply the filter to the model
-$("#txtSearch,#txtSearch2").keyup(function (e) {
-	Slick.GlobalEditorLock.cancelCurrentEdit();
+function onKeyUpSearch(e) {
+	Spark.GlobalEditorLock.cancelCurrentEdit();
 
 	// clear on Esc
 	if (e.which == 27) {
@@ -300,7 +298,11 @@ $("#txtSearch,#txtSearch2").keyup(function (e) {
 
 	searchString = this.value;
 	updateFilter();
-});
+}
+
+// wire up the search textbox to apply the filter to the model
+document.getElementById("txtSearch").addEventListener('keyup', onKeyUpSearch);
+document.getElementById("txtSearch2").addEventListener('keyup', onKeyUpSearch);
 
 function updateFilter() {
 	dataView.setFilterArgs({
@@ -310,8 +312,8 @@ function updateFilter() {
 	dataView.refresh();
 }
 
-$("#btnSelectRows").click(function () {
-	if (!Slick.GlobalEditorLock.commitCurrentEdit()) {
+document.getElementById('btnSelectRows').addEventListener('click', function () {
+	if (!Spark.GlobalEditorLock.commitCurrentEdit()) {
 		return;
 	}
 
@@ -338,7 +340,7 @@ dataView.endUpdate();
 // or being on a different page) to stay selected, pass 'false' to the second arg
 dataView.syncGridSelection(grid, true);
 
-$("#gridContainer").resizable();
+//$("#gridContainer").resizable();
 </script>
 </body>
 </html>

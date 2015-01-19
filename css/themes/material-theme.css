@@ -1,0 +1,76 @@
+@font-face {
+    font-family: "Material-Design-Icons";
+    src: url("../fonts/material-design-icons/Material-Design-Icons.eot");
+    src: url("../fonts/Material-Design-Icons.eot") format("embedded-opentype"), url("../fonts/Material-Design-Icons.woff") format("woff"), url("../fonts/Material-Design-Icons.ttf") format("truetype"), url("../fonts/Material-Design-Icons.svg") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
+
+[class^="spark-icon-"], .select-wrapper span.select-dropdown:after, [class*=" mdi-"] {
+    font-family: "Material-Design-Icons";
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    font-size: 16px;
+    cursor: pointer;
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale; }
+
+.spark-disabled {
+    color: rgba(0, 0, 0, 0.3)
+}
+
+.spark-icon-next-page:before {
+    content: "\e6a7"; }
+
+.spark-icon-prev-page:before {
+    content: "\e6a8"; }
+
+.spark-icon-last-page:before {
+    content: "\e6c6"; }
+
+.spark-icon-first-page:before {
+    content: "\e6c7"; }
+
+.spark-icon-settings:before {
+    content: "\e660"; }
+
+.spark-icon-search:before {
+    content: "\e65f"; }
+
+.spark-header-columns {
+    border-bottom: 1px solid #878787;
+}
+
+.spark-header-column {
+    border-color: transparent;
+}
+
+.spark-cell {
+    padding: 5px;
+    border-bottom-color: transparent;
+    border-right-color: transparent;
+}
+
+.spark-cell.selected {
+    background-color: #f2f2f2;
+}
+
+.spark-pager {
+    border-top: 1px solid #878787;
+}
+
+.spark-pager .spark-pager-nav {
+    padding: 6px;
+}
+
+.spark-pager span {
+    line-height: 16px;
+}
+
+.spark-pager-nav span{
+    padding: 6px;
+}

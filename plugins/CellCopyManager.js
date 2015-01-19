@@ -1,11 +1,4 @@
-(function ($) {
-  // register namespace
-  $.extend(true, window, {
-    "Slick": {
-      "CellCopyManager": CellCopyManager
-    }
-  });
-
+(function () {
 
   function CellCopyManager() {
     var _grid;
@@ -73,7 +66,7 @@
       _grid.removeCellCssStyles("copy-manager");
     }
 
-    $.extend(this, {
+    return {
       "init": init,
       "destroy": destroy,
       "clearCopySelection": clearCopySelection,
@@ -81,6 +74,8 @@
       "onCopyCells": new Slick.Event(),
       "onCopyCancelled": new Slick.Event(),
       "onPasteCells": new Slick.Event()
-    });
+    };
   }
-})(jQuery);
+
+  module.exports = CellCopyManager;
+})();

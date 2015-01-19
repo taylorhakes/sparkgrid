@@ -1,10 +1,6 @@
-(function ($) {
-  // register namespace
-  $.extend(true, window, {
-    "Slick": {
-      "CellRangeDecorator": CellRangeDecorator
-    }
-  });
+(function () {
+
+  var core = require('../src/core');
 
   /***
    * Displays an overlay on top of a given cell range.
@@ -27,15 +23,19 @@
       }
     };
 
-    options = $.extend(true, {}, _defaults, options);
+    options = core.extend({}, _defaults, options);
 
 
     function show(range) {
       if (!_elem) {
-        _elem = $("<div></div>", {css: options.selectionCss})
-            .addClass(options.selectionCssClass)
-            .css("position", "absolute")
-            .appendTo(grid.getCanvasNode());
+        _elem = core.createEl({
+          style: core.extend({}, options.selectionCss, {
+              position: 'absolute'
+            }),
+          className: options.selectionCssClass
+        });
+
+        grid.getCanvaseNode().appendChild(_elem);
       }
 
       var from = grid.getCellNodeBox(range.fromRow, range.fromCell);
@@ -58,9 +58,11 @@
       }
     }
 
-    $.extend(this, {
+    return {
       "show": show,
       "hide": hide
-    });
+    };
   }
-})(jQuery);
+
+  module.exports = CellRangeDecorator;
+})();

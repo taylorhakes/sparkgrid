@@ -47,7 +47,7 @@
     return value ? "<img src='../images/tick.png'>" : "";
   }
 
-	Spark.formatters = {
+	module.exports = {
 		"PercentComplete": PercentCompleteFormatter,
 		"PercentCompleteBar": PercentCompleteBarFormatter,
 		"YesNo": YesNoFormatter,

@@ -1,16 +1,30 @@
-var Grid = require('./src/Grid');
-var DataView = require('./src/DataView');
-var core = require('./src/core');
-var formatters = require('./src/formatters');
+var Grid = require('./src/Grid'),
+  DataView = require('./src/DataView'),
+  core = require('./src/core'),
+  formatters = require('./src/formatters'),
+  editors = require('./src/editors'),
+  CellRangeDecorator = require('./plugins/CellRangeDecorator'),
+  CellRangeSelector = require('./plugins/CellRangeSelector'),
+  CellSelectionModel = require('./plugins/CellSelectionModel'),
+  RowSelectionModel = require('./plugins/RowSelectionModel'),
+  Pager = require('./controls/Pager'),
+	ColumnPicker = require('./controls/ColumnPicker'),
+	RemoteModel = require('./src/RemoteModel');
 
-var exportObj = {
+
+window.Spark = core.extend(core, {
   Grid: Grid,
-  View: DataView,
-  core: core,
-  formatters: formatters
-};
-
-window.Spark = exportObj;
+  Data: DataView,
+  formatters: formatters,
+  editors: editors,
+  CellRangeDecorator: CellRangeDecorator,
+  CellRangeSelector: CellRangeSelector,
+  CellSelectionModel: CellSelectionModel,
+  RowSelectionModel: RowSelectionModel,
+  Pager: Pager,
+	ColumnPicker: ColumnPicker,
+	RemoteModel: RemoteModel
+});
 
 //if (typeof module !== 'undefined' && module.exports) {
 //  module.exports = exportObj;

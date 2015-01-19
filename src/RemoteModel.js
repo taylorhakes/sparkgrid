@@ -17,8 +17,8 @@
     var req = null; // ajax request
 
     // events
-    var onDataLoading = new Slick.Event();
-    var onDataLoaded = new Slick.Event();
+    var onDataLoading = new Spark.Event();
+    var onDataLoaded = new Spark.Event();
 
 
     function init() {
@@ -74,7 +74,7 @@
         return;
       }
 
-      var url = "http://api.thriftdb.com/api.hnsearch.com/items/_search?filter[fields][type][]=submission&q=" + searchstr + "&start=" + (fromPage * PAGESIZE) + "&limit=" + (((toPage - fromPage) * PAGESIZE) + PAGESIZE);
+      var url = "https://hacker-news.firebaseio.com/v0/item/8863.json";
 
       if (sortcol != null) {
           url += ("&sortby=" + sortcol + ((sortdir > 0) ? "+asc" : "+desc"));
@@ -90,8 +90,9 @@
 
         onDataLoading.notify({from: from, to: to});
 
-        req = $.jsonp({
+        req = $.ajax({
           url: url,
+					dataType: 'jsonp',
           callbackParameter: "callback",
           cache: true,
           success: onSuccess,
@@ -170,6 +171,6 @@
     };
   }
 
-  // Slick.Data.RemoteModel
+  // Spark.Data.RemoteModel
   module.exports = RemoteModel;
 })();

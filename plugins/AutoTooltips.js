@@ -1,10 +1,7 @@
-(function ($) {
-  // Register namespace
-  $.extend(true, window, {
-    "Slick": {
-      "AutoTooltips": AutoTooltips
-    }
-  });
+(function () {
+  'use strict';
+
+  var core = require('core');
 
   /**
    * AutoTooltips plugin to show/hide tooltips when columns are too narrow to fit content.
@@ -15,7 +12,6 @@
    */
   function AutoTooltips(options) {
     var _grid;
-    var _self = this;
     var _defaults = {
       enableForCells: true,
       enableForHeaderCells: false,
@@ -47,17 +43,17 @@
     function handleMouseEnter(e) {
       var cell = _grid.getCellFromEvent(e);
       if (cell) {
-        var $node = $(_grid.getCellNode(cell.row, cell.cell));
+        var node = _grid.getCellNode(cell.row, cell.cell);
         var text;
-        if ($node.innerWidth() < $node[0].scrollWidth) {
-          text = $.trim($node.text());
+        if (node.clientWidth < node.scrollWidth) {
+          text = $.trim(node.textContent);
           if (options.maxToolTipLength && text.length > options.maxToolTipLength) {
             text = text.substr(0, options.maxToolTipLength - 3) + "...";
           }
         } else {
           text = "";
         }
-        $node.attr("title", text);
+        node.title = text;
       }
     }
     
@@ -68,16 +64,18 @@
      */
     function handleHeaderMouseEnter(e, args) {
       var column = args.column,
-          $node = $(e.target).closest(".slick-header-column");
+          node = core.closest(e.target, ".slick-header-column");
       if (!column.toolTip) {
-        $node.attr("title", ($node.innerWidth() < $node[0].scrollWidth) ? column.name : "");
+        node.title = node.clientWidth < $node.scrollWidth ? column.name : "";
       }
     }
     
     // Public API
-    $.extend(this, {
+    return {
       "init": init,
       "destroy": destroy
-    });
+    };
   }
-})(jQuery);
+
+  module.exports = AutoTooltips;
+})();

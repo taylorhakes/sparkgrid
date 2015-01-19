@@ -1,18 +1,14 @@
-(function ($) {
-  // register namespace
-  $.extend(true, window, {
-    "Slick": {
-      "CellSelectionModel": CellSelectionModel
-    }
-  });
+(function () {
 
+  var core = require('../src/core'),
+    CellRangeSelector = require('./CellRangeSelector');
 
   function CellSelectionModel(options) {
     var _grid;
     var _canvas;
     var _ranges = [];
     var _self = this;
-    var _selector = new Slick.CellRangeSelector({
+    var _selector = new CellRangeSelector({
       "selectionCss": {
         "border": "2px solid black"
       }
@@ -24,7 +20,7 @@
 
 
     function init(grid) {
-      _options = $.extend(true, {}, _defaults, options);
+      _options = core.extend({}, _defaults, options);
       _grid = grid;
       _canvas = _grid.getCanvasNode();
       _grid.onActiveCellChanged.subscribe(handleActiveCellChange);
@@ -77,7 +73,7 @@
 
     function handleActiveCellChange(e, args) {
       if (_options.selectActiveCell && args.row != null && args.cell != null) {
-        setSelectedRanges([new Slick.Range(args.row, args.cell)]);
+        setSelectedRanges([new core.Range(args.row, args.cell)]);
       }
     }
     
@@ -141,14 +137,16 @@
       }           
     }
 
-    $.extend(this, {
+    return  core.extend(this, {
       "getSelectedRanges": getSelectedRanges,
       "setSelectedRanges": setSelectedRanges,
 
       "init": init,
       "destroy": destroy,
 
-      "onSelectedRangesChanged": new Slick.Event()
+      "onSelectedRangesChanged": new core.Event()
     });
   }
-})(jQuery);
+
+  module.exports = CellSelectionModel;
+})();

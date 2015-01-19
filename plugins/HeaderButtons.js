@@ -1,13 +1,4 @@
 (function ($) {
-  // register namespace
-  $.extend(true, window, {
-    "Slick": {
-      "Plugins": {
-        "HeaderButtons": HeaderButtons
-      }
-    }
-  });
-
 
   /***
    * A plugin to add custom buttons to column headers.
@@ -96,38 +87,40 @@
         var i = column.header.buttons.length;
         while (i--) {
           var button = column.header.buttons[i];
-          var btn = $("<div></div>")
-            .addClass(options.buttonCssClass)
-            .data("column", column)
-            .data("button", button);
+          var btn = core.createEl({
+            tag: 'div',
+            className: options.buttonCssClass
+          });
+
+          btn.dataset.column = column;
+          btn.dataset.button = button;
 
           if (button.showOnHover) {
-            btn.addClass("slick-header-button-hidden");
+            btn.classList.add("slick-header-button-hidden");
           }
 
           if (button.image) {
-            btn.css("backgroundImage", "url(" + button.image + ")");
+            btn.style.backgroundImage = "url(" + button.image + ")";
           }
 
           if (button.cssClass) {
-            btn.addClass(button.cssClass);
+            btn.classList.add(button.cssClass);
           }
 
           if (button.tooltip) {
-            btn.attr("title", button.tooltip);
+            btn.title = button.tooltip;
           }
 
           if (button.command) {
-            btn.data("command", button.command);
+            btn.dataset.command = button.command;
           }
 
           if (button.handler) {
-            btn.bind("click", button.handler);
+            btn.addEventListener("click", button.handler);
           }
 
-          btn
-            .bind("click", handleButtonClick)
-            .appendTo(args.node);
+          btn.addEventListener("click", handleButtonClick)
+          args.node.appendChild(btn);
         }
       }
     }
@@ -140,15 +133,18 @@
         // Removing buttons via jQuery will also clean up any event handlers and data.
         // NOTE: If you attach event handlers directly or using a different framework,
         //       you must also clean them up here to avoid memory leaks.
-        $(args.node).find("." + options.buttonCssClass).remove();
+        core.slice(args.node.querySelectorAll("." + options.buttonCssClass)).forEach(function(btn) {
+          btn.parentNode.removeChild(btn);
+        });
       }
     }
 
 
     function handleButtonClick(e) {
-      var command = $(this).data("command");
-      var columnDef = $(this).data("column");
-      var button = $(this).data("button");
+      var el = e.target;
+      var command = el.dataset.command;
+      var columnDef = el.dataset.column;
+      var button = el.dataset.button;
 
       if (command != null) {
         _self.onCommand.notify({
@@ -167,11 +163,13 @@
       e.stopPropagation();
     }
 
-    $.extend(this, {
+    return {
       "init": init,
       "destroy": destroy,
 
       "onCommand": new Slick.Event()
-    });
+    };
   }
+
+  module.exports = HeaderButtons;
 })(jQuery);

@@ -1,12 +1,14 @@
-@import url('../css/themes/default-theme.css');
+@import url('../css/themes/material-theme.css');
 
 * {
-  font-family: arial;
+  font-family: Roboto;
   font-size: 8pt;
 }
 
+
+
 body {
-  background: beige;
+  background: #fcfcfc;
   padding: 0;
   margin: 8px;
 }
@@ -31,17 +33,16 @@ li {
 }
 
 #myGrid {
-  background: white;
   outline: 0;
-  border: 1px solid gray;
 }
 
+
+
 .grid-header {
-  border: 1px solid gray;
   border-bottom: 0;
   border-top: 0;
-  background: url('../images/header-bg.gif') repeat-x center top;
-  color: black;
+  background: #2196F3;
+  color: white;
   height: 24px;
   line-height: 24px;
 }

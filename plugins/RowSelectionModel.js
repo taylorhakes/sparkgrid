@@ -1,16 +1,12 @@
-(function ($) {
-  // register namespace
-  $.extend(true, window, {
-    "Slick": {
-      "RowSelectionModel": RowSelectionModel
-    }
-  });
+(function () {
+
+  var core = require('../src/core');
 
   function RowSelectionModel(options) {
     var _grid;
     var _ranges = [];
-    var _self = this;
-    var _handler = new Slick.EventHandler();
+    var _self;
+    var _handler = new core.EventHandler();
     var _inHandler;
     var _options;
     var _defaults = {
@@ -18,7 +14,7 @@
     };
 
     function init(grid) {
-      _options = $.extend(true, {}, _defaults, options);
+      _options = core.extend({}, _defaults, options);
       _grid = grid;
       _handler.subscribe(_grid.onActiveCellChanged,
           wrapHandler(handleActiveCellChange));
@@ -56,7 +52,7 @@
       var ranges = [];
       var lastCell = _grid.getColumns().length - 1;
       for (var i = 0; i < rows.length; i++) {
-        ranges.push(new Slick.Range(rows[i], 0, rows[i], lastCell));
+        ranges.push(new core.Range(rows[i], 0, rows[i], lastCell));
       }
       return ranges;
     }
@@ -91,7 +87,7 @@
 
     function handleActiveCellChange(e, data) {
       if (_options.selectActiveRow && data.row != null) {
-        setSelectedRanges([new Slick.Range(data.row, 0, data.row, _grid.getColumns().length - 1)]);
+        setSelectedRanges([new core.Range(data.row, 0, data.row, _grid.getColumns().length - 1)]);
       }
     }
 
@@ -140,13 +136,13 @@
       }
 
       var selection = rangesToRows(_ranges);
-      var idx = $.inArray(cell.row, selection);
+      var idx = cell.row.indexOf(selection);
 
       if (idx === -1 && (e.ctrlKey || e.metaKey)) {
         selection.push(cell.row);
         _grid.setActiveCell(cell.row, cell.cell);
       } else if (idx !== -1 && (e.ctrlKey || e.metaKey)) {
-        selection = $.grep(selection, function (o, i) {
+        selection = selection.filter(function (o, i) {
           return (o !== cell.row);
         });
         _grid.setActiveCell(cell.row, cell.cell);
@@ -171,7 +167,7 @@
       return true;
     }
 
-    $.extend(this, {
+    _self = {
       "getSelectedRows": getSelectedRows,
       "setSelectedRows": setSelectedRows,
 
@@ -181,7 +177,11 @@
       "init": init,
       "destroy": destroy,
 
-      "onSelectedRangesChanged": new Slick.Event()
-    });
+      "onSelectedRangesChanged": new core.Event()
+    };
+
+		return _self;
   }
-})(jQuery);
+
+  module.exports = RowSelectionModel;
+})();

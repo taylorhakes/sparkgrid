@@ -7,6 +7,8 @@
 (function () {
 	'use strict';
 
+  var core = require('./core');
+
 	var LEFT_CODE = 37,
 		RIGHT_CODE = 39,
     ESCAPE = 27,
@@ -18,18 +20,19 @@
 		var defaultValue;
 
 		this.init = function () {
-			inputEl = Spark.core.createEl({
+			inputEl = core.createEl({
         tag: 'input',
         type: 'text',
         className: 'editor-text'
       });
-			inputEl.addEventListener('keydown', function() {
+			inputEl.addEventListener('keydown', function(e) {
 				if (e.keyCode === LEFT_CODE || e.keyCode === RIGHT_CODE) {
 					e.stopPropagation();
 				}
 			});
 			inputEl.focus();
 			inputEl.setSelectionRange(0, inputEl.value.length);
+			args.container.appendChild(inputEl);
 		};
 
 		this.destroy = function () {
@@ -87,7 +90,7 @@
 	function IntegerEditor(args) {
 		var inputEl;
 
-		Spark.core.extend(this, new TextEditor(args));
+		core.extend(this, new TextEditor(args));
 
 		this.validate = function () {
 			if (isNaN(inputEl.value)) {
@@ -112,13 +115,13 @@
 		var defaultValue;
 
 		this.init = function () {
-			selectEl = Spark.core.createEl({
+			selectEl = core.createEl({
         tag: 'select',
         tabIndex: '0',
         className: 'editor-yesno'
       });
       selectEl.innerHTML = '<OPTION value="yes">Yes</OPTION><OPTION value="no">No</OPTION>';
-			selectEl.appendTo(args.container);
+			args.container.appendChild(selectEl);
 			selectEl.focus();
 		};
 
@@ -162,14 +165,14 @@
 		var defaultValue;
 
 		this.init = function () {
-			select = Spark.core.createEl({
+			select = core.createEl({
         tag: 'input',
-        type: 'checkboxes',
-        value: 'true',
+        type: 'checkbox',
+        checked: true,
         className: 'editor-checkbox',
         hideFocus: true
       });
-			select.appendTo(args.container);
+			args.container.appendChild(select);
 			select.focus();
 		};
 
@@ -182,12 +185,7 @@
 		};
 
 		this.loadValue = function (item) {
-			defaultValue = !!item[args.column.field];
-			if (defaultValue) {
-				select.checked = true;
-			} else {
-				select.checked = false;
-			}
+			select.checked = !!item[args.column.field];
 		};
 
 		this.serializeValue = function () {
@@ -225,7 +223,7 @@
 		this.init = function () {
 			var container = document.body, buttonWrapper;
 
-			wrapper = Spark.core.createEl({
+			wrapper = core.createEl({
         tag: 'div',
         style: {
           zIndex: 10000,
@@ -238,7 +236,7 @@
       });
       container.appendChild(wrapper);
 
-			input = Spark.core.createEl({
+			input = core.createEl({
         tag: 'textarea',
         rows: 5,
         style: {
@@ -250,15 +248,16 @@
         }
       });
 
-      input.innerHTML = '<DIV style="text-align:right"><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></DIV>';
+      wrapper.innerHTML = '<DIV style="text-align:right"><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></DIV>';
       wrapper.appendChild(input);
 
-			wrapper.querySelector("button:first").addEventListener("click", this.save);
-			wrapper.querySelector("button:last").addEventListener("click", this.cancel);
+      var buttons = wrapper.querySelectorAll("button");
+			buttons[0].addEventListener("click", this.save);
+			buttons[buttons.length - 1].addEventListener("click", this.cancel);
 			input.addEventListener("keydown", this.handleKeyDown);
 
 			scope.position(args.position);
-			input.focus()
+			input.focus();
       input.select();
 		};
 
@@ -282,7 +281,7 @@
 		};
 
 		this.cancel = function () {
-			input.val(defaultValue);
+			input.value = defaultValue;
 			args.cancelChanges();
 		};
 
@@ -295,14 +294,14 @@
 		};
 
 		this.position = function (position) {
-			Spark.core.setStyle(wrapper, {
-        top: position.top - 5,
-        left: position.left - 5
+			core.setStyle(wrapper, {
+        top: position.top - 5 + 'px',
+        left: position.left - 5 + 'px'
       });
 		};
 
 		this.destroy = function () {
-			Spark.core.removeEl(wrapper);
+			core.removeEl(wrapper);
 		};
 
 		this.focus = function () {
@@ -336,7 +335,7 @@
 		this.init();
 	}
 
-	Spark.editors = {
+	module.exports = {
 		"Text": TextEditor,
 		"Integer": IntegerEditor,
 		"YesNoSelect": YesNoSelectEditor,
