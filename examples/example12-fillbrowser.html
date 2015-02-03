@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <title>SlickGrid example 12: Fill browser</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
   <link rel="stylesheet" href="examples.css" type="text/css"/>
   <style>
     html, body {
@@ -56,11 +56,7 @@
     </ul>
 </div>
 
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../src/slick.grid.js"></script>
+<script src="../build/bundle.js"></script>
 <script>
   var grid,
       data = [],
@@ -110,7 +106,7 @@
     };
   }
 
-  grid = new Slick.Grid("#container", data, columns, options);
+  grid = new Spark.Grid("#container", data, columns, options);
 </script>
 </body>
 </html>

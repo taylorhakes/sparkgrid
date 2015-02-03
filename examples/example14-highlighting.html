@@ -3,8 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   <title>SlickGrid example 14: Highlighting and Flashing cells</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
   <link rel="stylesheet" href="examples.css" type="text/css"/>
   <style>
     .load-medium {
@@ -54,16 +53,7 @@
   </div>
 </div>
 
-<script src="../lib/firebugx.js"></script>
-
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../plugins/slick.cellselectionmodel.js"></script>
-<script src="../plugins/slick.rowmovemanager.js"></script>
-<script src="../src/slick.grid.js"></script>
+<script src="../build/bundle.js"></script>
 
 <script>
   var grid;
@@ -104,21 +94,6 @@
   };
 
 
-  $(function () {
-    for (var i = 0; i < 500; i++) {
-      var d = (data[i] = {});
-      d.server = "Server " + i;
-      for (var j = 0; j < columns.length; j++) {
-        d[j] = Math.round(Math.random() * 100);
-      }
-    }
-
-    grid = new Slick.Grid("#myGrid", data, columns, options);
-
-    currentServer = Math.round(Math.random() * (data.length - 1));
-  });
-
-
   function simulateRealTimeUpdates() {
     var changes = {};
     var numberOfUpdates = Math.round(Math.random() * (data.length / 10));
@@ -152,6 +127,18 @@
     grid.scrollRowIntoView(currentServer);
     grid.flashCell(currentServer, grid.getColumnIndex("server"), 100);
   }
+
+  for (var i = 0; i < 500; i++) {
+	  var d = (data[i] = {});
+	  d.server = "Server " + i;
+	  for (var j = 0; j < columns.length; j++) {
+		  d[j] = Math.round(Math.random() * 100);
+	  }
+  }
+
+  grid = new Spark.Grid("#myGrid", data, columns, options);
+
+  currentServer = Math.round(Math.random() * (data.length - 1));
 </script>
 </body>
 </html>

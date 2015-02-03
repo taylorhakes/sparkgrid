@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <title>SlickGrid example 13: Indexed Sorting using Functional Data Provider</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
   <link rel="stylesheet" href="examples.css" type="text/css"/>
   <style>
     html, body {
@@ -55,10 +55,7 @@
     </ul>
 </div>
 
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-<script src="../slick.core.js"></script>
-<script src="../src/slick.grid.js"></script>
+<script src="../build/bundle.js"></script>
 
 <script>
   var grid,
@@ -77,7 +74,7 @@
 
   // Copies and shuffles the specified array and returns a new shuffled array.
   function randomize(items) {
-    var randomItems = $.extend(true, null, items), randomIndex, temp, index;
+    var randomItems = items.slice(), randomIndex, temp, index;
     for (index = items.length; index-- > 0;) {
       randomIndex = Math.round(Math.random() * items.length - 1);
       if (randomIndex > -1) {
@@ -113,7 +110,7 @@
     return data.length;
   }
 
-  grid = new Slick.Grid("#container", {getLength: getLength, getItem: getItem}, columns, options);
+  grid = new Spark.Grid("#container", {getLength: getLength, getItem: getItem}, columns, options);
   grid.onSort.subscribe(function (e, args) {
     currentSortCol = args.sortCol;
     isAsc = args.sortAsc;

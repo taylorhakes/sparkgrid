@@ -5,6 +5,13 @@
   font-size: 8pt;
 }
 
+a, a:hover {
+    color: #009587;
+}
+
+a:hover {
+    text-decoration: underline;
+}
 
 
 body {
@@ -25,7 +32,6 @@ ul {
 }
 
 li {
-  background: url("../images/arrow_right_spearmint.png") no-repeat center left;
   padding: 0 0 0 14px;
 
   list-style: none;
@@ -35,8 +41,6 @@ li {
 #myGrid {
   outline: 0;
 }
-
-
 
 .grid-header {
   border-bottom: 0;
@@ -118,13 +122,6 @@ li {
 .slick-row.complete {
   background-color: #DFD;
   color: #555;
-}
-
-.percent-complete-bar {
-  display: inline-block;
-  height: 6px;
-  -moz-border-radius: 3px;
-  -webkit-border-radius: 3px;
 }
 
 /* Slick.Editors.Text, Slick.Editors.Date */

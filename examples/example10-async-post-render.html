@@ -2,9 +2,8 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>SlickGrid example 10: Async post render</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+  <title>SparkGrid example 10: Async post render</title>
+  <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
   <link rel="stylesheet" href="examples.css" type="text/css"/>
   <style>
     .cell-title {
@@ -32,15 +31,15 @@
   <h2>Demonstrates:</h2>
 
   <p>
-    With SlickGrid, you can still have rich, complex cells rendered against the actual DOM nodes while still preserving
+    With SparkGrid, you can still have rich, complex cells rendered against the actual DOM nodes while still preserving
     the speed and responsiveness.
     This is achieved through async background post-rendering.
-    SlickGrid exposes a <u>asyncPostRender</u> property on a column which you can use to set your own function that will
+    SparkGrid exposes a <u>asyncPostRender</u> property on a column which you can use to set your own function that will
     manipulate the cell DOM node directly.
     The event is fired one by one for all visible rows in the viewport on a timer so it doesn't impact the UI
     responsiveness.
     You should still make sure that post-processing one row doesn't take too long though.
-    SlickGrid will figure out what and when needs to be updated for you.
+    SparkGrid will figure out what and when needs to be updated for you.
   </p>
 
   <p>
@@ -54,20 +53,14 @@
   </p>
     <h2>View Source:</h2>
     <ul>
-        <li><A href="https://github.com/mleibman/SlickGrid/blob/gh-pages/examples/example10-async-post-render.html" target="_sourcewindow"> View the source for this example on Github</a></li>
+        <li><A href="https://github.com/mleibman/SparkGrid/blob/gh-pages/examples/example10-async-post-render.html" target="_sourcewindow"> View the source for this example on Github</a></li>
     </ul>
 </div>
 
-<script src="../lib/firebugx.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
 
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-<script src="../lib/jquery.sparkline.min.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../src/slick.editors.js"></script>
-<script src="../src/slick.grid.js"></script>
+<script src="../build/bundle.js"></script>
 
 <script>
   function requiredFieldValidator(value) {
@@ -98,11 +91,11 @@
   var data = [];
   var columns = [
     {id: "title", name: "Title", field: "title", sortable: false, width: 120, cssClass: "cell-title"},
-    {id: "n1", name: "1", field: "n1", sortable: false, editor: Slick.Editors.Integer, width: 40, validator: requiredFieldValidator},
-    {id: "n2", name: "2", field: "n2", sortable: false, editor: Slick.Editors.Integer, width: 40, validator: requiredFieldValidator},
-    {id: "n3", name: "3", field: "n3", sortable: false, editor: Slick.Editors.Integer, width: 40, validator: requiredFieldValidator},
-    {id: "n4", name: "4", field: "n4", sortable: false, editor: Slick.Editors.Integer, width: 40, validator: requiredFieldValidator},
-    {id: "n5", name: "5", field: "n5", sortable: false, editor: Slick.Editors.Integer, width: 40, validator: requiredFieldValidator},
+    {id: "n1", name: "1", field: "n1", sortable: false, editor: Spark.editors.Integer, width: 40, validator: requiredFieldValidator},
+    {id: "n2", name: "2", field: "n2", sortable: false, editor: Spark.editors.Integer, width: 40, validator: requiredFieldValidator},
+    {id: "n3", name: "3", field: "n3", sortable: false, editor: Spark.editors.Integer, width: 40, validator: requiredFieldValidator},
+    {id: "n4", name: "4", field: "n4", sortable: false, editor: Spark.editors.Integer, width: 40, validator: requiredFieldValidator},
+    {id: "n5", name: "5", field: "n5", sortable: false, editor: Spark.editors.Integer, width: 40, validator: requiredFieldValidator},
     {id: "chart", name: "Chart", sortable: false, width: 60, formatter: waitingFormatter, rerenderOnResize: true, asyncPostRender: renderSparkline}
   ];
 
@@ -115,7 +108,6 @@
   };
 
 
-  $(function () {
     for (var i = 0; i < 500; i++) {
       var d = (data[i] = {});
 
@@ -127,8 +119,7 @@
       d["n5"] = Math.round(Math.random() * 10);
     }
 
-    grid = new Slick.Grid("#myGrid", data, columns, options);
-  })
+    grid = new Spark.Grid("#myGrid", data, columns, options);
 </script>
 </body>
 </html>

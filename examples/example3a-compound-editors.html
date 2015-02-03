@@ -1,149 +1,167 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>SlickGrid example 3a: Advanced Editing</title>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
-  <link rel="stylesheet" href="examples.css" type="text/css"/>
-  <style>
-    .cell-title {
-      font-weight: bold;
-    }
-  </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>SlickGrid example 3a: Advanced Editing</title>
+    <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="examples.css" type="text/css"/>
+    <style>
+        .cell-title {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
 <div style="position:relative">
-  <div style="width:600px;">
-    <div id="myGrid" style="width:100%;height:500px;"></div>
-  </div>
+    <div style="width:600px;">
+        <div id="myGrid" style="width:100%;height:500px;"></div>
+    </div>
 
-  <div class="options-panel">
-    <h2>Demonstrates:</h2>
-    <ul>
-      <li>compound cell editors driving multiple fields from one cell</li>
-      <li>providing validation from the editor</li>
-      <li>hooking into validation events</li>
-    </ul>
-      <h2>View Source:</h2>
-      <ul>
-          <li><A href="https://github.com/mleibman/SlickGrid/blob/gh-pages/examples/example3a-compound-editors.html" target="_sourcewindow"> View the source for this example on Github</a></li>
-      </ul>
+    <div class="options-panel">
+        <h2>Demonstrates:</h2>
+        <ul>
+            <li>compound cell editors driving multiple fields from one cell</li>
+            <li>providing validation from the editor</li>
+            <li>hooking into validation events</li>
+        </ul>
+        <h2>View Source:</h2>
+        <ul>
+            <li><A href="https://github.com/mleibman/SlickGrid/blob/gh-pages/examples/example3a-compound-editors.html"
+                   target="_sourcewindow"> View the source for this example on Github</a></li>
+        </ul>
 
 
-  </div>
+    </div>
 </div>
 
-<script src="../lib/firebugx.js"></script>
-
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../src/slick.editors.js"></script>
-<script src="../src/slick.grid.js"></script>
-
+<script src="require.js"></script>
+<script src="config.js"></script>
 <script>
-  var grid;
-  var data = [];
-  var columns = [
-    {id: "title", name: "Title", field: "title", width: 120, cssClass: "cell-title", editor: Slick.Editors.Text},
-    {id: "range", name: "Range", width: 120, formatter: NumericRangeFormatter, editor: NumericRangeEditor}
-  ];
+    var grid;
 
-  var options = {
-    editable: true,
-    enableAddRow: false,
-    enableCellNavigation: true,
-    asyncEditorLoading: false
-  };
 
-  function NumericRangeFormatter(row, cell, value, columnDef, dataContext) {
-    return dataContext.from + " - " + dataContext.to;
-  }
+    require(['./Grid', './editors', './core'], function (SparkGrid, editors, core) {
+        var data = [];
+        var LEFT = 37,
+                RIGHT = 39,
+                TAB = 9;
+        var columns = [
+            {
+                id: "title",
+                name: "Title",
+                field: "title",
+                width: 120,
+                cssClass: "cell-title",
+                editor: editors.Text
+            },
+            {id: "range", name: "Range", width: 120, formatter: numberRangeFormatter, editor: NumericRangeEditor}
+        ];
 
-  function NumericRangeEditor(args) {
-    var $from, $to;
-    var scope = this;
+        var options = {
+            editable: true,
+            enableAddRow: false,
+            enableCellNavigation: true,
+            asyncEditorLoading: false
+        };
 
-    this.init = function () {
-      $from = $("<INPUT type=text style='width:40px' />")
-          .appendTo(args.container)
-          .bind("keydown", scope.handleKeyDown);
+        function numberRangeFormatter(row, cell, value, columnDef, dataContext) {
+            return dataContext.from + " - " + dataContext.to;
+        }
 
-      $(args.container).append("&nbsp; to &nbsp;");
+        function NumericRangeEditor(args) {
+            var from, to;
+            var scope = this;
 
-      $to = $("<INPUT type=text style='width:40px' />")
-          .appendTo(args.container)
-          .bind("keydown", scope.handleKeyDown);
+            this.init = function () {
+                from = core.createEl({
+                    tag: 'input',
+                    type: 'text',
+                    style: {
+                        width: '40px'
+                    }
+                });
+                args.container.appendChild(from);
+                from.addEventListener('keydown', scope.handleKeyDown);
 
-      scope.focus();
-    };
+                args.container.appendChild(document.createTextNode(" to "));
 
-    this.handleKeyDown = function (e) {
-      if (e.keyCode == $.ui.keyCode.LEFT || e.keyCode == $.ui.keyCode.RIGHT || e.keyCode == $.ui.keyCode.TAB) {
-        e.stopImmediatePropagation();
-      }
-    };
+                to = core.createEl({
+                    tag: 'input',
+                    type: 'text',
+                    style: {
+                        width: '40px'
+                    }
+                });
+                args.container.appendChild(to);
+                to.addEventListener('keydown', scope.handleKeyDown);
 
-    this.destroy = function () {
-      $(args.container).empty();
-    };
+                scope.focus();
+            };
 
-    this.focus = function () {
-      $from.focus();
-    };
+            this.handleKeyDown = function (e) {
+                if (e.keyCode == LEFT || e.keyCode == RIGHT || e.keyCode == TAB) {
+                    e.stopPropagation();
+                }
+            };
 
-    this.serializeValue = function () {
-      return {from: parseInt($from.val(), 10), to: parseInt($to.val(), 10)};
-    };
+            this.destroy = function () {
+                args.container.innerHTML = '';
+            };
 
-    this.applyValue = function (item, state) {
-      item.from = state.from;
-      item.to = state.to;
-    };
+            this.focus = function () {
+                from.focus();
+            };
 
-    this.loadValue = function (item) {
-      $from.val(item.from);
-      $to.val(item.to);
-    };
+            this.serializeValue = function () {
+                return {from: parseInt(from.value, 10), to: parseInt(to.value, 10)};
+            };
 
-    this.isValueChanged = function () {
-      return args.item.from != parseInt($from.val(), 10) || args.item.to != parseInt($from.val(), 10);
-    };
+            this.applyValue = function (item, state) {
+                item.from = state.from;
+                item.to = state.to;
+            };
 
-    this.validate = function () {
-      if (isNaN(parseInt($from.val(), 10)) || isNaN(parseInt($to.val(), 10))) {
-        return {valid: false, msg: "Please type in valid numbers."};
-      }
+            this.loadValue = function (item) {
+                from.value = item.from;
+                to.value = item.to;
+            };
 
-      if (parseInt($from.val(), 10) > parseInt($to.val(), 10)) {
-        return {valid: false, msg: "'from' cannot be greater than 'to'"};
-      }
+            this.isValueChanged = function () {
+                return args.item.from != parseInt(from.value, 10) || args.item.to != parseInt(from.value, 10);
+            };
 
-      return {valid: true, msg: null};
-    };
+            this.validate = function () {
+                if (isNaN(parseInt(from.value, 10)) || isNaN(parseInt(to.value, 10))) {
+                    return {valid: false, msg: "Please type in valid numbers."};
+                }
 
-    this.init();
-  }
+                if (parseInt(from.value, 10) > parseInt(to.value, 10)) {
+                    return {valid: false, msg: "'from' cannot be greater than 'to'"};
+                }
 
-  $(function () {
-    for (var i = 0; i < 500; i++) {
-      var d = (data[i] = {});
+                return {valid: true, msg: null};
+            };
 
-      d["title"] = "Task " + i;
-      d["from"] = Math.round(Math.random() * 100);
-      d["to"] = d["from"] + Math.round(Math.random() * 100);
-    }
+            this.init();
+        }
 
-    grid = new Slick.Grid("#myGrid", data, columns, options);
 
-    grid.onValidationError.subscribe(function (e, args) {
-      alert(args.validationResults.msg);
+        for (var i = 0; i < 500; i++) {
+            var d = (data[i] = {});
+
+            d["title"] = "Task " + i;
+            d["from"] = Math.round(Math.random() * 100);
+            d["to"] = d["from"] + Math.round(Math.random() * 100);
+        }
+
+        grid = new SparkGrid("#myGrid", data, columns, options);
+
+        grid.onValidationError.subscribe(function (e, args) {
+            alert(args.validationResults.msg);
+        });
     });
-  })
 </script>
 </body>
 </html>

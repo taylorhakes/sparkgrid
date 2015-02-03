@@ -2,36 +2,30 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var gulp = require('gulp');
 var source = require('vinyl-source-stream');
+var to5 = require('gulp-6to5');
+var sourcemaps = require('gulp-sourcemaps');
+var watch = require('gulp-watch');
+var logger = require('gulp-logger');
 
-
-function scripts(watch) {
-	var bundler, rebundle;
-	bundler = browserify('./index.js', {
-		debug: true,
-		cache: {}, // required for watchify
-		packageCache: {}, // required for watchify
-		fullPaths: watch // required to be true only for watchify
-	});
-	if(watch) {
-		bundler = watchify(bundler)
-	}
-	rebundle = function() {
-		var stream = bundler.bundle();
-		stream = stream.pipe(source('bundle.js'));
-		return stream.pipe(gulp.dest('./build'));
-	};
-
-	bundler.on('update', rebundle);
-	return rebundle();
-}
-
+var path = {
+	source:'src/**/*.js',
+	output:'dist/',
+	doc:'./doc'
+};
 
 gulp.task('watch', function() {
-	return scripts(true);
+	return watch(path.source)
+		.pipe(logger({
+			before: 'Change Found...',
+			after: 'Transpile complete!',
+			showChange: true
+		}))
+		.pipe(to5({modules:'umd'}))
+		.pipe(gulp.dest(path.output));
 });
-
-
-gulp.task('build', function() {
-	return scripts();
+gulp.task('build', function () {
+	return gulp.src(path.source)
+		.pipe(to5({modules:'umd'}))
+		.pipe(gulp.dest(path.output));
 });
 

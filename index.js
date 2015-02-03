@@ -3,12 +3,12 @@ var Grid = require('./src/Grid'),
   core = require('./src/core'),
   formatters = require('./src/formatters'),
   editors = require('./src/editors'),
-  CellRangeDecorator = require('./plugins/CellRangeDecorator'),
-  CellRangeSelector = require('./plugins/CellRangeSelector'),
-  CellSelectionModel = require('./plugins/CellSelectionModel'),
-  RowSelectionModel = require('./plugins/RowSelectionModel'),
-  Pager = require('./controls/Pager'),
-	ColumnPicker = require('./controls/ColumnPicker'),
+  CellRangeDecorator = require('./src/plugins/CellRangeDecorator'),
+  CellRangeSelector = require('./src/plugins/CellRangeSelector'),
+  CellSelectionModel = require('./src/plugins/CellSelectionModel'),
+  RowSelectionModel = require('./src/plugins/RowSelectionModel'),
+  Pager = require('./src/plugins/Pager'),
+	ColumnPicker = require('./src/plugins/ColumnPicker'),
 	RemoteModel = require('./src/RemoteModel');
 
 

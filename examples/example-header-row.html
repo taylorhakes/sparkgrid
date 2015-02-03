@@ -111,7 +111,7 @@
     });
 
 
-    SparkGrid.core.delegate(grid.getHeaderRow(), "change keyup", '.input', function (e) {
+    Grid.core.delegate(grid.getHeaderRow(), "change keyup", '.input', function (e) {
       var columnId = e.target.dataset.columnId;
       if (columnId != null) {
         columnFilters[columnId] = this.value.trim();

@@ -1,56 +1,42 @@
-/***
- * Contains basic SlickGrid formatters.
- * 
- * NOTE:  These are merely examples.  You will most likely need to implement something more
- *        robust/extensible/localizable/etc. for your use!
- * 
- * @module Formatters
- * @namespace Slick
- */
+function PercentCompleteFormatter(row, cell, value, columnDef, dataContext) {
+	if (value == null || value === "") {
+		return "-";
+	} else if (value < 50) {
+		return "<span class='spark-bad'>" + value + "%</span>";
+	} else {
+		return "<span class='spark-good'>" + value + "%</span>";
+	}
+}
 
-(function () {
-  'use strict';
+function PercentCompleteBarFormatter(row, cell, value, columnDef, dataContext) {
+	if (value == null || value === "") {
+		return "";
+	}
 
-  function PercentCompleteFormatter(row, cell, value, columnDef, dataContext) {
-    if (value == null || value === "") {
-      return "-";
-    } else if (value < 50) {
-      return "<span style='color:red;font-weight:bold;'>" + value + "%</span>";
-    } else {
-      return "<span style='color:green'>" + value + "%</span>";
-    }
-  }
+	var className;
 
-  function PercentCompleteBarFormatter(row, cell, value, columnDef, dataContext) {
-    if (value == null || value === "") {
-      return "";
-    }
+	if (value < 30) {
+		className = "spark-bad";
+	} else if (value < 70) {
+		className = "spark-ok";
+	} else {
+		className = "spark-good";
+	}
 
-    var color;
+	return "<span class='spark-bar " + className + "' style='width:" + value + "%'></span>";
+}
 
-    if (value < 30) {
-      color = "red";
-    } else if (value < 70) {
-      color = "silver";
-    } else {
-      color = "green";
-    }
+function YesNoFormatter(row, cell, value, columnDef, dataContext) {
+	return value ? "Yes" : "No";
+}
 
-    return "<span class='percent-complete-bar' style='background:" + color + ";width:" + value + "%'></span>";
-  }
+function CheckmarkFormatter(row, cell, value, columnDef, dataContext) {
+	return value ? "<i class='spark-icon-check'></i>" : "";
+}
 
-  function YesNoFormatter(row, cell, value, columnDef, dataContext) {
-    return value ? "Yes" : "No";
-  }
-
-  function CheckmarkFormatter(row, cell, value, columnDef, dataContext) {
-    return value ? "<img src='../images/tick.png'>" : "";
-  }
-
-	module.exports = {
-		"PercentComplete": PercentCompleteFormatter,
-		"PercentCompleteBar": PercentCompleteBarFormatter,
-		"YesNo": YesNoFormatter,
-		"Checkmark": CheckmarkFormatter
-	};
-})();
+export {
+	PercentCompleteFormatter as PercentComplete,
+	PercentCompleteBarFormatter as PercentCompleteBar,
+	YesNoFormatter as YesNo,
+	CheckmarkFormatter as Checkmark
+};
