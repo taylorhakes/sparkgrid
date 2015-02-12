@@ -2,10 +2,10 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
-  <link rel="stylesheet" href="examples.css" type="text/css"/>
-  <link rel="stylesheet" href="../controls/slick.columnpicker.css" type="text/css"/>
+    <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="examples.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/ColumnPicker.css" type="text/css"/>
   <style>
     .slick-cell-checkboxsel {
       background: #f0f0f0;
@@ -33,25 +33,8 @@
   </div>
 </div>
 
-<script src="../lib/firebugx.js"></script>
-
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../src/plugins/CheckboxSelectColumn.js"></script>
-<script src="../src/plugins/slick.autotooltips.js"></script>
-<script src="../src/plugins/slick.cellrangedecorator.js"></script>
-<script src="../src/plugins/slick.cellrangeselector.js"></script>
-<script src="../src/plugins/slick.cellcopymanager.js"></script>
-<script src="../src/plugins/slick.cellselectionmodel.js"></script>
-<script src="../src/plugins/slick.rowselectionmodel.js"></script>
-<script src="../controls/slick.columnpicker.js"></script>
-<script src="../src/slick.formatters.js"></script>
-<script src="../src/slick.editors.js"></script>
-<script src="../src/slick.grid.js"></script>
-
+<script src="require.js"></script>
+<script src="config.js"></script>
 <script>
   var grid;
   var data = [];
@@ -63,13 +46,13 @@
   };
   var columns = [];
 
-  $(function () {
+  require(['./Grid', './editors', 'plugins/CheckboxSelectColumn', 'plugins/RowSelectionModel', 'plugins/ColumnPicker'], function (SparkGrid, editors, CheckboxSelectColumn, RowSelectionModel, ColumnPicker) {
     for (var i = 0; i < 100; i++) {
       var d = (data[i] = {});
       d[0] = "Row " + i;
     }
 
-    var checkboxSelector = new Slick.CheckboxSelectColumn({
+    var checkboxSelector = new CheckboxSelectColumn({
       cssClass: "slick-cell-checkboxsel"
     });
 
@@ -81,15 +64,15 @@
         name: String.fromCharCode("A".charCodeAt(0) + i),
         field: i,
         width: 100,
-        editor: Slick.Editors.Text
+        editor: editors.Text
       });
     }
 
-    grid = new Slick.Grid("#myGrid", data, columns, options);
-    grid.setSelectionModel(new Slick.RowSelectionModel({selectActiveRow: false}));
+    grid = new SparkGrid("#myGrid", data, columns, options);
+    grid.setSelectionModel(new RowSelectionModel({selectActiveRow: false}));
     grid.registerPlugin(checkboxSelector);
 
-    var columnpicker = new Slick.Controls.ColumnPicker(columns, grid, options);
+    var columnpicker = new ColumnPicker(columns, grid, options);
   })
 </script>
 </body>

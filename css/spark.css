@@ -123,7 +123,7 @@ classes should alter those!
   border: 1px solid red !important;
 }
 
-.spark-cell.editable {
+.spark-cell.spark-editable {
   z-index: 11;
   overflow: visible;
   background: white;

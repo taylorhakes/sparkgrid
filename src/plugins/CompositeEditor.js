@@ -1,11 +1,4 @@
-;
-(function ($) {
-  $.extend(true, window, {
-    Slick: {
-      CompositeEditor: CompositeEditor
-    }
-  });
-
+import { extend } from '../core';
 
   /***
    * A composite SlickGrid editor factory.
@@ -32,7 +25,7 @@
    *  position                -   A function to be called when the grid asks the editor to reposition itself.
    *  destroy                 -   A function to be called when the editor is destroyed.
    */
-  function CompositeEditor(columns, containers, options) {
+  export default function CompositeEditor(columns, containers, options) {
     var defaultOptions = {
       validationFailedMsg: "Some of the fields have failed validation",
       show: null,
@@ -46,20 +39,19 @@
 
     var firstInvalidEditor;
 
-    options = $.extend({}, defaultOptions, options);
+    options = extend({}, defaultOptions, options);
 
 
     function getContainerBox(i) {
       var c = containers[i];
-      var offset = $(c).offset();
-      var w = $(c).width();
-      var h = $(c).height();
+      var w = c.clientHeight;
+      var h = c.clientWidth;
 
       return {
-        top: offset.top,
-        left: offset.left,
-        bottom: offset.top + h,
-        right: offset.left + w,
+        top: c.offsetTop,
+        left: c.offsetLeft,
+        bottom: c.offsetTop + h,
+        right: c.offsetLeft + w,
         width: w,
         height: h,
         visible: true
@@ -208,4 +200,3 @@
 
     return editor;
   }
-})(jQuery);

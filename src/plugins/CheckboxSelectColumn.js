@@ -11,7 +11,7 @@ export default function CheckboxSelectColumn(options) {
 		width: 30
 	};
 
-	var _options = $.extend(true, {}, _defaults, options);
+	var _options = extend({}, _defaults, options);
 
 	function init(grid) {
 		_grid = grid;
@@ -65,7 +65,7 @@ export default function CheckboxSelectColumn(options) {
 
 	function handleClick(e, args) {
 		// clicking on a row select checkbox
-		if (_grid.getColumns()[args.cell].id === _options.columnId && $(e.target).is(":checkbox")) {
+		if (_grid.getColumns()[args.cell].id === _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
 			// if editing, try to commit
 			if (_grid.getEditorLock().isActive() && !_grid.getEditorLock().commitCurrentEdit()) {
 				e.preventDefault();
@@ -81,8 +81,8 @@ export default function CheckboxSelectColumn(options) {
 
 	function toggleRowSelection(row) {
 		if (_selectedRowsLookup[row]) {
-			_grid.setSelectedRows($.grep(_grid.getSelectedRows(), function (n) {
-				return n != row
+			_grid.setSelectedRows(_grid.getSelectedRows().filter(function (n) {
+				return n != row;
 			}));
 		} else {
 			_grid.setSelectedRows(_grid.getSelectedRows().concat(row));
@@ -90,7 +90,7 @@ export default function CheckboxSelectColumn(options) {
 	}
 
 	function handleHeaderClick(e, args) {
-		if (args.column.id == _options.columnId && $(e.target).is(":checkbox")) {
+		if (args.column.id == _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
 			// if editing, try to commit
 			if (_grid.getEditorLock().isActive() && !_grid.getEditorLock().commitCurrentEdit()) {
 				e.preventDefault();
@@ -98,7 +98,7 @@ export default function CheckboxSelectColumn(options) {
 				return;
 			}
 
-			if ($(e.target).is(":checked")) {
+			if ((e.target.type || '').toLowerCase() === 'checked') {
 				var rows = [];
 				for (var i = 0; i < _grid.getDataLength(); i++) {
 					rows.push(i);

@@ -16,6 +16,7 @@
   */
 	module.exports = AutoTooltips;
 	var closest = _core.closest;
+	var extend = _core.extend;
 	function AutoTooltips(options) {
 		var _grid;
 		var _defaults = {
@@ -28,7 +29,7 @@
    * Initialize plugin.
    */
 		function init(grid) {
-			options = $.extend(true, {}, _defaults, options);
+			options = extend({}, _defaults, options);
 			_grid = grid;
 			if (options.enableForCells) _grid.onMouseEnter.subscribe(handleMouseEnter);
 			if (options.enableForHeaderCells) _grid.onHeaderMouseEnter.subscribe(handleHeaderMouseEnter);
@@ -52,7 +53,7 @@
 				var node = _grid.getCellNode(cell.row, cell.cell);
 				var text;
 				if (node.clientWidth < node.scrollWidth) {
-					text = $.trim(node.textContent);
+					text = node.textContent.trim();
 					if (options.maxToolTipLength && text.length > options.maxToolTipLength) {
 						text = text.substr(0, options.maxToolTipLength - 3) + "...";
 					}
@@ -72,7 +73,7 @@
 			var column = args.column,
 			    node = core.closest(e.target, ".slick-header-column");
 			if (!column.toolTip) {
-				node.title = node.clientWidth < $node.scrollWidth ? column.name : "";
+				node.title = node.clientWidth < node.scrollWidth ? column.name : "";
 			}
 		}
 

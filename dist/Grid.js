@@ -367,8 +367,8 @@
 				viewport.addEventListener("click", handleClick);
 				headerScroller.addEventListener("contextmenu", handleHeaderContextMenu);
 				headerScroller.addEventListener("click", handleHeaderClick);
-				delegate(headerScroller, ".spark-header-column", "mouseenter", handleHeaderMouseEnter);
-				delegate(headerScroller, ".spark-header-column", "mouseleave", handleHeaderMouseLeave);
+				delegate(headerScroller, ".spark-header-column", "mouseover", handleHeaderMouseEnter);
+				delegate(headerScroller, ".spark-header-column", "mouseout", handleHeaderMouseLeave);
 				headerRowScroller.addEventListener("scroll", handleHeaderRowScroll);
 
 				focusSink.addEventListener("keydown", handleKeyDown);
@@ -384,8 +384,8 @@
 				canvas.addEventListener("dragend", handleDragEnd);
 
 
-				delegate(canvas, "spark-cell", "mouseenter", handleMouseEnter);
-				delegate(canvas, "spark-cell", "mouseleave", handleMouseLeave);
+				delegate(canvas, "spark-cell", "mouseover", handleMouseEnter);
+				delegate(canvas, "spark-cell", "mouseout", handleMouseLeave);
 
 				// Work around http://crbug.com/312427.
 				if (navigator.userAgent.toLowerCase().match(/webkit/) && navigator.userAgent.toLowerCase().match(/macintosh/)) {
@@ -1212,9 +1212,9 @@
 			}
 			var h;
 			for (var i = 0, headers = headers.children, ii = headers.length; i < ii; i++) {
-				h = $(headers[i]);
-				if (h.width() !== columns[i].width - headerColumnWidthDiff) {
-					h.width(columns[i].width - headerColumnWidthDiff);
+				h = headers[i];
+				if (h.clientWidth !== columns[i].width - headerColumnWidthDiff) {
+					h.style.width = columns[i].width - headerColumnWidthDiff + "px";
 				}
 			}
 
@@ -2384,7 +2384,7 @@
 				// if this click resulted in some cell child node getting focus,
 				// don't steal it back - keyboard events will still bubble up
 				// IE9+ seems to default DIVs to tabIndex=0 instead of -1, so check for cell clicks directly.
-				if (e.target != document.activeElement || $(e.target).hasClass("spark-cell")) {
+				if (e.target != document.activeElement || e.target.classList.contains("spark-cell")) {
 					setFocus();
 				}
 			}
@@ -2440,13 +2440,13 @@
 
 		function handleHeaderMouseEnter(e) {
 			trigger(self.onHeaderMouseEnter, {
-				column: $(this).data("column")
+				column: this.dataset.column
 			}, e);
 		}
 
 		function handleHeaderMouseLeave(e) {
 			trigger(self.onHeaderMouseLeave, {
-				column: $(this).data("column")
+				column: this.dataset.column
 			}, e);
 		}
 
@@ -2673,7 +2673,7 @@
 
 			if (activeCellNode) {
 				var d = getDataItem(activeRow);
-				activeCellNode.classList.remove("editable", "invalid");
+				activeCellNode.classList.remove("spark-editable", "spark-invalid");
 				if (d) {
 					var column = columns[activeCell];
 					var formatter = getFormatter(activeRow, column);
@@ -2715,7 +2715,7 @@
 			}
 
 			getEditorLock().activate(editController);
-			activeCellNode.classList.add("editable");
+			activeCellNode.classList.add("spark-editable");
 
 			// don't clear the cell if a custom editor is passed through
 			if (!editor) {
@@ -3334,9 +3334,9 @@
 						return !getEditorLock().isActive();
 					} else {
 						// Re-add the CSS class to trigger transitions, if any.
-						$(activeCellNode).removeClass("invalid");
-						$(activeCellNode).width(); // force layout
-						$(activeCellNode).addClass("invalid");
+						activeCellNode.classList.remove("spark-invalid");
+						activeCellNode.clientWidth; // force layout
+						activeCellNode.classList.add("spark-invalid");
 
 						trigger(self.onValidationError, {
 							editor: currentEditor,

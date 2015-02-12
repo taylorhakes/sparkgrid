@@ -111,3 +111,21 @@
 .spark-bar.spark-ok {
     background-color: #9e9e9e;
 }
+
+.spark-cell.spark-invalid {
+    border-color: red;
+    -moz-animation-duration: 0.2s;
+    -webkit-animation-duration: 0.2s;
+    -moz-animation-name: spark-invalid-hilite;
+    -webkit-animation-name: spark-invalid-hilite;
+}
+
+@-moz-keyframes spark-invalid-hilite {
+    from { box-shadow: 0 0 6px red; }
+    to { box-shadow: none; }
+}
+
+@-webkit-keyframes spark-invalid-hilite {
+    from { box-shadow: 0 0 6px red; }
+    to { box-shadow: none; }
+}

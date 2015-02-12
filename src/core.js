@@ -53,7 +53,7 @@ function delegate(elem, className, event, fn) {
 	for (; i < len; i++) {
 		var ev = events[i];
 		elem.addEventListener(ev, function (e) {
-			if (closest(elem, className, e.target)) {
+			if (closest(e.target, className, elem)) {
 				fn(e);
 			}
 		});

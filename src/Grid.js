@@ -344,8 +344,8 @@ export default function Grid(container, data, columns, options) {
 			viewport.addEventListener("click", handleClick);
 			headerScroller.addEventListener("contextmenu", handleHeaderContextMenu);
 			headerScroller.addEventListener("click", handleHeaderClick);
-			delegate(headerScroller, ".spark-header-column", "mouseenter", handleHeaderMouseEnter);
-			delegate(headerScroller, ".spark-header-column", "mouseleave", handleHeaderMouseLeave);
+			delegate(headerScroller, ".spark-header-column", "mouseover", handleHeaderMouseEnter);
+			delegate(headerScroller, ".spark-header-column", "mouseout", handleHeaderMouseLeave);
 			headerRowScroller.addEventListener("scroll", handleHeaderRowScroll);
 
 			focusSink.addEventListener("keydown", handleKeyDown);
@@ -361,8 +361,8 @@ export default function Grid(container, data, columns, options) {
 			canvas.addEventListener("dragend", handleDragEnd);
 
 
-			delegate(canvas, "spark-cell", "mouseenter", handleMouseEnter);
-			delegate(canvas, "spark-cell", "mouseleave", handleMouseLeave);
+			delegate(canvas, "spark-cell", "mouseover", handleMouseEnter);
+			delegate(canvas, "spark-cell", "mouseout", handleMouseLeave);
 
 			// Work around http://crbug.com/312427.
 			if (navigator.userAgent.toLowerCase().match(/webkit/) && navigator.userAgent.toLowerCase().match(/macintosh/)) {
@@ -1224,9 +1224,9 @@ export default function Grid(container, data, columns, options) {
 		}
 		var h;
 		for (var i = 0, headers = headers.children, ii = headers.length; i < ii; i++) {
-			h = $(headers[i]);
-			if (h.width() !== columns[i].width - headerColumnWidthDiff) {
-				h.width(columns[i].width - headerColumnWidthDiff);
+			h = headers[i];
+			if (h.clientWidth !== columns[i].width - headerColumnWidthDiff) {
+				h.style.width = (columns[i].width - headerColumnWidthDiff) + 'px';
 			}
 		}
 
@@ -2397,7 +2397,7 @@ export default function Grid(container, data, columns, options) {
 			// if this click resulted in some cell child node getting focus,
 			// don't steal it back - keyboard events will still bubble up
 			// IE9+ seems to default DIVs to tabIndex=0 instead of -1, so check for cell clicks directly.
-			if (e.target != document.activeElement || $(e.target).hasClass("spark-cell")) {
+			if (e.target != document.activeElement || e.target.classList.contains("spark-cell")) {
 				setFocus();
 			}
 		}
@@ -2453,13 +2453,13 @@ export default function Grid(container, data, columns, options) {
 
 	function handleHeaderMouseEnter(e) {
 		trigger(self.onHeaderMouseEnter, {
-			"column": $(this).data("column")
+			"column": this.dataset.column
 		}, e);
 	}
 
 	function handleHeaderMouseLeave(e) {
 		trigger(self.onHeaderMouseLeave, {
-			"column": $(this).data("column")
+			"column": this.dataset.column
 		}, e);
 	}
 
@@ -3348,9 +3348,9 @@ export default function Grid(container, data, columns, options) {
 					return !getEditorLock().isActive();
 				} else {
 					// Re-add the CSS class to trigger transitions, if any.
-					$(activeCellNode).removeClass("invalid");
-					$(activeCellNode).width();  // force layout
-					$(activeCellNode).addClass("invalid");
+					activeCellNode.classList.remove("invalid");
+					activeCellNode.clientWidth;  // force layout
+					activeCellNode.classList.add("invalid");
 
 					trigger(self.onValidationError, {
 						editor: currentEditor,

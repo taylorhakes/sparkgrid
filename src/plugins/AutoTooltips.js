@@ -1,4 +1,4 @@
-import { closest } from '../core'
+import { closest, extend } from '../core'
 
 /**
  * AutoTooltips plugin to show/hide tooltips when columns are too narrow to fit content.
@@ -19,7 +19,7 @@ export default function AutoTooltips(options) {
 	 * Initialize plugin.
 	 */
 	function init(grid) {
-		options = $.extend(true, {}, _defaults, options);
+		options = extend({}, _defaults, options);
 		_grid = grid;
 		if (options.enableForCells) _grid.onMouseEnter.subscribe(handleMouseEnter);
 		if (options.enableForHeaderCells) _grid.onHeaderMouseEnter.subscribe(handleHeaderMouseEnter);
@@ -43,7 +43,7 @@ export default function AutoTooltips(options) {
 			var node = _grid.getCellNode(cell.row, cell.cell);
 			var text;
 			if (node.clientWidth < node.scrollWidth) {
-				text = $.trim(node.textContent);
+				text = node.textContent.trim();
 				if (options.maxToolTipLength && text.length > options.maxToolTipLength) {
 					text = text.substr(0, options.maxToolTipLength - 3) + "...";
 				}
@@ -63,7 +63,7 @@ export default function AutoTooltips(options) {
 		var column = args.column,
 			node = core.closest(e.target, ".slick-header-column");
 		if (!column.toolTip) {
-			node.title = node.clientWidth < $node.scrollWidth ? column.name : "";
+			node.title = node.clientWidth < node.scrollWidth ? column.name : "";
 		}
 	}
 
