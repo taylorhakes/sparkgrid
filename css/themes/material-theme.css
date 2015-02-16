@@ -20,6 +20,30 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+.spark {
+    border: 1px solid #dddddd;
+    color: #666666;
+}
+
+.spark-header-column, .spark-cell {
+    border-right: 1px solid #dddddd;
+    border-bottom: 1px solid #dddddd;
+}
+
+.spark-header-column {
+    border-bottom-width: 2px;
+    font-weight: bold;
+    color: #555;
+}
+
+.spark-row.odd {
+    background-color: #f9f9f9;
+}
+
+.spark-row.active, .spark-cell.active {
+    background-color: #EEEEEE;
+}
+
 .spark-disabled {
     color: rgba(0, 0, 0, 0.3)
 }
@@ -52,18 +76,8 @@
     content: "\e623";
 }
 
-.spark-header-columns {
-    border-bottom: 1px solid #878787;
-}
-
-.spark-header-column {
-    border-color: transparent;
-}
-
 .spark-cell {
     padding: 3px;
-    border-bottom-color: transparent;
-    border-right-color: transparent;
 }
 
 .spark-cell.selected {
@@ -71,7 +85,7 @@
 }
 
 .spark-pager {
-    border-top: 1px solid #878787;
+    border-top: 1px solid #dddddd;
 }
 
 .spark-pager .spark-pager-nav {

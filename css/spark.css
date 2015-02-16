@@ -5,11 +5,22 @@ No built-in (selected, editable, highlight, flashing, invalid, loading, :focus) 
 classes should alter those!
 */
 
+.spark, .spark .spark-header-columns, .spark .grid-canvas {
+    box-sizing: content-box;
+}
+.spark * {
+    box-sizing: border-box;
+}
+
+.spark-row {
+    position: absolute;
+    width: 100%;
+    border: 0;
+}
 
 .spark-header, .spark-headerrow {
   width: 100%;
   overflow: hidden;
-  border-left: 0px;
 }
 
 .spark-header-columns, .spark-headerrow-columns {
@@ -25,25 +36,14 @@ classes should alter those!
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
-  height: 16px;
-  line-height: 16px;
   margin: 0;
   padding: 4px;
-  border-right: 1px solid silver;
-  border-left: 0px;
-  border-top: 0px;
-  border-bottom: 0px;
   float: left;
 }
 
-.spark-headerrow-column.ui-state-default {
+.spark-headerrow-column {
   padding: 4px;
 }
-
-.spark-header-column-sorted {
-  font-style: italic;
-}
-
 .spark-sort-indicator {
   display: inline-block;
   width: 8px;
@@ -72,10 +72,6 @@ classes should alter those!
   height: 100%;
 }
 
-.spark-sortable-placeholder {
-  background: silver;
-}
-
 .grid-canvas {
   position: relative;
   outline: 0;
@@ -90,8 +86,6 @@ classes should alter those!
 .spark-cell, .spark-headerrow-column {
   position: absolute;
   border: 1px solid transparent;
-  border-right: 1px dotted silver;
-  border-bottom-color: silver;
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
@@ -101,9 +95,6 @@ classes should alter those!
   margin: 0;
   white-space: nowrap;
   cursor: default;
-}
-
-.spark-group {
 }
 
 .spark-group-toggle {
@@ -117,10 +108,6 @@ classes should alter those!
   -moz-transition: all 0.5s;
   -o-transition: all 0.5s;
   transition: all 0.5s;
-}
-
-.spark-cell.flashing {
-  border: 1px solid red !important;
 }
 
 .spark-cell.spark-editable {
@@ -137,7 +124,6 @@ classes should alter those!
 
 .spark-reorder-proxy {
   display: inline-block;
-  background: blue;
   opacity: 0.15;
   filter: alpha(opacity = 15);
   cursor: move;
@@ -146,7 +132,6 @@ classes should alter those!
 .spark-reorder-guide {
   display: inline-block;
   height: 2px;
-  background: blue;
   opacity: 0.7;
   filter: alpha(opacity = 70);
 }

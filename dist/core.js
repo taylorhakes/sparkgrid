@@ -41,7 +41,7 @@
 	function closest(el, className, lastEl) {
 		// Go through parents and check matches
 		if (typeof lastEl) while (true) {
-			if (el && el.className && ~el.className.indexOf(className)) {
+			if (el && el.classList && el.classList.contains(className)) {
 				return el;
 			}
 			if (!el || el === lastEl || typeof lastEl === "string" && el[matchesSelector](lastEl)) {

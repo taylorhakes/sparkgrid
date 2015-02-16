@@ -2,8 +2,8 @@ import { GlobalEditorLock, extend, createEl, delegate,
 	getCss, setCss, slice, closest, toggleClass, Range, Event } from './core';
 
 // shared across all grids on the page
-var scrollbarDimensions;
-var maxSupportedCssHeight;  // browser's breaking point
+var scrollbarDimensions,
+	maxSupportedCssHeight;  // browser's breaking point
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // SparkGrid class implementation (available as Spark.Grid)
@@ -31,7 +31,7 @@ export default function Grid(container, data, columns, options) {
 		enableColumnReorder: true,
 		asyncEditorLoading: false,
 		asyncEditorLoadDelay: 100,
-		forceFitColumns: false,
+		forceFitColumns: true,
 		enableAsyncPostRender: false,
 		asyncPostRenderDelay: 50,
 		autoHeight: false,
@@ -52,9 +52,8 @@ export default function Grid(container, data, columns, options) {
 		defaultFormatter: defaultFormatter,
 		forceSyncScrolling: false,
 		addNewRowCssClass: "new-row"
-	};
-
-	var columnDefaults = {
+	},
+		columnDefaults = {
 		name: "",
 		resizable: true,
 		sortable: false,
@@ -67,15 +66,15 @@ export default function Grid(container, data, columns, options) {
 	};
 
 	// scroller
-	var th;   // virtual height
-	var h;    // real scrollable height
-	var ph;   // page height
-	var n;    // number of pages
-	var cj;   // "jumpiness" coefficient
+	var th,   // virtual height
+		h,    // real scrollable height
+		ph,   // page height
+		n,   // number of pages
+		cj;   // "jumpiness" coefficient
 
-	var page = 0;       // current page
-	var offset = 0;     // current page offset
-	var vScrollDir = 1;
+	var page = 0,       // current page
+		offset = 0,     // current page offset
+		vScrollDir = 1;
 
 	// private
 	var initialized = false;
@@ -116,6 +115,7 @@ export default function Grid(container, data, columns, options) {
 	var lastRenderedScrollLeft = 0;
 	var prevScrollLeft = 0;
 	var scrollLeft = 0;
+	var scrollTimeout = null;
 
 	var selectionModel;
 	var selectedRows = [];
@@ -206,7 +206,7 @@ export default function Grid(container, data, columns, options) {
 
 		headerScroller = createEl({
 			tag: 'div',
-			className: 'spark-header ui-state-default',
+			className: 'spark-header',
 			style: {
 				overflow: 'hidden',
 				position: 'relative'
@@ -226,7 +226,7 @@ export default function Grid(container, data, columns, options) {
 
 		headerRowScroller = createEl({
 			tag: 'div',
-			className: 'spark-headerrow ui-state-default',
+			className: 'spark-headerrow',
 			style: {
 				overflow: 'hidden',
 				position: 'relative'
@@ -254,7 +254,7 @@ export default function Grid(container, data, columns, options) {
 
 		topPanelScroller = createEl({
 			tag: 'div',
-			className: 'spark-top-panel-scroller ui-state-default',
+			className: 'spark-top-panel-scroller',
 			style: {
 				overflow: 'hidden',
 				position: 'relative'
@@ -435,8 +435,7 @@ export default function Grid(container, data, columns, options) {
 	function getHeadersWidth() {
 		var headersWidth = 0;
 		for (var i = 0, ii = columns.length; i < ii; i++) {
-			var width = columns[i].width;
-			headersWidth += width;
+			headersWidth += columns[i].width;
 		}
 		headersWidth += scrollbarDimensions.width;
 		return Math.max(headersWidth, viewportW || 0) + 1000;
@@ -574,13 +573,6 @@ export default function Grid(container, data, columns, options) {
 	}
 
 	function createColumnHeaders() {
-		function onMouseEnter() {
-			this.classList.add("ui-state-hover");
-		}
-
-		function onMouseLeave() {
-			this.classList.remove("ui-state-hover");
-		}
 
 		slice(headers.querySelectorAll(".spark-header-column")).forEach(function (el) {
 			var columnDef = columns[+el.dataset.columIndex];
@@ -621,11 +613,6 @@ export default function Grid(container, data, columns, options) {
 				header.classList.add(m.headerCssClass);
 			}
 			headers.appendChild(header);
-
-			if (options.enableColumnReorder || m.sortable) {
-				header.addEventListener('mouseenter', onMouseEnter);
-				header.addEventListener('mouseleave', onMouseLeave);
-			}
 
 			if (m.sortable) {
 				header.classList.add('spark-header-sortable');
@@ -793,24 +780,30 @@ export default function Grid(container, data, columns, options) {
 			}
 			var handle = createEl({
 				tag: 'div',
-				className: 'spart-resizable-handle'
+				className: 'spark-resizable-handle'
 			});
 
-			handle.addEventListener("dragstart", function (e) {
+			handle.addEventListener("mousedown", handleMousedown);
+
+			function handleMousedown(e) {
+				var shrinkLeewayOnRight = null, stretchLeewayOnRight = null;
+
 				if (!getEditorLock().commitCurrentEdit()) {
 					return false;
 				}
 				pageX = e.pageX;
+				e.preventDefault();
 				this.parentNode.classList.add("spark-header-column-active");
-				var shrinkLeewayOnRight = null, stretchLeewayOnRight = null;
+
 				// lock each column's width option to current width
-				columnElements.each(function (i, e) {
-					columns[i].previousWidth = $(e).outerWidth();
+				columnElements.forEach(function (e, i) {
+					columns[i].previousWidth = e.offsetWidth;
+					console.log(i, columns[i].previousWidth);
 				});
 				if (options.forceFitColumns) {
 					shrinkLeewayOnRight = 0;
 					stretchLeewayOnRight = 0;
-					// colums on right affect maxPageX/minPageX
+					// columns on right affect maxPageX/minPageX
 					for (j = i + 1; j < columnElements.length; j++) {
 						c = columns[j];
 						if (c.resizable) {
@@ -855,10 +848,14 @@ export default function Grid(container, data, columns, options) {
 				}
 				maxPageX = pageX + Math.min(shrinkLeewayOnRight, stretchLeewayOnLeft);
 				minPageX = pageX - Math.min(shrinkLeewayOnLeft, stretchLeewayOnRight);
-			});
 
-			handle.addEventListener("drag", function (e) {
+				document.body.addEventListener('mousemove', handleDrag);
+				document.body.addEventListener('mouseup', handleMouseUp);
+			}
+
+			function handleDrag(e) {
 				var actualMinWidth, d = Math.min(maxPageX, Math.max(minPageX, e.pageX)) - pageX, x;
+				e.preventDefault();
 				if (d < 0) { // shrink column
 					x = d;
 					for (j = i; j >= 0; j--) {
@@ -926,23 +923,27 @@ export default function Grid(container, data, columns, options) {
 				if (options.syncColumnCellResize) {
 					applyColumnWidths();
 				}
-			});
+			}
 
-			handle.addEventListener("dragend", function (e) {
+			function handleMouseUp(e) {
 				var newWidth;
+				document.body.removeEventListener("mouseup", handleMouseUp);
+				document.body.removeEventListener('mousemove', handleDrag);
 				e.target.parentNode.classList.remove("spark-header-column-active");
 				for (j = 0; j < columnElements.length; j++) {
 					c = columns[j];
-					newWidth = $(columnElements[j]).outerWidth();
+					newWidth = columnElements[j].clientWidth;
 
 					if (c.previousWidth !== newWidth && c.rerenderOnResize) {
 						invalidateAllRows();
 					}
 				}
+
 				updateCanvasWidth(true);
 				render();
 				trigger(self.onColumnsResized, {});
-			});
+
+			}
 
 			el.appendChild(handle);
 		});
@@ -971,28 +972,13 @@ export default function Grid(container, data, columns, options) {
 
 		el = createEl({
 			tag: 'div',
-			className: 'ui-state-default spark-header-column',
+			className: 'spark-header-column',
 			style: {
 				visibility: 'hidden'
 			}
 		});
 		headers.appendChild(el);
 		headerColumnWidthDiff = headerColumnHeightDiff = 0;
-		if (el.style.boxSizing !== "border-box" && el.style.MozBoxSizing !== "border-box" && el.style.webkitBoxSizing != "border-box") {
-			i = 0;
-			len = h.length;
-			compStyle = window.getComputedStyle(el);
-			for (; i < len; i++) {
-				val = h[i];
-				headerColumnWidthDiff += parseFloat(compStyle[val]) || 0;
-			}
-			i = 0;
-			len = v.length;
-			for (; i < len; i++) {
-				val = v[i];
-				headerColumnHeightDiff += parseFloat(compStyle[val]) || 0;
-			}
-		}
 		el.parentNode.removeChild(el);
 
 		var r = createEl({
@@ -1042,8 +1028,8 @@ export default function Grid(container, data, columns, options) {
 			"." + uid + " .spark-header-column { left: 1000px; }",
 			"." + uid + " .spark-top-panel { height:" + options.topPanelHeight + "px; }",
 			"." + uid + " .spark-headerrow-columns { height:" + options.headerRowHeight + "px; }",
-			"." + uid + " .spark-cell { height:" + rowHeight + "px; }",
-			"." + uid + " .spark-row { height:" + options.rowHeight + "px; }"
+			"." + uid + " .spark-row { height:" + options.rowHeight + "px; }",
+			"." + uid + " .spark-cell { height:" + options.rowHeight + "px; }"
 		];
 
 		for (var i = 0; i < columns.length; i++) {
@@ -1118,7 +1104,7 @@ export default function Grid(container, data, columns, options) {
 		container.unbind(".sparkgrid");
 		removeCssRules();
 
-		canvas.unbind("draginit dragstart dragend drag");
+		//canvas.unbind("draginit dragstart dragend drag");
 		container.empty().removeClass(uid);
 	}
 
@@ -1223,9 +1209,9 @@ export default function Grid(container, data, columns, options) {
 			return;
 		}
 		var h;
-		for (var i = 0, headers = headers.children, ii = headers.length; i < ii; i++) {
-			h = headers[i];
-			if (h.clientWidth !== columns[i].width - headerColumnWidthDiff) {
+		for (var i = 0, hds = headers.children, ii = hds.length; i < ii; i++) {
+			h = hds[i];
+			if (h.offsetWidth !== columns[i].width - headerColumnWidthDiff) {
 				h.style.width = (columns[i].width - headerColumnWidthDiff) + 'px';
 			}
 		}
@@ -1549,7 +1535,7 @@ export default function Grid(container, data, columns, options) {
 			rowCss += " " + metadata.cssClasses;
 		}
 
-		stringArray.push("<div class='ui-widget-content " + rowCss + "' style='top:" + getRowTop(row) + "px'>");
+		stringArray.push("<div class='" + rowCss + "' style='top:" + getRowTop(row) + "px'>");
 
 		var colspan, m;
 		for (var i = 0, ii = columns.length; i < ii; i++) {
@@ -1736,8 +1722,7 @@ export default function Grid(container, data, columns, options) {
 		}
 
 		numVisibleRows = Math.ceil(viewportH / options.rowHeight);
-		var style = window.getComputedStyle(container);
-		viewportW = parseFloat(style.width);
+		viewportW = container.clientWidth;
 		if (!options.autoHeight) {
 			setCss(viewport, 'height', viewportH);
 		}
@@ -2442,9 +2427,6 @@ export default function Grid(container, data, columns, options) {
 		}
 
 		trigger(self.onDblClick, {row: cell.row, cell: cell.cell}, e);
-//      if (e.isImmediatePropagationStopped()) {
-//        return;
-//      }
 
 		if (options.editable) {
 			gotoCell(cell.row, cell.cell, true);
