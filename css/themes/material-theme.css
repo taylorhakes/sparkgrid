@@ -21,8 +21,10 @@
 }
 
 .spark {
-    border: 1px solid #dddddd;
     color: #666666;
+    border: 1px solid #dddddd;
+    border-bottom-width: 2px;
+    background-color: #fff;
 }
 
 .spark-header-column, .spark-cell {
@@ -31,9 +33,14 @@
 }
 
 .spark-header-column {
-    border-bottom-width: 2px;
-    font-weight: bold;
-    color: #555;
+    color: #D5DDE5;
+    background: #1b1e24;
+    border-bottom: 3px solid #9ea7af;
+    border-right: none;
+}
+
+.spark-row {
+    border-left: 1px solid #dddddd;
 }
 
 .spark-row.odd {

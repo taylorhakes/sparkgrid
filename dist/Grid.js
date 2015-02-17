@@ -9,8 +9,6 @@
 
 	// browser's breaking point
 
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	// SparkGrid class implementation (available as Spark.Grid)
 
 	/**
   * Creates a new instance of the grid.
@@ -36,7 +34,9 @@
 
 
 	// shared across all grids on the page
-	var scrollbarDimensions, maxSupportedCssHeight;function Grid(container, data, columns, options) {
+	var scrollbarDimensions,
+	    maxSupportedCssHeight,
+	    uidIndex = 1;function Grid(container, data, columns, options) {
 		// settings
 		var defaults = {
 			explicitInitialization: false,
@@ -82,95 +82,105 @@
 			defaultSortAsc: true,
 			focusable: true,
 			selectable: true
-		};
+		},
+		   
 
 		// scroller
-		var th, // virtual height
-		h, // real scrollable height
-		ph, // page height
-		n, // number of pages
-		cj; // "jumpiness" coefficient
+		th,
+		    // virtual height
+		h,
+		    // real scrollable height
+		ph,
+		    // page height
+		n,
+		    // number of pages
+		cj,
+		    // "jumpiness" coefficient
 
-		var page = 0,
+		page = 0,
 		    // current page
 		offset = 0,
 		    // current page offset
-		vScrollDir = 1;
+		vScrollDir = 1,
+		   
 
 		// private
-		var initialized = false;
-		var uid = "sparkgrid_" + Math.round(1000000 * Math.random());
-		var self = this;
-		var focusSink, focusSink2;
-		var headerScroller;
-		var headers;
-		var headerRow, headerRowScroller, headerRowSpacer;
-		var topPanelScroller;
-		var topPanel;
-		var viewport;
-		var canvas;
-		var style;
-		var boundAncestors;
-		var stylesheet, columnCssRulesL, columnCssRulesR;
-		var viewportH, viewportW;
-		var canvasWidth;
-		var viewportHasHScroll, viewportHasVScroll;
-		var headerColumnWidthDiff = 0,
+		initialized = false,
+		    uid = "sparkgrid_" + uidIndex++,
+		    self = this,
+		    focusSink,
+		    focusSink2,
+		    headerScroller,
+		    headers,
+		    headerRow,
+		    headerRowScroller,
+		    headerRowSpacer,
+		    topPanelScroller,
+		    topPanel,
+		    viewport,
+		    canvas,
+		    style,
+		    boundAncestors,
+		    stylesheet,
+		    columnCssRulesL,
+		    columnCssRulesR,
+		    viewportH,
+		    viewportW,
+		    canvasWidth,
+		    viewportHasHScroll,
+		    viewportHasVScroll,
+		    headerColumnWidthDiff = 0,
 		    headerColumnHeightDiff = 0,
 		    // border+padding
 		cellWidthDiff = 0,
-		    cellHeightDiff = 0;
-		var absoluteColumnMinWidth;
-
-		var tabbingDirection = 1;
-		var activePosX;
-		var activeRow, activeCell;
-		var activeCellNode = null;
-		var currentEditor = null;
-		var serializedEditorValue;
-		var editController;
-
-		var rowsCache = {};
-		var renderedRows = 0;
-		var numVisibleRows;
-		var prevScrollTop = 0;
-		var scrollTop = 0;
-		var lastRenderedScrollTop = 0;
-		var lastRenderedScrollLeft = 0;
-		var prevScrollLeft = 0;
-		var scrollLeft = 0;
-		var scrollTimeout = null;
-
-		var selectionModel;
-		var selectedRows = [];
-
-		var plugins = [];
-		var cellCssClasses = {};
-
-		var columnsById = {};
-		var sortColumns = [];
-		var columnPosLeft = [];
-		var columnPosRight = [];
+		    cellHeightDiff = 0,
+		    absoluteColumnMinWidth,
+		    tabbingDirection = 1,
+		    activePosX,
+		    activeRow,
+		    activeCell,
+		    activeCellNode = null,
+		    currentEditor = null,
+		    serializedEditorValue,
+		    editController,
+		    rowsCache = {},
+		    renderedRows = 0,
+		    numVisibleRows,
+		    prevScrollTop = 0,
+		    scrollTop = 0,
+		    lastRenderedScrollTop = 0,
+		    lastRenderedScrollLeft = 0,
+		    prevScrollLeft = 0,
+		    scrollLeft = 0,
+		    selectionModel,
+		    selectedRows = [],
+		    plugins = [],
+		    cellCssClasses = {},
+		    columnsById = {},
+		    sortColumns = [],
+		    columnPosLeft = [],
+		    columnPosRight = [],
+		   
 
 		// async call handles
-		var h_editorLoader = null;
-		var h_render = null;
-		var h_postrender = null;
-		var postProcessedRows = {};
-		var postProcessToRow = null;
-		var postProcessFromRow = null;
+		h_editorLoader = null,
+		    h_render = null,
+		    h_postrender = null,
+		    postProcessedRows = {},
+		    postProcessToRow = null,
+		    postProcessFromRow = null,
+		   
 
 		// perf counters
-		var counter_rows_rendered = 0;
-		var counter_rows_removed = 0;
+		counter_rows_rendered = 0,
+		    counter_rows_removed = 0,
+		   
 
 		// These two variables work around a bug with inertial scrolling in Webkit/Blink on Mac.
 		// See http://crbug.com/312427.
-		var rowNodeFromLastMouseWheelEvent; // this node must not be deleted while inertial scrolling
-		var zombieRowNodeFromLastMouseWheelEvent; // node that was hidden instead of getting deleted
-
-		//////////////////////////////////////////////////////////////////////////////////////////////
-		// Initialization
+		rowNodeFromLastMouseWheelEvent,
+		    // this node must not be deleted while inertial scrolling
+		zombieRowNodeFromLastMouseWheelEvent; // node that was hidden instead of getting deleted
 
 		function init() {
 			container = typeof container === "string" ? document.querySelector(container) : container;
@@ -341,13 +351,6 @@
 				// calculate the diff so we can set consistent sizes
 				measureCellPaddingAndBorder();
 
-				// for usability reasons, all text selection in SparkGrid is disabled
-				// with the exception of input and textarea elements (selection must
-				// be enabled there so that editors work as expected); note that
-				// selection in grid cells (grid body) is already unavailable in
-				// all browsers except IE
-				disableSelection(headers); // disable all text selection in header (including input and textarea)
-
 				if (!options.enableTextSelectionOnCells) {
 					// disable text selection in grid cells except in input and textarea elements
 					// (this is IE-specific, because selectstart event will only fire in IE)
@@ -383,7 +386,6 @@
 				canvas.addEventListener("dragstart", handleDragStart); // {distance: 3}
 				canvas.addEventListener("drag", handleDrag);
 				canvas.addEventListener("dragend", handleDragEnd);
-
 
 				delegate(canvas, "spark-cell", "mouseover", handleMouseEnter);
 				delegate(canvas, "spark-cell", "mouseout", handleMouseLeave);
@@ -492,8 +494,6 @@
 				applyColumnWidths();
 			}
 		}
-
-		function disableSelection($target) {}
 
 		function getMaxSupportedCssHeight() {
 			var supportedHeight = 1000000;
@@ -781,7 +781,6 @@
 					// lock each column's width option to current width
 					columnElements.forEach(function (e, i) {
 						columns[i].previousWidth = e.offsetWidth;
-						console.log(i, columns[i].previousWidth);
 					});
 					if (options.forceFitColumns) {
 						shrinkLeewayOnRight = 0;
@@ -1693,7 +1692,7 @@
 		}
 
 		function getViewportHeight() {
-			return container.clientHeight - parseFloat(container.style.paddingTop || 0) - parseFloat(container.style.paddingBottom || 0) - headerScroller.clientHeight - getVBoxDelta(headerScroller) - (options.showTopPanel ? options.topPanelHeight + getVBoxDelta(topPanelScroller) : 0) - (options.showHeaderRow ? options.headerRowHeight + getVBoxDelta(headerRowScroller) : 0);
+			return container.clientHeight - parseFloat(container.style.paddingTop || 0) - parseFloat(container.style.paddingBottom || 0) - headerScroller.offsetHeight - getVBoxDelta(headerScroller) - (options.showTopPanel ? options.topPanelHeight + getVBoxDelta(topPanelScroller) : 0) - (options.showHeaderRow ? options.headerRowHeight + getVBoxDelta(headerRowScroller) : 0);
 		}
 
 		function resizeCanvas() {
@@ -2121,7 +2120,7 @@
 					if (options.forceSyncScrolling || Math.abs(lastRenderedScrollTop - scrollTop) < viewportH && Math.abs(lastRenderedScrollLeft - scrollLeft) < viewportW) {
 						render();
 					} else {
-						h_render = setTimeout(render, 50);
+						h_render = setTimeout(render, 10);
 					}
 
 					trigger(self.onViewportChanged, {});
@@ -3492,11 +3491,6 @@
 	}
 });
 
-//			if ($target && $target.jquery) {
-//				$target.attr("unselectable", "on").css("MozUserSelect", "none").bind("selectstart.ui", function () {
-//					return false;
-//				}); // from jquery:ui.core.js 1.7.2
-//			}
 //    			headers.filter(":ui-sortable").sortable("destroy");
 //    			$headers.sortable({
 //    				containment: "parent",
