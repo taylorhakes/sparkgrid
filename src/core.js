@@ -10,6 +10,11 @@ for (; i < len; i++) {
 	}
 }
 
+/**
+ * Mix objects together, 1 level deep
+ * @param obj {Object} source object
+ * @returns {Object}
+ */
 function extend(obj /* ...objects */) {
 	var i, len, source;
 	for (i = 1, len = arguments.length; i < len; i++) {
@@ -25,24 +30,27 @@ function extend(obj /* ...objects */) {
 	return obj;
 }
 
+/**
+ * Wrapper for querySelectorAll, but returns an array
+ * @param selector {string} Search selector, i.e. #myId, .myClass, etc.
+ * @param el {HTMLElement} parent element for query, defaults to document
+ * @returns {Array}
+ */
 function query(selector, el) {
 	return slice((el || document).querySelectorAll(selector));
 }
 
 function closest(el, className, lastEl) {
 	// Go through parents and check matches
-	if (typeof lastEl)
-
-		while (true) {
-			if (el && el.classList && el.classList.contains(className)) {
-				return el;
-			}
-			if (!el || el === lastEl || (typeof lastEl === 'string' && el[matchesSelector](lastEl))) {
-				break;
-			}
-			el = el.parentNode
+	while (true) {
+		if (el && el.classList && el.classList.contains(className)) {
+			return el;
 		}
-	return null;
+		if (!el || el === lastEl || (typeof lastEl === 'string' && el[matchesSelector](lastEl))) {
+			return null;
+		}
+		el = el.parentNode
+	}
 }
 
 function delegate(elem, className, event, fn) {
@@ -53,8 +61,9 @@ function delegate(elem, className, event, fn) {
 	for (; i < len; i++) {
 		var ev = events[i];
 		elem.addEventListener(ev, function (e) {
-			if (closest(e.target, className, elem)) {
-				fn(e);
+			var delEl = closest(e.target, className, elem);
+			if (delEl) {
+				fn.call(delEl, e);
 			}
 		});
 	}
@@ -72,6 +81,7 @@ function createEl(options) {
 
 	return el;
 }
+
 function setStyle(el, styles) {
 	return extend(el.style, styles);
 }
@@ -84,11 +94,11 @@ function removeEl(el) {
 
 var slice = Function.prototype.call.bind(Array.prototype.slice);
 
-function setCss(el, prop, val) {
+function setPx(el, prop, val) {
 	el.style[prop] = val + 'px';
 }
 
-function getCss(el, prop) {
+function getPx(el, prop) {
 	return parseFloat(el.style[prop] || 0);
 }
 
@@ -119,7 +129,7 @@ function EventControl() {
 
 	/***
 	 * Stops event from propagating up the DOM tree.
-	 * @method stopPropagation
+	 * @method stop
 	 */
 	this.stop = function () {
 		isStopped = true;
@@ -127,7 +137,7 @@ function EventControl() {
 
 	/***
 	 * Returns whether stopPropagation was called on this event object.
-	 * @method isPropagationStopped
+	 * @method isStopped
 	 * @return {Boolean}
 	 */
 	this.isStopped = function () {
@@ -170,7 +180,7 @@ function Event() {
 	/***
 	 * Fires an event notifying all subscribers.
 	 * @method notify
-	 * @param args {Object} Additional data object to be passed to all handlers.
+	 * @param data {Object} Additional data object to be passed to all handlers.
 	 * @param e {EventControl}
 	 *      Optional.
 	 *      An <code>EventData</code> object to be passed to all handlers.
@@ -180,15 +190,19 @@ function Event() {
 	 *      The scope ("this") within which the handler will be executed.
 	 *      If not specified, the scope will be set to the <code>Event</code> instance.
 	 */
-	this.notify = function (args, e, scope) {
+	this.notify = function (data, e, scope) {
 		var eventControl = new EventControl();
 		scope = scope || this;
 
-		for (var i = 0; i < handlers.length /*&& !(e.isPropagationStopped() || e.isImmediatePropagationStopped())*/; i++) {
-			handlers[i].call(scope, e, args, eventControl);
+		for (var i = 0; i < handlers.length; i++) {
+			handlers[i].call(scope, {
+				event: e,
+				data: data,
+				stop: eventControl.stop
+			});
 		}
 
-		return eventControl;
+		return eventControl.isStopped;
 	};
 }
 
@@ -521,8 +535,8 @@ export {
 	slice,
 	createEl,
 	setStyle,
-	setCss,
-	getCss,
+	setPx,
+	getPx,
 	toggle,
 	toggleClass,
 	removeEl,

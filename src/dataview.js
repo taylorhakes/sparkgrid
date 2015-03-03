@@ -823,13 +823,13 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 	 *
 	 * NOTE:  This doesn't work with cell selection model.
 	 *
-	 * @param grid {Spark.Grid} The grid to sync selection with.
+	 * @param grid {Grid} The grid to sync selection with.
 	 * @param preserveHidden {Boolean} Whether to keep selected items that go out of the
 	 *     view due to them getting filtered out.
 	 * @param preserveHiddenOnSelectionChange {Boolean} Whether to keep selected items
 	 *     that are currently out of the view (see preserveHidden) as selected when selection
 	 *     changes.
-	 * @return {Spark.Event} An event that notifies when an internal list of selected row ids
+	 * @return {Event} An event that notifies when an internal list of selected row ids
 	 *     changes.  This is useful since, in combination with the above two options, it allows
 	 *     access to the full list selected row ids, and not just the ones visible to the grid.
 	 * @method syncGridSelection

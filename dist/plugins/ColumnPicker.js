@@ -10,7 +10,7 @@
 	module.exports = ColumnPicker;
 	var extend = _core.extend;
 	var createEl = _core.createEl;
-	var setCss = _core.setCss;
+	var setPx = _core.setPx;
 	function ColumnPicker(columns, grid, options) {
 		var menu;
 		var columnCheckboxes;
@@ -121,8 +121,8 @@
 				input.checked = true;
 			}
 
-			setCss(menu, "top", e.pageY - 10);
-			setCss(menu, "left", e.pageX - 10);
+			setPx(menu, "top", e.pageY - 10);
+			setPx(menu, "left", e.pageX - 10);
 			menu.style.display = "";
 		}
 

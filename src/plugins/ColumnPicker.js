@@ -1,4 +1,4 @@
-import { extend, createEl, setCss } from  '../core';
+import { extend, createEl, setPx } from  '../core';
 
 export default function ColumnPicker(columns, grid, options) {
 	var menu;
@@ -111,8 +111,8 @@ export default function ColumnPicker(columns, grid, options) {
 			input.checked = true;
 		}
 
-		setCss(menu, 'top', e.pageY - 10);
-		setCss(menu, 'left', e.pageX - 10);
+		setPx(menu, 'top', e.pageY - 10);
+		setPx(menu, 'left', e.pageX - 10);
 		menu.style.display = '';
 	}
 
