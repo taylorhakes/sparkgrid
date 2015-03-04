@@ -37,7 +37,8 @@
     "run-sequence": "^1.0.2",
     "gulp-watch": "^4.1.0",
     "gulp-logger": "0.0.2",
-    "karma": "^0.12.31"
+    "karma": "^0.12.31",
+    "sortablejs": "^1.1.1"
   },
   "dependencies": {
     "gulp-logger": "0.0.2"

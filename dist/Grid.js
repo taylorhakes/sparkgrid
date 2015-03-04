@@ -2920,8 +2920,8 @@
 			return colspan;
 		}
 
-		function getHeaders() {
-			return headers.children;
+		function getHeader() {
+			return headers;
 		}
 
 		function getUid() {
@@ -3477,7 +3477,7 @@
 			getCellEditor: getCellEditor,
 			getCellNode: getCellNode,
 			getCellNodeBox: getCellNodeBox,
-			getHeaders: getHeaders,
+			getHeader: getHeader,
 			canCellBeSelected: canCellBeSelected,
 			canCellBeActive: canCellBeActive,
 			navigatePrev: navigatePrev,

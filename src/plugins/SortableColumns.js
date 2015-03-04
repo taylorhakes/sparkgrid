@@ -6,7 +6,7 @@ import Sortable from 'sortable';
 import { Event } from '../core';
 
 export default function SortableColumns(options) {
-	var headers, sortable,
+	var header, sortable,
 		onColumnsReordered = new Event();
 
 
@@ -16,20 +16,20 @@ export default function SortableColumns(options) {
 	}
 
 	function sortableInit() {
-		headers = grid.getHeaders();
+		header = grid.getHeader();
 
 		if (sortable) {
 			sortable.destroy();
 		}
 
-		sortable = Sortable({
-			els: headers,
-			onDragEnd: handleDragEnd
+		sortable = new Sortable(header, {
+			onUpdate: handleDragEnd,
+			animation: 300
 		});
 	}
 
-	function handleDragEnd() {
-		var parent = headers[0].parentNode,
+	function handleDragEnd(evt) {
+		var parent = evt.item.parentNode,
 			ids = [],
 			reorderedColumns = [],
 			uid = grid.getUid(),
