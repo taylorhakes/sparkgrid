@@ -43,7 +43,7 @@
 			enableAddRow: false,
 			leaveSpaceForNewRows: false,
 			editable: false,
-			autoEdit: true,
+			autoEdit: false,
 			enableCellNavigation: true,
 			enableColumnReorder: true,
 			asyncEditorLoading: false,
@@ -196,10 +196,6 @@
 			}
 			columns = options.columns;
 
-			// Check data is valid
-			if (options.data && !Array.isArray(options.data)) {
-				throw new Error("SparkGrid requires data to be an Array (options.data).");
-			}
 			data = options.data || [];
 
 			// Calculate these only once and share between grid instances
@@ -1283,9 +1279,10 @@
 			return sortColumns;
 		}
 
-		function handleSelectedRangesChanged(e, ranges) {
+		function handleSelectedRangesChanged(info) {
 			selectedRows = [];
-			var hash = {};
+			var hash = {},
+			    ranges = info.data;
 			for (var i = 0; i < ranges.length; i++) {
 				for (var j = ranges[i].fromRow; j <= ranges[i].toRow; j++) {
 					if (!hash[j]) {
@@ -1303,7 +1300,7 @@
 
 			setCellCssStyles(options.selectedCellCssClass, hash);
 
-			trigger(self.onSelectedRowsChanged, { rows: getSelectedRows() }, e);
+			trigger(self.onSelectedRowsChanged, { rows: getSelectedRows() }, info.e);
 		}
 
 		function getColumns() {
@@ -2059,22 +2056,22 @@
 			if (!initialized) {
 				return;
 			}
-			var visible = getVisibleRange();
-			var rendered = getRenderedRange();
+			var vRange = getVisibleRange();
+			var rRange = getRenderedRange();
 
 			// remove rows no longer in the viewport
-			cleanupRows(rendered);
+			cleanupRows(rRange);
 
 			// add new rows & missing cells in existing rows
 			if (lastRenderedScrollLeft != scrollLeft) {
-				cleanUpAndRenderCells(rendered);
+				cleanUpAndRenderCells(rRange);
 			}
 
 			// render missing rows
-			renderRows(rendered);
+			renderRows(rRange);
 
-			postProcessFromRow = visible.top;
-			postProcessToRow = Math.min(getDataLengthIncludingAddNew() - 1, visible.bottom);
+			postProcessFromRow = vRange.top;
+			postProcessToRow = Math.min(getDataLengthIncludingAddNew() - 1, vRange.bottom);
 			startPostProcessing();
 
 			lastRenderedScrollTop = scrollTop;
@@ -2389,9 +2386,7 @@
 				return;
 			}
 
-			var eventControl = trigger(self.onClick, { row: cell.row, cell: cell.cell }, e);
-
-			if (eventControl.isStopped()) {
+			if (!trigger(self.onClick, { row: cell.row, cell: cell.cell }, e)) {
 				return;
 			}
 
@@ -2648,11 +2643,7 @@
 			}
 
 			// does this cell have an editor?
-			if (!getEditor(row, cell)) {
-				return false;
-			}
-
-			return true;
+			return !!getEditor(row, cell);
 		}
 
 		function makeActiveCellNormal() {
@@ -2701,7 +2692,7 @@
 			var columnDef = columns[activeCell];
 			var item = getDataItem(activeRow);
 
-			if (trigger(self.onBeforeEditCell, { row: activeRow, cell: activeCell, item: item, column: columnDef }) === false) {
+			if (!trigger(self.onBeforeEditCell, { row: activeRow, cell: activeCell, item: item, column: columnDef })) {
 				setFocus();
 				return;
 			}

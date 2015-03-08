@@ -82,11 +82,7 @@
                     {id: "c15", name: "C15", field: "c15", width: 120},
                     {id: "c16", name: "C16", field: "c16", width: 120},
                     {id: "c17", name: "C17", field: "c17", width: 120}
-                ],
-                options = {
-                    enableCellNavigation: false,
-                    enableColumnReorder: false
-                };
+                ];
 
         for (var i = 10000; i-- > 0;) {
             data[i] = {
@@ -110,7 +106,13 @@
             };
         }
 
-        grid = new SparkGrid("#container", data, columns, options);
+        grid = new SparkGrid({
+            el: "#container",
+            data: data,
+            columns: columns,
+            enableCellNavigation: false,
+            enableColumnReorder: false
+        });
     });
 </script>
 </body>

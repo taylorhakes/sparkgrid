@@ -2,24 +2,24 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-    <title>SlickGrid example 8: Alternative display</title>
+    <title>sparkGrid example 8: Alternative display</title>
     <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
     <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="examples.css" type="text/css"/>
     <style>
-        .slick-cell {
+        .spark-cell {
             background: white !important;
             border-color: transparent !important;
             line-height: 19px !important;
         }
 
         /* alternating offsets */
-        .slick-row .cell-inner {
+        .spark-row .cell-inner {
             margin-right: 60px;
         }
 
-        .slick-row[row$="1"] .cell-inner, .slick-row[row$="3"] .cell-inner, .slick-row[row$="5"] .cell-inner,
-        .slick-row[row$="7"] .cell-inner, .slick-row[row$="9"] .cell-inner {
+        .spark-row[row$="1"] .cell-inner, .spark-row[row$="3"] .cell-inner, .spark-row[row$="5"] .cell-inner,
+        .spark-row[row$="7"] .cell-inner, .spark-row[row$="9"] .cell-inner {
             margin-left: 60px;
             margin-right: 0;
         }
@@ -29,7 +29,6 @@
         }
 
         .cell-inner {
-            height: 80px;
             margin: 10px;
             padding: 10px;
             background: #fafafa;
@@ -71,13 +70,13 @@
                 <li>Template-based rendering using John Resig's <a
                         href="http://ejohn.org/blog/javascript-micro-templating/"
                         target=_blank>micro-templates</a> while still using
-                    SlickGrid's virtual rendering technology.
+                    sparkGrid's virtual rendering technology.
                 </li>
             </ul>
             <h2>View Source:</h2>
             <ul>
                 <li>
-                    <A href="https://github.com/mleibman/SlickGrid/blob/gh-pages/examples/example8-alternative-display.html"
+                    <A href="https://github.com/mleibman/sparkGrid/blob/gh-pages/examples/example8-alternative-display.html"
                        target="_sourcewindow"> View the source for this example on Github</a></li>
             </ul>
 
@@ -136,14 +135,6 @@
             {id: "contact-card", name: "Contacts", formatter: renderCell, width: 500, cssClass: "contact-card-cell"}
         ];
 
-        var options = {
-            rowHeight: 140,
-            editable: false,
-            enableAddRow: false,
-            enableCellNavigation: false,
-            enableColumnReorder: false
-        };
-
         var compiled_template = tmpl("cell_template");
 
         function renderCell(row, cell, value, columnDef, dataContext) {
@@ -159,7 +150,16 @@
             d["phone"] = "206-000-0000";
         }
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
+            rowHeight: 140,
+            editable: false,
+            enableAddRow: false,
+            enableCellNavigation: false,
+            enableColumnReorder: false
+        });
     });
 </script>
 </body>

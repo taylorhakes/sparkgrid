@@ -38,13 +38,12 @@
 <script src="require.js"></script>
 <script src="config.js"></script>
 <script>
-    require(['./Grid', './formatters'], function (SparkGrid, formatters) {
+    var grid, data = [];
+    require(['./Grid', './formatters', 'plugins/MovableColumns'], function (SparkGrid, formatters, MovableColumns) {
         function formatter(row, cell, value, columnDef, dataContext) {
             return value;
         }
 
-        var grid;
-        var data = [];
         var columns = [
             {id: "title", name: "Title", field: "title", width: 120, cssClass: "cell-title", formatter: formatter},
             {id: "duration", name: "Duration", field: "duration"},
@@ -71,14 +70,8 @@
             }
         ];
 
-        var options = {
-            editable: false,
-            enableAddRow: false,
-            enableCellNavigation: true
-        };
-
         for (var i = 0; i < 5; i++) {
-            var d = (data[i] = {});
+            var d = data[i] = {};
 
             d["title"] = "<a href='#' tabindex='0'>Task</a> " + i;
             d["duration"] = "5 days";
@@ -88,7 +81,17 @@
             d["effortDriven"] = (i % 5 == 0);
         }
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
+            editable: false,
+            enableAddRow: false,
+            enableCellNavigation: true
+        });
+
+        // Add Movable Columns
+        grid.registerPlugin(new MovableColumns());
     });
 </script>
 </body>

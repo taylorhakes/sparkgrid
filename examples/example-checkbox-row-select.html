@@ -12,6 +12,9 @@
       border-right-color: silver;
       border-right-style: solid;
     }
+      input[type="checkbox"] {
+          margin: 0 4px;
+      }
   </style>
 </head>
 <body>
@@ -39,10 +42,7 @@
   var grid;
   var data = [];
   var options = {
-    editable: true,
-    enableCellNavigation: true,
-    asyncEditorLoading: false,
-    autoEdit: false
+
   };
   var columns = [];
 
@@ -68,7 +68,15 @@
       });
     }
 
-    grid = new SparkGrid("#myGrid", data, columns, options);
+    grid = new SparkGrid({
+        el: "#myGrid",
+        columns: columns,
+        data: data,
+        editable: true,
+        enableCellNavigation: true,
+        asyncEditorLoading: false,
+        autoEdit: false
+    });
     grid.setSelectionModel(new RowSelectionModel({selectActiveRow: false}));
     grid.registerPlugin(checkboxSelector);
 

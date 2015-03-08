@@ -26,7 +26,7 @@ export default function CheckboxSelectColumn(options) {
 		_handler.unsubscribeAll();
 	}
 
-	function handleSelectedRowsChanged(e, args) {
+	function handleSelectedRowsChanged() {
 		var selectedRows = _grid.getSelectedRows();
 		var lookup = {}, row, i;
 		for (i = 0; i < selectedRows.length; i++) {
@@ -50,12 +50,15 @@ export default function CheckboxSelectColumn(options) {
 		}
 	}
 
-	function handleKeyDown(e, args) {
+	function handleKeyDown(info) {
+		var e = info.event,
+			data = info.data;
+
 		if (e.which == 32) {
-			if (_grid.getColumns()[args.cell].id === _options.columnId) {
+			if (_grid.getColumns()[data.cell].id === _options.columnId) {
 				// if editing, try to commit
 				if (!_grid.getEditorLock().isActive() || _grid.getEditorLock().commitCurrentEdit()) {
-					toggleRowSelection(args.row);
+					toggleRowSelection(data.row);
 				}
 				e.preventDefault();
 				e.stopImmediatePropagation();
@@ -63,9 +66,12 @@ export default function CheckboxSelectColumn(options) {
 		}
 	}
 
-	function handleClick(e, args) {
+	function handleClick(info) {
+		var e = info.event,
+			data = info.data
+
 		// clicking on a row select checkbox
-		if (_grid.getColumns()[args.cell].id === _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
+		if (_grid.getColumns()[data.cell].id === _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
 			// if editing, try to commit
 			if (_grid.getEditorLock().isActive() && !_grid.getEditorLock().commitCurrentEdit()) {
 				e.preventDefault();
@@ -73,7 +79,7 @@ export default function CheckboxSelectColumn(options) {
 				return;
 			}
 
-			toggleRowSelection(args.row);
+			toggleRowSelection(data.row);
 			e.stopPropagation();
 			e.stopImmediatePropagation();
 		}
@@ -89,8 +95,11 @@ export default function CheckboxSelectColumn(options) {
 		}
 	}
 
-	function handleHeaderClick(e, args) {
-		if (args.column.id == _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
+	function handleHeaderClick(info) {
+		var e = info.event,
+			data = info.data;
+
+		if (data.column.id == _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
 			// if editing, try to commit
 			if (_grid.getEditorLock().isActive() && !_grid.getEditorLock().commitCurrentEdit()) {
 				e.preventDefault();

@@ -37,8 +37,9 @@ export default function ColumnPicker(columns, grid, options) {
 		menu.parentNode.removeChild(menu);
 	}
 
-	function handleHeaderContextMenu(e, args) {
-		e.preventDefault();
+	function handleHeaderContextMenu(info) {
+		var e = info.event;
+
 		menu.innerHTML = '';
 		updateColumnOrder();
 		columnCheckboxes = [];

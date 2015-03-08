@@ -68,7 +68,13 @@ grid.render();</pre>
             };
         }
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
+            enableCellNavigation: true,
+            enableColumnReorder: false
+        });
         grid.registerPlugin(new AutoTooltips({enableForHeaderCells: true}));
         grid.render();
     });

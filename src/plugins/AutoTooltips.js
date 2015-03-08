@@ -37,7 +37,8 @@ export default function AutoTooltips(options) {
 	 * Handle mouse entering grid cell to add/remove tooltip.
 	 * @param {jQuery.Event} e - The event
 	 */
-	function handleMouseEnter(e) {
+	function handleMouseEnter(info) {
+		var e = info.event;
 		var cell = _grid.getCellFromEvent(e);
 		if (cell) {
 			var node = _grid.getCellNode(cell.row, cell.cell);
@@ -57,10 +58,11 @@ export default function AutoTooltips(options) {
 	/**
 	 * Handle mouse entering header cell to add/remove tooltip.
 	 * @param {jQuery.Event} e     - The event
-	 * @param {object} args.column - The column definition
+	 * @param {object} data.column - The column definition
 	 */
-	function handleHeaderMouseEnter(e, args) {
-		var column = args.column,
+	function handleHeaderMouseEnter(info) {
+		var e = info.e, data = info.data;
+		var column = data.column,
 			node = core.closest(e.target, ".slick-header-column");
 		if (!column.toolTip) {
 			node.title = node.clientWidth < node.scrollWidth ? column.name : "";

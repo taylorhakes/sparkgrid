@@ -80,16 +80,14 @@ require(['./Grid'], function (SparkGrid) {
         };
     }
 
-    require(['./Grid', 'plugins/SortableColumns'], function (SparkGrid, SortableColumns) {
-        var sortableColumns = new SortableColumns();
+    require(['./Grid'], function (SparkGrid) {
 
+        // Init grid
         grid = new SparkGrid({
             el: "#myGrid",
             data: data,
             columns: columns
         });
-
-        grid.registerPlugin(sortableColumns);
     });
 </script>
 </body>

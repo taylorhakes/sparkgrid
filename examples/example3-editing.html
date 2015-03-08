@@ -44,86 +44,87 @@
 <script src="require.js"></script>
 <script src="config.js"></script>
 <script>
+    var grid, data = [];
+    for (var i = 0; i < 500; i++) {
+        var d = data[i] = {};
+
+        d["title"] = "Task " + i;
+        d["description"] = "This is a sample task description.\n  It can be multiline";
+        d["duration"] = "5 days";
+        d["percentComplete"] = Math.round(Math.random() * 100);
+        d["start"] = "01/01/2009";
+        d["finish"] = "01/05/2009";
+        d["effortDriven"] = (i % 5 == 0);
+    }
+
     require(['./Grid', 'plugins/CellSelectionModel', './editors', './formatters'],
             function (SparkGrid, CellSelectionModel, editors, formatters) {
-        function requiredFieldValidator(value) {
-            if (value == null || value == undefined || !value.length) {
-                return {valid: false, msg: "This is a required field"};
-            } else {
-                return {valid: true, msg: null};
-            }
-        }
 
-        var grid;
-        var data = [];
-        var columns = [
-            {
-                id: "title",
-                name: "Title",
-                field: "title",
-                width: 120,
-                cssClass: "cell-title",
-                editor: editors.Text,
-                validator: requiredFieldValidator
-            },
-            {id: "desc", name: "Description", field: "description", width: 100, editor: editors.LongText},
-            {id: "duration", name: "Duration", field: "duration", editor: editors.Text},
-            {
-                id: "%",
-                name: "% Complete",
-                field: "percentComplete",
-                width: 80,
-                resizable: false,
-                formatter: formatters.PercentCompleteBar,
-                editor: editors.PercentComplete
-            },
-            {id: "start", name: "Start", field: "start", minWidth: 60, editor: editors.Date},
-            {id: "finish", name: "Finish", field: "finish", minWidth: 60, editor: editors.Date},
-            {
-                id: "effort-driven",
-                name: "Effort Driven",
-                width: 80,
-                minWidth: 20,
-                maxWidth: 80,
-                cssClass: "cell-effort-driven",
-                field: "effortDriven",
-                formatter: formatters.Checkmark,
-                editor: editors.Checkbox
-            }
-        ];
-        var options = {
-            editable: true,
-            enableAddRow: true,
-            enableCellNavigation: true,
-            asyncEditorLoading: false,
-            autoEdit: false
-        };
+                function requiredFieldValidator(value) {
+                    if (value == null || value == undefined || !value.length) {
+                        return {valid: false, msg: "This is a required field"};
+                    } else {
+                        return {valid: true, msg: null};
+                    }
+                }
 
-        for (var i = 0; i < 500; i++) {
-            var d = (data[i] = {});
+                var columns = [
+                    {
+                        id: "title",
+                        name: "Title",
+                        field: "title",
+                        width: 120,
+                        cssClass: "cell-title",
+                        editor: editors.Text,
+                        validator: requiredFieldValidator
+                    },
+                    {id: "desc", name: "Description", field: "description", width: 100, editor: editors.LongText},
+                    {id: "duration", name: "Duration", field: "duration", editor: editors.Text},
+                    {
+                        id: "%",
+                        name: "% Complete",
+                        field: "percentComplete",
+                        width: 80,
+                        resizable: false,
+                        formatter: formatters.PercentCompleteBar,
+                        editor: editors.PercentComplete
+                    },
+                    {id: "start", name: "Start", field: "start", minWidth: 60, editor: editors.Date},
+                    {id: "finish", name: "Finish", field: "finish", minWidth: 60, editor: editors.Date},
+                    {
+                        id: "effort-driven",
+                        name: "Effort Driven",
+                        width: 80,
+                        minWidth: 20,
+                        maxWidth: 80,
+                        cssClass: "cell-effort-driven",
+                        field: "effortDriven",
+                        formatter: formatters.Checkmark,
+                        editor: editors.Checkbox
+                    }
+                ];
 
-            d["title"] = "Task " + i;
-            d["description"] = "This is a sample task description.\n  It can be multiline";
-            d["duration"] = "5 days";
-            d["percentComplete"] = Math.round(Math.random() * 100);
-            d["start"] = "01/01/2009";
-            d["finish"] = "01/05/2009";
-            d["effortDriven"] = (i % 5 == 0);
-        }
+                grid = new SparkGrid({
+                    el: "#myGrid",
+                    data: data,
+                    columns: columns,
+                    editable: true,
+                    enableAddRow: true,
+                    enableCellNavigation: true,
+                    asyncEditorLoading: false,
+                    autoEdit: false
+                });
 
+                grid.setSelectionModel(new CellSelectionModel());
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
-
-        grid.setSelectionModel(new CellSelectionModel());
-
-        grid.onAddNewRow.subscribe(function (e, args) {
-            var item = args.item;
-            grid.invalidateRow(data.length);
-            data.push(item);
-            grid.updateRowCount();
-            grid.render();
-        });
-    });
+                grid.onAddNewRow.subscribe(function (e, args) {
+                    var item = args.item;
+                    grid.invalidateRow(data.length);
+                    data.push(item);
+                    grid.updateRowCount();
+                    grid.render();
+                });
+            });
 </script>
 </body>
 </html>

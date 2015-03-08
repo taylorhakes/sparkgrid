@@ -41,12 +41,12 @@
 <script>
     var grid;
 
-
     require(['./Grid', './editors', './core'], function (SparkGrid, editors, core) {
-        var data = [];
-        var LEFT = 37,
-                RIGHT = 39,
-                TAB = 9;
+        var data = [],
+            LEFT = 37,
+            RIGHT = 39,
+            TAB = 9;
+
         var columns = [
             {
                 id: "title",
@@ -58,13 +58,6 @@
             },
             {id: "range", name: "Range", width: 120, formatter: numberRangeFormatter, editor: NumericRangeEditor}
         ];
-
-        var options = {
-            editable: true,
-            enableAddRow: false,
-            enableCellNavigation: true,
-            asyncEditorLoading: false
-        };
 
         function numberRangeFormatter(row, cell, value, columnDef, dataContext) {
             return dataContext.from + " - " + dataContext.to;
@@ -147,7 +140,6 @@
             this.init();
         }
 
-
         for (var i = 0; i < 500; i++) {
             var d = (data[i] = {});
 
@@ -156,7 +148,15 @@
             d["to"] = d["from"] + Math.round(Math.random() * 100);
         }
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
+            editable: true,
+            enableAddRow: false,
+            enableCellNavigation: true,
+            asyncEditorLoading: false
+        });
 
         grid.onValidationError.subscribe(function (e, args) {
             alert(args.validationResults.msg);

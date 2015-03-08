@@ -26,7 +26,6 @@
 			padding: 4px 4px 4px 14px;
 			list-style: none;
 			cursor: pointer;
-			background: url("../images/arrow_right_peppermint.png") no-repeat center left;
 		}
 
 		#contextMenu li:hover {
@@ -74,23 +73,25 @@
         ];
         var contextMenu = document.getElementById('contextMenu');
 
-        var options = {
-            editable: true,
-            enableAddRow: false,
-            enableCellNavigation: true,
-            asyncEditorLoading: false,
-            rowHeight: 30
-        };
-
         for (var i = 0; i < 100; i++) {
             var d = (data[i] = {});
             d["title"] = "Task " + i;
             d["priority"] = "Medium";
         }
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
+            editable: true,
+            enableAddRow: false,
+            enableCellNavigation: true,
+            asyncEditorLoading: false,
+            rowHeight: 30
+        });
 
-        grid.onContextMenu.subscribe(function (e) {
+        grid.onContextMenu.subscribe(function (info) {
+            var e = info.event;
             e.preventDefault();
             var cell = grid.getCellFromEvent(e);
             contextMenu.dataset.row = cell.row;
@@ -108,7 +109,8 @@
             document.body.addEventListener("click", onBodyClick);
         });
 
-        grid.onClick.subscribe(function (e) {
+        grid.onClick.subscribe(function (info) {
+            var e = info.event;
             var cell = grid.getCellFromEvent(e);
             if (grid.getColumns()[cell.cell].id == "priority") {
                 if (!grid.getEditorLock().commitCurrentEdit()) {

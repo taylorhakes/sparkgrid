@@ -202,7 +202,7 @@ function Event() {
 			});
 		}
 
-		return eventControl.isStopped;
+		return !eventControl.isStopped();
 	};
 }
 

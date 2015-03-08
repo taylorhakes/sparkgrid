@@ -69,9 +69,9 @@ export default function CellSelectionModel(options) {
 		setSelectedRanges([args.range]);
 	}
 
-	function handleActiveCellChange(e, args) {
-		if (_options.selectActiveCell && args.row != null && args.cell != null) {
-			setSelectedRanges([new Range(args.row, args.cell)]);
+	function handleActiveCellChange(e) {
+		if (_options.selectActiveCell && e.data.row != null && e.data.cell != null) {
+			setSelectedRanges([new Range(e.data.row, e.data.cell)]);
 		}
 	}
 

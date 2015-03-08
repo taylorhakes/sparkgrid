@@ -211,7 +211,7 @@
 				});
 			}
 
-			return eventControl.isStopped;
+			return !eventControl.isStopped();
 		};
 	}
 

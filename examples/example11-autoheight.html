@@ -51,7 +51,7 @@
 <script src="config.js"></script>
 <script>
     var grid,
-            data = [];
+        data = [];
     require(['./Grid'], function (SparkGrid) {
         var columns = [
                     {id: "title", name: "Title", field: "title"},
@@ -62,10 +62,7 @@
                     {id: "effort-driven", name: "Effort Driven", field: "effortDriven"}
                 ],
                 options = {
-                    editable: false,
-                    enableAddRow: false,
-                    enableCellNavigation: false,
-                    autoHeight: true
+
                 };
 
         for (var i = 100; i-- > 0;) {
@@ -79,7 +76,16 @@
             };
         }
 
-        grid = new SparkGrid("#container", data, columns, options);
+        grid = new SparkGrid({
+            el: "#container",
+            data: data,
+            columns: columns,
+            editable: false,
+            enableAddRow: false,
+            enableCellNavigation: false,
+            autoHeight: true
+
+        });
     })
 </script>
 </body>

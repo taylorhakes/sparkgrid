@@ -43,22 +43,37 @@
 
 
 <script>
-    var commandQueue = [];
-    var grid;
+    var commandQueue = [],
+            data = [];
+    var grid, undo;
+
+    for (var i = 0; i < 500; i++) {
+        var d = (data[i] = {});
+
+        d["title"] = "Task " + i;
+        d["description"] = "This is a sample task description.\n  It can be multiline";
+        d["duration"] = "5 days";
+        d["percentComplete"] = Math.round(Math.random() * 100);
+        d["start"] = "01/01/2009";
+        d["finish"] = "01/05/2009";
+        d["effortDriven"] = (i % 5 == 0);
+    }
 
     function queueAndExecuteCommand(item, column, editCommand) {
         commandQueue.push(editCommand);
         editCommand.execute();
     }
 
-    function undo() {
-        var command = commandQueue.pop();
-        if (command && Slick.GlobalEditorLock.cancelCurrentEdit()) {
-            command.undo();
-            grid.gotoCell(command.row, command.cell, false);
-        }
-    }
-    require(['./Grid', './editors', './formatters'], function (SparkGrid, editors, formatters) {
+
+    require(['./Grid', './editors', './formatters', './core'], function (SparkGrid, editors, formatters, core) {
+        undo = function() {
+            var command = commandQueue.pop();
+            if (command && core.GlobalEditorLock.cancelCurrentEdit()) {
+                command.undo();
+                grid.gotoCell(command.row, command.cell, false);
+            }
+        };
+
         function requiredFieldValidator(value) {
             if (value == null || value == undefined || !value.length) {
                 return {valid: false, msg: "This is a required field"};
@@ -66,8 +81,6 @@
                 return {valid: true, msg: null};
             }
         }
-
-        var data = [];
         var columns = [
             {
                 id: "title",
@@ -104,28 +117,17 @@
             }
         ];
 
-        var options = {
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
             editable: true,
             enableAddRow: false,
             enableCellNavigation: true,
             asyncEditorLoading: false,
             autoEdit: false,
             editCommandHandler: queueAndExecuteCommand
-        };
-
-        for (var i = 0; i < 500; i++) {
-            var d = (data[i] = {});
-
-            d["title"] = "Task " + i;
-            d["description"] = "This is a sample task description.\n  It can be multiline";
-            d["duration"] = "5 days";
-            d["percentComplete"] = Math.round(Math.random() * 100);
-            d["start"] = "01/01/2009";
-            d["finish"] = "01/05/2009";
-            d["effortDriven"] = (i % 5 == 0);
-        }
-
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        });
     });
 
 </script>

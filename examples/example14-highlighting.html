@@ -121,11 +121,7 @@
     }
 
     var options = {
-        editable: false,
-        enableAddRow: false,
-        enableCellNavigation: true,
-        cellHighlightCssClass: "changed",
-        cellFlashingCssClass: "current-server"
+
     };
 
 
@@ -138,7 +134,16 @@
     }
 
     require(['./Grid'], function (SparkGrid) {
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
+            editable: false,
+            enableAddRow: false,
+            enableCellNavigation: true,
+            cellHighlightCssClass: "changed",
+            cellFlashingCssClass: "current-server"
+        });
 
         currentServer = Math.round(Math.random() * (data.length - 1));
     });

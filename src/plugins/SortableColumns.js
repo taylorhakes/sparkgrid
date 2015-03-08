@@ -2,20 +2,20 @@
  * This file needs Sortable `npm install html5-sortable`
  */
 
-import Sortable from 'sortable';
+import Sortable from 'sortablejs';
 import { Event } from '../core';
 
-export default function SortableColumns(options) {
+export default function MovableColumns(options) {
 	var header, sortable,
 		onColumnsReordered = new Event();
 
 
 	function init(grid) {
-		grid.onHeadersRendered.subscribe(sortableInit);
-		sortableInit();
+		grid.onHeadersRendered.subscribe(movableInit);
+		movableInit();
 	}
 
-	function sortableInit() {
+	function movableInit() {
 		header = grid.getHeader();
 
 		if (sortable) {
@@ -49,7 +49,7 @@ export default function SortableColumns(options) {
 
 
 	function destroy() {
-		grid.onHeadersRendered.unsubscribe(sortableInit);
+		grid.onHeadersRendered.unsubscribe(movableInit);
 		sortable.destroy();
 	}
 

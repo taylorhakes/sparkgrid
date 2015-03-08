@@ -83,13 +83,15 @@ export default function RowSelectionModel(options) {
 		return _ranges;
 	}
 
-	function handleActiveCellChange(e, data) {
+	function handleActiveCellChange(info) {
+		var data = info.data;
 		if (_options.selectActiveRow && data.row != null) {
 			setSelectedRanges([new Range(data.row, 0, data.row, _grid.getColumns().length - 1)]);
 		}
 	}
 
-	function handleKeyDown(e) {
+	function handleKeyDown(info) {
+		var e = info.event;
 		var activeRow = _grid.getActiveCell();
 		if (activeRow && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && (e.which == 38 || e.which == 40)) {
 			var selectedRows = getSelectedRows();
@@ -122,7 +124,8 @@ export default function RowSelectionModel(options) {
 		}
 	}
 
-	function handleClick(e) {
+	function handleClick(info) {
+		var e = info.event;
 		var cell = _grid.getCellFromEvent(e);
 		if (!cell || !_grid.canCellBeActive(cell.row, cell.cell)) {
 			return false;
@@ -134,7 +137,7 @@ export default function RowSelectionModel(options) {
 		}
 
 		var selection = rangesToRows(_ranges);
-		var idx = cell.row.indexOf(selection);
+		var idx = selection.indexOf(cell.row);
 
 		if (idx === -1 && (e.ctrlKey || e.metaKey)) {
 			selection.push(cell.row);

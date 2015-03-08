@@ -46,8 +46,8 @@
     background-color: #f9f9f9;
 }
 
-.spark-row.active, .spark-cell.active {
-    background-color: #EEEEEE;
+.spark-cell.active {
+    border-color: #999;
 }
 
 .spark-disabled {

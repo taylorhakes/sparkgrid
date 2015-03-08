@@ -129,13 +129,6 @@
             }
         ];
 
-        var options = {
-            editable: true,
-            enableAddRow: true,
-            enableCellNavigation: true,
-            asyncEditorLoading: false
-        };
-
         var percentCompleteThreshold = 0;
         var searchString = "";
 
@@ -208,13 +201,21 @@
         dataView.endUpdate();
 
         // initialize the grid
-        grid = new SparkGrid("#myGrid", dataView, columns, options);
-
-        grid.onCellChange.subscribe(function (e, args) {
-            dataView.updateItem(args.item.id, args.item);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: dataView,
+            columns: columns,
+            editable: true,
+            enableAddRow: true,
+            enableCellNavigation: true,
+            asyncEditorLoading: false
         });
 
-        grid.onAddNewRow.subscribe(function (e, args) {
+        grid.onCellChange.subscribe(function (info) {
+            dataView.updateItem(info.data.item.id, info.data.item);
+        });
+
+        grid.onAddNewRow.subscribe(function (info) {
             var item = {
                 "id": "new_" + (Math.round(Math.random() * 10000)),
                 "indent": 0,
@@ -225,13 +226,13 @@
                 "finish": "01/01/2009",
                 "effortDriven": false
             };
-            Spark.extend(item, args.item);
+            core.extend(item, info.data.item);
             dataView.addItem(item);
         });
 
-        grid.onClick.subscribe(function (e, args, eventControl) {
-            if (e.target.classList.contains("toggle")) {
-                var item = dataView.getItem(args.row);
+        grid.onClick.subscribe(function (info) {
+            if (info.event.target.classList.contains("toggle")) {
+                var item = dataView.getItem(info.data.row);
                 if (item) {
                     if (!item._collapsed) {
                         item._collapsed = true;
@@ -241,18 +242,18 @@
 
                     dataView.updateItem(item.id, item);
                 }
-                eventControl.stop();
+                info.stop();
             }
         });
 
         // wire up model events to drive the grid
-        dataView.onRowCountChanged.subscribe(function (e, args) {
+        dataView.onRowCountChanged.subscribe(function () {
             grid.updateRowCount();
             grid.render();
         });
 
-        dataView.onRowsChanged.subscribe(function (e, args) {
-            grid.invalidateRows(args.rows);
+        dataView.onRowsChanged.subscribe(function (info) {
+            grid.invalidateRows(info.data.rows);
             grid.render();
         });
 

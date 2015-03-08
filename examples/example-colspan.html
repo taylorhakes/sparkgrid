@@ -76,7 +76,11 @@
             }
         };
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns
+        }, data, columns, options);
 
         grid.setSelectionModel(new CellSelectionModel());
     });
