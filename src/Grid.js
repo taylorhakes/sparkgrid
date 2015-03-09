@@ -344,8 +344,8 @@ export default function Grid(options) {
 			viewport.addEventListener("click", handleClick);
 			headerScroller.addEventListener("contextmenu", handleHeaderContextMenu);
 			headerScroller.addEventListener("click", handleHeaderClick);
-			delegate(headerScroller, ".spark-header-column", "mouseover", handleHeaderMouseEnter);
-			delegate(headerScroller, ".spark-header-column", "mouseout", handleHeaderMouseLeave);
+			delegate(headerScroller, "mouseover", ".spark-header-column", handleHeaderMouseEnter);
+			delegate(headerScroller, "mouseout", ".spark-header-column", handleHeaderMouseLeave);
 			headerRowScroller.addEventListener("scroll", handleHeaderRowScroll);
 
 			focusSink.addEventListener("keydown", handleKeyDown);
@@ -360,8 +360,8 @@ export default function Grid(options) {
 			canvas.addEventListener("drag", handleDrag);
 			canvas.addEventListener("dragend", handleDragEnd);
 
-			delegate(canvas, "spark-cell", "mouseover", handleMouseEnter);
-			delegate(canvas, "spark-cell", "mouseout", handleMouseLeave);
+			delegate(canvas, "mouseover", ".spark-cell", handleMouseEnter);
+			delegate(canvas, "mouseout", ".spark-cell", handleMouseLeave);
 
 			// Work around http://crbug.com/312427.
 			if (navigator.userAgent.toLowerCase().match(/webkit/) && navigator.userAgent.toLowerCase().match(/macintosh/)) {
@@ -649,7 +649,7 @@ export default function Grid(options) {
 				return;
 			}
 
-			var col = closest(e.target, "spark-header-column");
+			var col = closest(e.target, ".spark-header-column");
 			if (!col) {
 				return;
 			}
@@ -2217,7 +2217,7 @@ export default function Grid(options) {
 	// Interactivity
 
 	function handleMouseWheel(e) {
-		var rowNode = closest(e.target, 'spark-row');
+		var rowNode = closest(e.target, '.spark-row');
 		if (rowNode != rowNodeFromLastMouseWheelEvent) {
 			if (zombieRowNodeFromLastMouseWheelEvent && zombieRowNodeFromLastMouseWheelEvent != rowNode) {
 				canvas.removeChild(zombieRowNodeFromLastMouseWheelEvent);
@@ -2356,7 +2356,7 @@ export default function Grid(options) {
 	}
 
 	function handleContextMenu(e) {
-		var cell = closest(e.target, 'spark-cell');
+		var cell = closest(e.target, '.spark-cell');
 		if (!cell) {
 			return;
 		}
@@ -2395,13 +2395,13 @@ export default function Grid(options) {
 	}
 
 	function handleHeaderContextMenu(e) {
-		var header = closest(e.target, "spark-header-column");
+		var header = closest(e.target, ".spark-header-column");
 		var column = header && columns[+header.dataset.columnIndex];
 		trigger(self.onHeaderContextMenu, {column: column}, e);
 	}
 
 	function handleHeaderClick(e) {
-		var header = closest(e.target, "spark-header-column");
+		var header = closest(e.target, ".spark-header-column");
 		var column = header && columns[+header.dataset.columnIndex];
 		if (column) {
 			trigger(self.onHeaderClick, {column: column}, e);
@@ -2457,7 +2457,7 @@ export default function Grid(options) {
 	}
 
 	function getCellFromEvent(e) {
-		var cell = closest(e.target, "spark-cell");
+		var cell = closest(e.target, ".spark-cell");
 		if (!cell) {
 			return null;
 		}

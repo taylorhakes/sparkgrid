@@ -221,7 +221,6 @@
 			e.stopPropagation();
 		}
 
-
 		function handleMenuItemClick(e) {
 			var command = $(this).data("command");
 			var columnDef = $(this).data("column");

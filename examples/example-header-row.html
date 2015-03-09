@@ -2,18 +2,19 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
-  <link rel="stylesheet" href="../css/slick.grid.css" type="text/css"/>
-  <link rel="stylesheet" href="examples.css" type="text/css"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>SparkGrid example 1: Basic grid</title>
+    <link rel="stylesheet" href="../css/spark.css" type="text/css"/>
+    <link rel="stylesheet" href="examples.css" type="text/css"/>
   <style>
-    .slick-headerrow-column {
+    .spark-headerrow-column {
       background: #87ceeb;
       text-overflow: clip;
       -moz-box-sizing: border-box;
       box-sizing: border-box;
     }
 
-    .slick-headerrow-column input {
+    .spark-headerrow-column input {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -41,27 +42,12 @@
       </ul>
   </div>
 </div>
-
-<script src="../lib/firebugx.js"></script>
-
-<script src="../lib/jquery-1.7.min.js"></script>
-<script src="../lib/jquery-ui-1.8.16.custom.min.js"></script>
-<script src="../lib/jquery.event.drag-2.2.js"></script>
-
-<script src="../slick.core.js"></script>
-<script src="../src/slick.dataview.js"></script>
-<script src="../src/slick.grid.js"></script>
-
+<script src="require.js"></script>
+<script src="config.js"></script>
 <script>
   var dataView;
   var grid;
   var data = [];
-  var options = {
-    enableCellNavigation: true,
-    showHeaderRow: true,
-    headerRowHeight: 30,
-    explicitInitialization: true
-  };
   var columns = [];
   var columnFilters = {};
 
@@ -74,66 +60,79 @@
     });
   }
 
-
-  function filter(item) {
-    for (var columnId in columnFilters) {
-      if (columnId !== undefined && columnFilters[columnId] !== "") {
-        var c = grid.getColumns()[grid.getColumnIndex(columnId)];
-        if (item[c.field] != columnFilters[columnId]) {
-          return false;
-        }
+  require(['./Grid', './DataView', './core'], function(SparkGrid, DataView, core) {
+      function filter(item) {
+          for (var columnId in columnFilters) {
+              if (columnId !== undefined && columnFilters[columnId] !== "") {
+                  var c = grid.getColumns()[grid.getColumnIndex(columnId)];
+                  if (item[c.field] != columnFilters[columnId]) {
+                      return false;
+                  }
+              }
+          }
+          return true;
       }
-    }
-    return true;
-  }
 
-  $(function () {
-    for (var i = 0; i < 100; i++) {
-      var d = (data[i] = {});
-      d["id"] = i;
-      for (var j = 0; j < columns.length; j++) {
-        d[j] = Math.round(Math.random() * 10);
+      for (var i = 0; i < 100; i++) {
+          var d = (data[i] = {});
+          d["id"] = i;
+          for (var j = 0; j < columns.length; j++) {
+              d[j] = Math.round(Math.random() * 10);
+          }
       }
-    }
 
-    dataView = new Slick.Data.DataView();
-    grid = new Slick.Grid("#myGrid", dataView, columns, options);
-
-
-    dataView.onRowCountChanged.subscribe(function (e, args) {
-      grid.updateRowCount();
-      grid.render();
-    });
-
-    dataView.onRowsChanged.subscribe(function (e, args) {
-      grid.invalidateRows(args.rows);
-      grid.render();
-    });
+      dataView = new DataView();
+      grid = new SparkGrid({
+          el: "#myGrid",
+          data: dataView,
+          columns: columns,
+          enableCellNavigation: true,
+          showHeaderRow: true,
+          headerRowHeight: 30,
+          explicitInitialization: true
+      });
 
 
-    Grid.core.delegate(grid.getHeaderRow(), "change keyup", '.input', function (e) {
-      var columnId = e.target.dataset.columnId;
-      if (columnId != null) {
-        columnFilters[columnId] = this.value.trim();
-        dataView.refresh();
-      }
-    });
+      dataView.onRowCountChanged.subscribe(function () {
+          grid.updateRowCount();
+          grid.render();
+      });
 
-    grid.onHeaderRowCellRendered.subscribe(function(e, args) {
-       	args.node.innerHTML = '';
-        $("<input type='text' class='input'">")
-           .data("columnId", args.column.id)
-           .val(columnFilters[args.column.id])
-           .appendTo(args.node);
-    });
+      dataView.onRowsChanged.subscribe(function (info) {
+          grid.invalidateRows(info.data.rows);
+          grid.render();
+      });
 
-    grid.init();
 
-    dataView.beginUpdate();
-    dataView.setItems(data);
-    dataView.setFilter(filter);
-    dataView.endUpdate();
-  })
+      core.delegate(grid.getHeaderRow(), "change keyup", 'input', function (e) {
+          var columnId = e.target.dataset.columnId;
+          if (columnId != null) {
+              columnFilters[columnId] = this.value.trim();
+              dataView.refresh();
+          }
+      });
+
+      grid.onHeaderRowCellRendered.subscribe(function(info) {
+          var data = info.data;
+          data.node.innerHTML = '';
+          var input = core.createEl({
+              tag: 'input',
+              type: 'text'
+          });
+
+          input.dataset.columnId = data.column.id;
+          input.value = columnFilters[data.column.id] || '';
+
+          data.node.appendChild(input);
+      });
+
+      grid.init();
+
+      dataView.beginUpdate();
+      dataView.setItems(data);
+      dataView.setFilter(filter);
+      dataView.endUpdate();
+  });
 </script>
 </body>
 </html>

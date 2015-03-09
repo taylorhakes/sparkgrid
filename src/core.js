@@ -40,10 +40,10 @@ function query(selector, el) {
 	return slice((el || document).querySelectorAll(selector));
 }
 
-function closest(el, className, lastEl) {
+function closest(el, selector, lastEl) {
 	// Go through parents and check matches
 	while (true) {
-		if (el && el.classList && el.classList.contains(className)) {
+		if (el && el[matchesSelector] && el[matchesSelector](selector)) {
 			return el;
 		}
 		if (!el || el === lastEl || (typeof lastEl === 'string' && el[matchesSelector](lastEl))) {
@@ -53,7 +53,7 @@ function closest(el, className, lastEl) {
 	}
 }
 
-function delegate(elem, className, event, fn) {
+function delegate(elem, event, selector, fn) {
 	var events = event.split(' '),
 		i = 0,
 		len = events.length;
@@ -61,7 +61,7 @@ function delegate(elem, className, event, fn) {
 	for (; i < len; i++) {
 		var ev = events[i];
 		elem.addEventListener(ev, function (e) {
-			var delEl = closest(e.target, className, elem);
+			var delEl = closest(e.target, selector, elem);
 			if (delEl) {
 				fn.call(delEl, e);
 			}

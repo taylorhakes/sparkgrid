@@ -41,9 +41,7 @@
     ];
 
     var options = {
-        enableCellNavigation: true,
-        enableColumnReorder: false,
-        dataItemColumnValueExtractor: getItemColumnValue
+
     };
 
     // Get the item column value using a custom 'fieldIdx' column param
@@ -69,7 +67,14 @@
             };
         }
 
-        grid = new SparkGrid("#myGrid", data, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: data,
+            columns: columns,
+            enableCellNavigation: true,
+            enableColumnReorder: false,
+            dataItemColumnValueExtractor: getItemColumnValue
+        });
     });
 </script>
 </body>

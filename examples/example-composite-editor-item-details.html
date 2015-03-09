@@ -105,59 +105,68 @@
     var grid;
     var data = [];
     var columns;
+    var openDetails;
 
-    function openDetails() {
-        if (grid.getEditorLock().isActive() && !grid.getEditorLock().commitCurrentEdit()) {
-            return;
-        }
 
-        var $modal = $("<div class='item-details-form'></div>");
-
-        $modal = $("#itemDetailsTemplate")
-                .tmpl({
-                    context: grid.getDataItem(grid.getActiveCell().row),
-                    columns: columns
-                })
-                .appendTo("body");
-
-        $modal.keydown(function (e) {
-            if (e.which == $.ui.keyCode.ENTER) {
-                grid.getEditController().commitCurrentEdit();
-                e.stopPropagation();
-                e.preventDefault();
-            } else if (e.which == $.ui.keyCode.ESCAPE) {
-                grid.getEditController().cancelCurrentEdit();
-                e.stopPropagation();
-                e.preventDefault();
-            }
-        });
-
-        $modal.find("[data-action=save]").click(function () {
-            grid.getEditController().commitCurrentEdit();
-        });
-
-        $modal.find("[data-action=cancel]").click(function () {
-            grid.getEditController().cancelCurrentEdit();
-        });
-
-        var containers = $.map(columns, function (c) {
-            return $modal.find("[data-editorid=" + c.id + "]");
-        });
-
-        var compositeEditor = new CompositeEditor(
-                columns,
-                containers,
-                {
-                    destroy: function () {
-                        $modal.remove();
-                    }
-                }
-        );
-
-        grid.editActiveCell(compositeEditor);
-    }
 
     require(['./Grid', './formatters', './editors', 'plugins/CompositeEditor'], function (SparkGrid, formatters, editors, CompositeEditor) {
+
+        openDetails = function() {
+            if (grid.getEditorLock().isActive() && !grid.getEditorLock().commitCurrentEdit()) {
+                return;
+            }
+
+            var tmpl = "<div class='item-details-form'>";
+            tmpl += columns.map(function(c) {
+                return "<div class='item-details-label'>" +
+                        c.name + "</div><div class='item-details-editor-container' data-editorid='"+ c.id +"'></div>";
+            }).join('');
+            tmpl += '<hr/>' +
+            "<div class='item-details-form-buttons'>" +
+            "<button data-action='save'>Save</button>" +
+            "<button data-action='cancel'>Cancel</button>" +
+            "</div>" +
+            "</div>";
+
+            var $modal = $(tmpl)
+                    .appendTo("body");
+
+            $modal.keydown(function (e) {
+                if (e.which == $.ui.keyCode.ENTER) {
+                    grid.getEditController().commitCurrentEdit();
+                    e.stopPropagation();
+                    e.preventDefault();
+                } else if (e.which == $.ui.keyCode.ESCAPE) {
+                    grid.getEditController().cancelCurrentEdit();
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            });
+
+            $modal.find("[data-action=save]").click(function () {
+                grid.getEditController().commitCurrentEdit();
+            });
+
+            $modal.find("[data-action=cancel]").click(function () {
+                grid.getEditController().cancelCurrentEdit();
+            });
+
+            var containers = $.map(columns, function (c) {
+                return $modal.find("[data-editorid=" + c.id + "]")[0];
+            });
+
+            var compositeEditor = new CompositeEditor(
+                    columns,
+                    containers,
+                    {
+                        destroy: function () {
+                            $modal.remove();
+                        }
+                    }
+            );
+
+            grid.editActiveCell(compositeEditor);
+        }
 
         function requiredFieldValidator(value) {
             if (value == null || value == undefined || !value.length) {
@@ -166,6 +175,42 @@
                 return {valid: true, msg: null};
             }
         }
+
+        columns = [
+            {
+                id: "title",
+                name: "Title",
+                field: "title",
+                width: 120,
+                cssClass: "cell-title",
+                editor: editors.Text,
+                validator: requiredFieldValidator
+            },
+            {id: "desc", name: "Description", field: "description", width: 100, editor: editors.Text},
+            {id: "duration", name: "Duration", field: "duration", editor: editors.Text},
+            {
+                id: "percent",
+                name: "% Complete",
+                field: "percentComplete",
+                width: 80,
+                resizable: false,
+                formatter: formatters.PercentCompleteBar,
+                editor: editors.PercentComplete
+            },
+            {id: "start", name: "Start", field: "start", minWidth: 60, editor: editors.Text},
+            {id: "finish", name: "Finish", field: "finish", minWidth: 60, editor: editors.Text},
+            {
+                id: "effort-driven",
+                name: "Effort Driven",
+                width: 80,
+                minWidth: 20,
+                maxWidth: 80,
+                cssClass: "cell-effort-driven",
+                field: "effortDriven",
+                formatter: formatters.Checkmark,
+                editor: editors.Checkbox
+            }
+        ]
 
         for (var i = 0; i < 500; i++) {
             var d = (data[i] = {});
