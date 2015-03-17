@@ -7,16 +7,6 @@
 })(function (exports, module, _core) {
 	"use strict";
 
-	/**
-  * Creates a new instance of the grid.
-  * @class Grid
-  * @constructor
-  * @param {Node}              container   Container node to create the grid in.
-  * @param {Array,Object}      data        An array of objects for databinding.
-  * @param {Array}             columns     An array of column definitions.
-  * @param {Object}            options     Grid options.
-  **/
-	module.exports = Grid;
 	var GlobalEditorLock = _core.GlobalEditorLock;
 	var extend = _core.extend;
 	var createEl = _core.createEl;
@@ -34,7 +24,18 @@
 	var scrollbarDimensions,
 	    maxSupportedCssHeight,
 	    // browser's breaking point
-	uidIndex = 1;function Grid(options) {
+	uidIndex = 1;
+
+	/**
+  * Creates a new instance of the grid.
+  * @class Grid
+  * @constructor
+  * @param {Node}              container   Container node to create the grid in.
+  * @param {Array,Object}      data        An array of objects for databinding.
+  * @param {Array}             columns     An array of column definitions.
+  * @param {Object}            options     Grid options.
+  **/
+	function Grid(options) {
 		// settings
 		var defaults = {
 			explicitInitialization: false,
@@ -3503,4 +3504,8 @@
 
 		return obj;
 	}
+
+	Grid.GlobalEditorLock = new EditorLock();
+
+	module.exports = Grid;
 });

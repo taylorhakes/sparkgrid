@@ -1,4 +1,4 @@
-export default function CellCopyManager() {
+function CellCopyManager() {
 	var _grid;
 	var _self = this;
 	var _copiedRanges;
@@ -12,8 +12,9 @@ export default function CellCopyManager() {
 		_grid.onKeyDown.unsubscribe(handleKeyDown);
 	}
 
-	function handleKeyDown(e, args) {
-		var ranges;
+	function handleKeyDown(info) {
+		var ranges,
+			e = info.event;
 		if (!_grid.getEditorLock().isActive()) {
 			if (e.which == $.ui.keyCode.ESCAPE) {
 				if (_copiedRanges) {
@@ -53,24 +54,25 @@ export default function CellCopyManager() {
 			for (var j = ranges[i].fromRow; j <= ranges[i].toRow; j++) {
 				hash[j] = {};
 				for (var k = ranges[i].fromCell; k <= ranges[i].toCell; k++) {
-					hash[j][columns[k].id] = "copied";
+					hash[j][columns[k].id] = 'copied';
 				}
 			}
 		}
-		_grid.setCellCssStyles("copy-manager", hash);
+		_grid.setCellCssStyles('copy-manager', hash);
 	}
 
 	function clearCopySelection() {
-		_grid.removeCellCssStyles("copy-manager");
+		_grid.removeCellCssStyles('copy-manager');
 	}
 
 	return {
-		"init": init,
-		"destroy": destroy,
-		"clearCopySelection": clearCopySelection,
-
-		"onCopyCells": new Slick.Event(),
-		"onCopyCancelled": new Slick.Event(),
-		"onPasteCells": new Slick.Event()
+		'init': init,
+		'destroy': destroy,
+		'clearCopySelection': clearCopySelection,
+		'onCopyCells': new Slick.Event(),
+		'onCopyCancelled': new Slick.Event(),
+		'onPasteCells': new Slick.Event()
 	};
 }
+
+export default CellCopyManager;

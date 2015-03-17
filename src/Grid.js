@@ -1,10 +1,69 @@
-import { GlobalEditorLock, extend, createEl, delegate,
-	getPx, setPx, slice, closest, toggleClass, Range, Event } from './core';
+import { extend, createEl, delegate,
+	getPx, setPx, slice, closest, toggleClass } from './util/misc';
+import Range from './selection/Range';
+import { Event }  from './util/events';
+import EditorLock from './editing/EditorLock';
+
 
 // shared across all grids on the page
 var scrollbarDimensions,
 	maxSupportedCssHeight, // browser's breaking point
-	uidIndex = 1;
+	uidIndex = 1,
+	GlobalEditorLock = new EditorLock();
+
+var defaults = {
+		explicitInitialization: false,
+		rowHeight: 25,
+		defaultColumnWidth: 80,
+		enableAddRow: false,
+		leaveSpaceForNewRows: false,
+		editable: false,
+		autoEdit: false,
+		enableCellNavigation: true,
+		enableColumnReorder: true,
+		asyncEditorLoading: false,
+		asyncEditorLoadDelay: 100,
+		forceFitColumns: true,
+		enableAsyncPostRender: false,
+		asyncPostRenderDelay: 50,
+		autoHeight: false,
+		editorLock: GlobalEditorLock,
+		showHeaderRow: false,
+		headerRowHeight: 25,
+		showTopPanel: false,
+		topPanelHeight: 25,
+		formatterFactory: null,
+		editorFactory: null,
+		cellFlashingCssClass: "flashing",
+		selectedCellCssClass: "selected",
+		multiSelect: true,
+		enableTextSelectionOnCells: false,
+		dataItemColumnValueExtractor: null,
+		fullWidthRows: false,
+		multiColumnSort: false,
+		defaultFormatter: defaultFormatter,
+		forceSyncScrolling: false,
+		addNewRowCssClass: "new-row"
+	},
+	columnDefaults = {
+		name: "",
+		resizable: true,
+		sortable: false,
+		minWidth: 30,
+		rerenderOnResize: false,
+		headerCssClass: null,
+		defaultSortAsc: true,
+		focusable: true,
+		selectable: true
+	};
+
+function defaultFormatter(row, cell, value, columnDef, dataContext) {
+	if (value == null) {
+		return "";
+	} else {
+		return (value + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	}
+}
 
 /**
  * Creates a new instance of the grid.
@@ -15,55 +74,9 @@ var scrollbarDimensions,
  * @param {Array}             columns     An array of column definitions.
  * @param {Object}            options     Grid options.
  **/
-export default function Grid(options) {
+function Grid(options) {
 	// settings
-	var defaults = {
-			explicitInitialization: false,
-			rowHeight: 25,
-			defaultColumnWidth: 80,
-			enableAddRow: false,
-			leaveSpaceForNewRows: false,
-			editable: false,
-			autoEdit: false,
-			enableCellNavigation: true,
-			enableColumnReorder: true,
-			asyncEditorLoading: false,
-			asyncEditorLoadDelay: 100,
-			forceFitColumns: true,
-			enableAsyncPostRender: false,
-			asyncPostRenderDelay: 50,
-			autoHeight: false,
-			editorLock: GlobalEditorLock,
-			showHeaderRow: false,
-			headerRowHeight: 25,
-			showTopPanel: false,
-			topPanelHeight: 25,
-			formatterFactory: null,
-			editorFactory: null,
-			cellFlashingCssClass: "flashing",
-			selectedCellCssClass: "selected",
-			multiSelect: true,
-			enableTextSelectionOnCells: false,
-			dataItemColumnValueExtractor: null,
-			fullWidthRows: false,
-			multiColumnSort: false,
-			defaultFormatter: defaultFormatter,
-			forceSyncScrolling: false,
-			addNewRowCssClass: "new-row"
-		},
-		columnDefaults = {
-			name: "",
-			resizable: true,
-			sortable: false,
-			minWidth: 30,
-			rerenderOnResize: false,
-			headerCssClass: null,
-			defaultSortAsc: true,
-			focusable: true,
-			selectable: true
-		},
-
-		container,
+	var	container,
 		columns,
 		data,
 
@@ -155,7 +168,6 @@ export default function Grid(options) {
 		if (!Array.isArray(options.columns)) {
 			throw new Error('SparkGrid requires valid column definitions (options.columns).')
 		}
-		columns = options.columns;
 
 		data = options.data || [];
 
@@ -165,20 +177,8 @@ export default function Grid(options) {
 
 		options = extend({}, defaults, options);
 		validateAndEnforceOptions();
-		columnDefaults.width = options.defaultColumnWidth;
 
-		// Save the columns by ID for reference later
-		columnsById = {};
-		for (var i = 0; i < columns.length; i++) {
-			var m = columns[i] = extend({}, columnDefaults, columns[i]);
-			columnsById[m.id] = i;
-			if (m.minWidth && m.width < m.minWidth) {
-				m.width = m.minWidth;
-			}
-			if (m.maxWidth && m.width > m.maxWidth) {
-				m.width = m.maxWidth;
-			}
-		}
+		extendColumns(options.columns);
 
 		editController = {
 			"commitCurrentEdit": commitCurrentEdit,
@@ -314,59 +314,61 @@ export default function Grid(options) {
 	}
 
 	function finishInitialization() {
-		if (!initialized) {
-			initialized = true;
+		// Block users from annoying mistake
+		if (initialized) {
+			throw new Error('Grid is already initialized');
+		}
+		initialized = true;
 
-			var style = window.getComputedStyle(container);
-			viewportW = parseFloat(style.width);
+		var style = window.getComputedStyle(container);
+		viewportW = parseFloat(style.width);
 
-			// header columns and cells may have different padding/border skewing width calculations (box-sizing, hello?)
-			// calculate the diff so we can set consistent sizes
-			measureCellPaddingAndBorder();
+		// header columns and cells may have different padding/border skewing width calculations (box-sizing, hello?)
+		// calculate the diff so we can set consistent sizes
+		measureCellPaddingAndBorder();
 
-			if (!options.enableTextSelectionOnCells) {
-				// disable text selection in grid cells except in input and textarea elements
-				// (this is IE-specific, because selectstart event will only fire in IE)
-				viewport.addEventListener("selectstart.ui", function (event) {
-					return !!~("input,textarea").indexOf(event.target.tagName.toLowerCase());
-				});
-			}
+		if (!options.enableTextSelectionOnCells) {
+			// disable text selection in grid cells except in input and textarea elements
+			// (this is IE-specific, because selectstart event will only fire in IE)
+			viewport.addEventListener("selectstart.ui", function (event) {
+				return !!~("input,textarea").indexOf(event.target.tagName.toLowerCase());
+			});
+		}
 
-			updateColumnCaches();
-			createColumnHeaders();
-			setupColumnSort();
-			createCssRules();
-			resizeCanvas();
-			bindAncestorScrollEvents();
+		updateColumnCaches();
+		createColumnHeaders();
+		setupColumnSort();
+		createCssRules();
+		resizeCanvas();
+		bindAncestorScrollEvents();
 
-			container.addEventListener("resize.sparkgrid", resizeCanvas);
-			viewport.addEventListener("scroll", handleScroll);
-			viewport.addEventListener("click", handleClick);
-			headerScroller.addEventListener("contextmenu", handleHeaderContextMenu);
-			headerScroller.addEventListener("click", handleHeaderClick);
-			delegate(headerScroller, "mouseover", ".spark-header-column", handleHeaderMouseEnter);
-			delegate(headerScroller, "mouseout", ".spark-header-column", handleHeaderMouseLeave);
-			headerRowScroller.addEventListener("scroll", handleHeaderRowScroll);
+		container.addEventListener("resize.sparkgrid", resizeCanvas);
+		viewport.addEventListener("scroll", handleScroll);
+		viewport.addEventListener("click", handleClick);
+		headerScroller.addEventListener("contextmenu", handleHeaderContextMenu);
+		headerScroller.addEventListener("click", handleHeaderClick);
+		delegate(headerScroller, "mouseover", ".spark-header-column", handleHeaderMouseEnter);
+		delegate(headerScroller, "mouseout", ".spark-header-column", handleHeaderMouseLeave);
+		headerRowScroller.addEventListener("scroll", handleHeaderRowScroll);
 
-			focusSink.addEventListener("keydown", handleKeyDown);
-			focusSink2.addEventListener('keydown', handleKeyDown);
+		focusSink.addEventListener("keydown", handleKeyDown);
+		focusSink2.addEventListener('keydown', handleKeyDown);
 
-			canvas.addEventListener("keydown", handleKeyDown);
-			canvas.addEventListener("click", handleClick);
-			canvas.addEventListener("dblclick", handleDblClick);
-			canvas.addEventListener("contextmenu", handleContextMenu);
-			canvas.addEventListener("draginit", handleDragInit);
-			canvas.addEventListener("dragstart", handleDragStart); // {distance: 3}
-			canvas.addEventListener("drag", handleDrag);
-			canvas.addEventListener("dragend", handleDragEnd);
+		canvas.addEventListener("keydown", handleKeyDown);
+		canvas.addEventListener("click", handleClick);
+		canvas.addEventListener("dblclick", handleDblClick);
+		canvas.addEventListener("contextmenu", handleContextMenu);
+		canvas.addEventListener("draginit", handleDragInit);
+		canvas.addEventListener("dragstart", handleDragStart); // {distance: 3}
+		canvas.addEventListener("drag", handleDrag);
+		canvas.addEventListener("dragend", handleDragEnd);
 
-			delegate(canvas, "mouseover", ".spark-cell", handleMouseEnter);
-			delegate(canvas, "mouseout", ".spark-cell", handleMouseLeave);
+		delegate(canvas, "mouseover", ".spark-cell", handleMouseEnter);
+		delegate(canvas, "mouseout", ".spark-cell", handleMouseLeave);
 
-			// Work around http://crbug.com/312427.
-			if (navigator.userAgent.toLowerCase().match(/webkit/) && navigator.userAgent.toLowerCase().match(/macintosh/)) {
-				canvas.addEventListener("mousewheel", handleMouseWheel);
-			}
+		// Work around http://crbug.com/312427.
+		if (navigator.userAgent.toLowerCase().match(/webkit/) && navigator.userAgent.toLowerCase().match(/macintosh/)) {
+			canvas.addEventListener("mousewheel", handleMouseWheel);
 		}
 	}
 
@@ -376,14 +378,12 @@ export default function Grid(options) {
 	}
 
 	function unregisterPlugin(plugin) {
-		for (var i = plugins.length; i >= 0; i--) {
-			if (plugins[i] === plugin) {
-				if (plugins[i].destroy) {
-					plugins[i].destroy();
-				}
-				plugins.splice(i, 1);
-				break;
+		var index = plugins.indexOf(plugin);
+		if (~index) {
+			if (plugins[index].destroy) {
+				plugins[index].destroy();
 			}
+			plugins.splice(index, 1);
 		}
 	}
 
@@ -1262,6 +1262,27 @@ export default function Grid(options) {
 		return columns;
 	}
 
+	function extendColumns(newColumns) {
+		columns = slice(newColumns);
+
+		// Save the columns by ID for reference later
+		columnsById = {};
+		for (var i = 0; i < columns.length; i++) {
+			var m = columns[i] = extend({
+				width: options.defaultColumnWidth
+			}, columnDefaults, columns[i]);
+
+			columns[i] = m;
+			columnsById[m.id] = i;
+			if (m.minWidth && m.width < m.minWidth) {
+				m.width = m.minWidth;
+			}
+			if (m.maxWidth && m.width > m.maxWidth) {
+				m.width = m.maxWidth;
+			}
+		}
+	}
+
 	function updateColumnCaches() {
 		// Pre-calculate cell boundaries.
 		columnPosLeft = [];
@@ -1274,21 +1295,8 @@ export default function Grid(options) {
 		}
 	}
 
-	function setColumns(columnDefinitions) {
-		columns = columnDefinitions;
-
-		columnsById = {};
-		for (var i = 0; i < columns.length; i++) {
-			var m = columns[i] = extend({}, columnDefaults, columns[i]);
-			columnsById[m.id] = i;
-			if (m.minWidth && m.width < m.minWidth) {
-				m.width = m.minWidth;
-			}
-			if (m.maxWidth && m.width > m.maxWidth) {
-				m.width = m.maxWidth;
-			}
-		}
-
+	function setColumns(columns) {
+		extendColumns(columns);
 		updateColumnCaches();
 
 		if (initialized) {
@@ -1429,14 +1437,6 @@ export default function Grid(options) {
 			viewport.scrollTop = (lastRenderedScrollTop = scrollTop = prevScrollTop = newScrollTop);
 
 			trigger(self.onViewportChanged, {});
-		}
-	}
-
-	function defaultFormatter(row, cell, value, columnDef, dataContext) {
-		if (value == null) {
-			return "";
-		} else {
-			return (value + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 		}
 	}
 
@@ -3462,3 +3462,7 @@ export default function Grid(options) {
 
 	return obj;
 }
+
+Grid.GlobalEditorLock = GlobalEditorLock;
+
+export default Grid;

@@ -180,13 +180,48 @@
                     return "% Complete:  " + g.value + "  <span style='color:green'>(" + g.count + " items)</span>";
                 },
                 aggregators: [
-                    aggregators.Avg("percentComplete")
+                    new aggregators.Avg("percentComplete")
                 ],
                 aggregateCollapsed: true,
                 collapsed: true,
                 lazyTotalsCalculation: true
             }
         ]);
+    }
+
+    function groupByDuration() {
+        dataView.setGrouping({
+            getter: "duration",
+            formatter: function (g) {
+                return "Duration:  " + g.value + "  <span style='color:green'>(" + g.count + " items)</span>";
+            },
+            aggregators: [
+                new aggregators.Avg("percentComplete"),
+                new aggregators.Sum("cost")
+            ],
+            aggregateCollapsed: false,
+            lazyTotalsCalculation: true
+        });
+    }
+
+    function loadData(count) {
+        var someDates = ["01/01/2009", "02/02/2009", "03/03/2009"];
+        data = [];
+        // prepare the data
+        for (var i = 0; i < count; i++) {
+            var d = (data[i] = {});
+
+            d["id"] = "id_" + i;
+            d["num"] = i;
+            d["title"] = "Task " + i;
+            d["duration"] = Math.round(Math.random() * 30);
+            d["percentComplete"] = Math.round(Math.random() * 100);
+            d["start"] = someDates[Math.floor((Math.random() * 2))];
+            d["finish"] = someDates[Math.floor((Math.random() * 2))];
+            d["cost"] = Math.round(Math.random() * 10000) / 100;
+            d["effortDriven"] = (i % 5 == 0);
+        }
+        dataView.setItems(data);
     }
 
     require(['./Grid', './DataView', './formatters', './editors', './core', './aggregators', './GroupItemMetadataProvider', 'plugins/ColumnPicker', 'plugins/CellSelectionModel', 'plugins/Pager'],
@@ -277,52 +312,8 @@
             return (x == y ? 0 : (x > y ? 1 : -1));
         }
 
-        function groupByDuration() {
-            dataView.setGrouping({
-                getter: "duration",
-                formatter: function (g) {
-                    return "Duration:  " + g.value + "  <span style='color:green'>(" + g.count + " items)</span>";
-                },
-                aggregators: [
-                    new aggregators.Avg("percentComplete"),
-                    new aggregators.Sum("cost")
-                ],
-                aggregateCollapsed: false,
-                lazyTotalsCalculation: true
-            });
-        }
-
-        function loadData(count) {
-            var someDates = ["01/01/2009", "02/02/2009", "03/03/2009"];
-            data = [];
-            // prepare the data
-            for (var i = 0; i < count; i++) {
-                var d = (data[i] = {});
-
-                d["id"] = "id_" + i;
-                d["num"] = i;
-                d["title"] = "Task " + i;
-                d["duration"] = Math.round(Math.random() * 30);
-                d["percentComplete"] = Math.round(Math.random() * 100);
-                d["start"] = someDates[Math.floor((Math.random() * 2))];
-                d["finish"] = someDates[Math.floor((Math.random() * 2))];
-                d["cost"] = Math.round(Math.random() * 10000) / 100;
-                d["effortDriven"] = (i % 5 == 0);
-            }
-            dataView.setItems(data);
-        }
-
-        $(".grid-header .ui-icon")
-                .addClass("ui-state-default ui-corner-all")
-                .mouseover(function (e) {
-                    $(e.target).addClass("ui-state-hover")
-                })
-                .mouseout(function (e) {
-                    $(e.target).removeClass("ui-state-hover")
-                });
-
         var groupItemMetadataProvider = new GroupItemMetadataProvider();
-        dataView = new Slick.Data.DataView({
+        dataView = new DataView({
             groupItemMetadataProvider: groupItemMetadataProvider,
             inlineFilters: true
         });
@@ -338,12 +329,14 @@
         grid.registerPlugin(groupItemMetadataProvider);
         grid.setSelectionModel(new CellSelectionModel());
 
-        var pager = new Pager(dataView, grid, $("#pager"));
-        var columnpicker = new ColumnPicker(columns, grid, options);
+        var pager = new Pager(dataView, grid, document.getElementById('pager'));
+        var columnpicker = new ColumnPicker(columns, grid);
 
-        grid.onSort.subscribe(function (e, args) {
-            sortdir = args.sortAsc ? 1 : -1;
-            sortcol = args.sortCol.field;
+        grid.onSort.subscribe(function (info) {
+            var data = info.data;
+
+            sortdir = data.sortAsc ? 1 : -1;
+            sortcol = data.sortCol.field;
 
             if ($.browser.msie && $.browser.version <= 8) {
                 // using temporary Object.prototype.toString override
@@ -361,23 +354,23 @@
                 };
 
                 // use numeric sort of % and lexicographic for everything else
-                dataView.fastSort((sortcol == "percentComplete") ? percentCompleteValueFn : sortcol, args.sortAsc);
+                dataView.fastSort((sortcol == "percentComplete") ? percentCompleteValueFn : sortcol, data.sortAsc);
             }
             else {
                 // using native sort with comparer
                 // preferred method but can be very slow in IE with huge datasets
-                dataView.sort(comparer, args.sortAsc);
+                dataView.sort(comparer, data.sortAsc);
             }
         });
 
         // wire up model events to drive the grid
-        dataView.onRowCountChanged.subscribe(function (e, args) {
+        dataView.onRowCountChanged.subscribe(function () {
             grid.updateRowCount();
             grid.render();
         });
 
-        dataView.onRowsChanged.subscribe(function (e, args) {
-            grid.invalidateRows(args.rows);
+        dataView.onRowsChanged.subscribe(function (info) {
+            grid.invalidateRows(info.data.rows);
             grid.render();
         });
 

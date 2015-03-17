@@ -96,9 +96,9 @@ function SumAggregator(field) {
 	}
 }
 
-export var aggregators = {
-	Avg: AvgAggregator,
-	Min: MinAggregator,
-	Max: MaxAggregator,
-	Sum: SumAggregator
+export default {
+	'Avg': AvgAggregator,
+	'Min': MinAggregator,
+	'Max': MaxAggregator,
+	'Sum': SumAggregator
 };

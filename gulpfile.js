@@ -2,8 +2,7 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var gulp = require('gulp');
 var source = require('vinyl-source-stream');
-var to5 = require('gulp-6to5');
-var sourcemaps = require('gulp-sourcemaps');
+var babel = require('gulp-babel');
 var watch = require('gulp-watch');
 var logger = require('gulp-logger');
 
@@ -20,12 +19,12 @@ gulp.task('watch', function() {
 			after: 'Transpile complete!',
 			showChange: true
 		}))
-		.pipe(to5({modules:'umd'}))
+		.pipe(babel({modules:'umd'}))
 		.pipe(gulp.dest(path.output));
 });
 gulp.task('build', function () {
 	return gulp.src(path.source)
-		.pipe(to5({modules:'umd'}))
+		.pipe(babel({modules:'umd'}))
 		.pipe(gulp.dest(path.output));
 });
 

@@ -1,4 +1,4 @@
-import { extend } from './core'
+import { extend, Group } from '../util/misc';
 
 /***
  * Provides item metadata for group (Slick.Group) and totals (Slick.Totals) rows produced by the DataView.
@@ -14,7 +14,7 @@ import { extend } from './core'
  * @constructor
  * @param options
  */
-export default function GroupItemMetadataProvider(options) {
+function GroupItemMetadataProvider(options) {
 	var _grid;
 	var _defaults = {
 		groupCssClass: "slick-group",
@@ -23,14 +23,15 @@ export default function GroupItemMetadataProvider(options) {
 		groupFocusable: true,
 		totalsFocusable: false,
 		toggleCssClass: "slick-group-toggle",
-		toggleExpandedCssClass: "expanded",
-		toggleCollapsedCssClass: "collapsed",
+		toggleExpandedCssClass: "spark-icon-remove-circle",
+		toggleCollapsedCssClass: "spark-icon-add-circle",
 		enableExpandCollapse: true,
 		groupFormatter: defaultGroupCellFormatter,
 		totalsFormatter: defaultTotalsCellFormatter
-	};
+	},
+		SPACE_KEYCODE = 32;
 
-	options = extend(true, {}, _defaults, options);
+	options = extend({}, _defaults, options);
 
 
 	function defaultGroupCellFormatter(row, cell, value, columnDef, item) {
@@ -68,9 +69,11 @@ export default function GroupItemMetadataProvider(options) {
 		}
 	}
 
-	function handleGridClick(e, args) {
-		var item = this.getDataItem(args.row);
-		if (item && item instanceof Slick.Group && $(e.target).hasClass(options.toggleCssClass)) {
+	function handleGridClick(info) {
+		var data = info.data,
+			e = info.event;
+		var item = this.getDataItem(data.row);
+		if (item && item instanceof Group && e.target.classList.contains(options.toggleCssClass)) {
 			var range = _grid.getRenderedRange();
 			this.getData().setRefreshHints({
 				ignoreDiffsBefore: range.top,
@@ -89,8 +92,9 @@ export default function GroupItemMetadataProvider(options) {
 	}
 
 	// TODO:  add -/+ handling
-	function handleGridKeyDown(e, args) {
-		if (options.enableExpandCollapse && (e.which == $.ui.keyCode.SPACE)) {
+	function handleGridKeyDown(info) {
+		var e = info.event;
+		if (options.enableExpandCollapse && (e.which == SPACE_KEYCODE)) {
 			var activeCell = this.getActiveCell();
 			if (activeCell) {
 				var item = this.getDataItem(activeCell.row);
@@ -114,7 +118,7 @@ export default function GroupItemMetadataProvider(options) {
 		}
 	}
 
-	function getGroupRowMetadata(item) {
+	function getGroupRowMetadata() {
 		return {
 			selectable: false,
 			focusable: options.groupFocusable,
@@ -129,7 +133,7 @@ export default function GroupItemMetadataProvider(options) {
 		};
 	}
 
-	function getTotalsRowMetadata(item) {
+	function getTotalsRowMetadata() {
 		return {
 			selectable: false,
 			focusable: options.totalsFocusable,
@@ -147,3 +151,5 @@ export default function GroupItemMetadataProvider(options) {
 		"getTotalsRowMetadata": getTotalsRowMetadata
 	};
 }
+
+export default GroupItemMetadataProvider;

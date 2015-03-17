@@ -7,7 +7,7 @@ import { closest, extend } from '../core'
  * @param {boolean} [options.enableForHeaderCells=false] - Enable tooltip for header cells
  * @param {number}  [options.maxToolTipLength=null]      - The maximum length for a tooltip
  */
-export default function AutoTooltips(options) {
+function AutoTooltips(options) {
 	var _grid;
 	var _defaults = {
 		enableForCells: true,
@@ -46,10 +46,10 @@ export default function AutoTooltips(options) {
 			if (node.clientWidth < node.scrollWidth) {
 				text = node.textContent.trim();
 				if (options.maxToolTipLength && text.length > options.maxToolTipLength) {
-					text = text.substr(0, options.maxToolTipLength - 3) + "...";
+					text = text.substr(0, options.maxToolTipLength - 3) + '...';
 				}
 			} else {
-				text = "";
+				text = '';
 			}
 			node.title = text;
 		}
@@ -63,15 +63,17 @@ export default function AutoTooltips(options) {
 	function handleHeaderMouseEnter(info) {
 		var e = info.e, data = info.data;
 		var column = data.column,
-			node = core.closest(e.target, ".slick-header-column");
+			node = core.closest(e.target, '.slick-header-column');
 		if (!column.toolTip) {
-			node.title = node.clientWidth < node.scrollWidth ? column.name : "";
+			node.title = node.clientWidth < node.scrollWidth ? column.name : '';
 		}
 	}
 
 	// Public API
 	return {
-		"init": init,
-		"destroy": destroy
+		'init': init,
+		'destroy': destroy
 	};
 }
+
+export default AutoTooltips;

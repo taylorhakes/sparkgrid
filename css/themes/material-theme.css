@@ -6,7 +6,7 @@
     font-style: normal;
 }
 
-[class^="spark-icon-"], .select-wrapper span.select-dropdown:after, [class*=" mdi-"] {
+[class^="spark-icon-"], [class*=" spark-icon-"] {
     font-family: "Material-Design-Icons";
     speak: none;
     font-style: normal;
@@ -36,6 +36,7 @@
     background: #1b1e24;
     border-bottom: 3px solid #9ea7af;
     border-right: none;
+    height: 27px;
 }
 
 .spark-row {
@@ -81,6 +82,13 @@
 .spark-icon-check:before {
     content: "\e623";
 }
+.spark-icon-add-circle:before {
+    content: "\e6fd";
+}
+.spark-icon-remove-circle:before {
+    content: "\e712";
+}
+
 
 .spark-cell {
     padding: 3px;
@@ -139,6 +147,12 @@
     -moz-animation-name: spark-invalid-hilite;
     -webkit-animation-name: spark-invalid-hilite;
 }
+
+.slick-group-toggle {
+    margin-right: 5px;
+}
+
+
 
 @-moz-keyframes spark-invalid-hilite {
     from { box-shadow: 0 0 6px red; }

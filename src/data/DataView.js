@@ -217,7 +217,7 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 		groupingInfos = (groupingInfo instanceof Array) ? groupingInfo : [groupingInfo];
 
 		for (var i = 0; i < groupingInfos.length; i++) {
-			var gi = groupingInfos[i] = core.extend(true, {}, groupingInfoDefaults, groupingInfos[i]);
+			var gi = groupingInfos[i] = extend({}, groupingInfoDefaults, groupingInfos[i]);
 			gi.getterIsAFn = typeof gi.getter === "function";
 
 			// pre-compile accumulator loops
@@ -469,7 +469,7 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 			val = gi.predefinedValues[i];
 			group = groupsByVal[val];
 			if (!group) {
-				group = new core.Group();
+				group = new Group();
 				group.value = val;
 				group.level = level;
 				group.groupingKey = (parentGroup ? parentGroup.groupingKey + groupingDelimiter : '') + val;
@@ -483,7 +483,7 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 			val = gi.getterIsAFn ? gi.getter(r) : r[gi.getter];
 			group = groupsByVal[val];
 			if (!group) {
-				group = new core.Group();
+				group = new Group();
 				group.value = val;
 				group.level = level;
 				group.groupingKey = (parentGroup ? parentGroup.groupingKey + groupingDelimiter : '') + val;
@@ -537,7 +537,7 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 
 	function addGroupTotals(group) {
 		var gi = groupingInfos[group.level];
-		var totals = new core.GroupTotals();
+		var totals = new GroupTotals();
 		totals.group = group;
 		group.totals = totals;
 		if (!gi.lazyTotalsCalculation) {

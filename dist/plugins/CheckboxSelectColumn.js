@@ -115,7 +115,7 @@
 					return;
 				}
 
-				if (e.target && e.target.checked) {
+				if ((e.target.type || "").toLowerCase() === "checked") {
 					var rows = [];
 					for (var i = 0; i < _grid.getDataLength(); i++) {
 						rows.push(i);

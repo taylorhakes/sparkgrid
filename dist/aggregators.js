@@ -1,10 +1,10 @@
 (function (factory) {
 	if (typeof define === "function" && define.amd) {
-		define(["exports"], factory);
-	} else if (typeof exports !== "undefined") {
-		factory(exports);
+		define(["exports", "module"], factory);
+	} else if (typeof exports !== "undefined" && typeof module !== "undefined") {
+		factory(exports, module);
 	}
-})(function (exports) {
+})(function (exports, module) {
 	"use strict";
 
 	function AvgAggregator(field) {
@@ -105,11 +105,10 @@
 		};
 	}
 
-	var aggregators = exports.aggregators = {
+	module.exports = {
 		Avg: AvgAggregator,
 		Min: MinAggregator,
 		Max: MaxAggregator,
 		Sum: SumAggregator
 	};
-	exports.__esModule = true;
 });

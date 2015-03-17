@@ -25,9 +25,9 @@
 			options = extend({}, defaults, options);
 
 			menu = createEl({
-				tag: "span",
+				tag: "ul",
 				className: "spark-columnpicker",
-				styles: {
+				style: {
 					display: "none",
 					position: "absolute",
 					zIndex: 20
@@ -50,6 +50,8 @@
 		function handleHeaderContextMenu(info) {
 			var e = info.event;
 
+			e.preventDefault();
+
 			menu.innerHTML = "";
 			updateColumnOrder();
 			columnCheckboxes = [];
@@ -64,7 +66,7 @@
 					tag: "input",
 					type: "checkbox"
 				});
-				input.dataset["column-id"] = columns[i].id;
+				input.dataset.column_id = columns[i].id;
 				columnCheckboxes.push(input);
 
 				if (grid.getColumnIndex(columns[i].id) != null) {
@@ -107,6 +109,7 @@
 			li = createEl({
 				tag: "li"
 			});
+
 			menu.appendChild(li);
 			input = createEl({
 				tag: "input",
@@ -171,8 +174,8 @@
 
 			if (e.target.type === "checkbox") {
 				var visibleColumns = [];
-				$.each(columnCheckboxes, function (i, e) {
-					if (this.checked) {
+				columnCheckboxes.forEach(function (c, i) {
+					if (c.checked) {
 						visibleColumns.push(columns[i]);
 					}
 				});

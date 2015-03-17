@@ -5,7 +5,7 @@
 import Sortable from 'sortablejs';
 import { Event } from '../core';
 
-export default function MovableColumns(options) {
+export default function ReorderColumns(options) {
 	var header, sortable,
 		onColumnsReordered = new Event();
 

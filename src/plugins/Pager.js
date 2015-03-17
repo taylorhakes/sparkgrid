@@ -4,8 +4,8 @@ export default function Pager(dataView, grid, container) {
 	var status;
 
 	function init() {
-		dataView.onPagingInfoChanged.subscribe(function (e, pagingInfo) {
-			updatePager(pagingInfo);
+		dataView.onPagingInfoChanged.subscribe(function (info) {
+			updatePager(info.data);
 		});
 
 		constructPagerUI();

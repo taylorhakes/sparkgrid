@@ -1,4 +1,4 @@
-import { extend, createEl, removeEl, setStyle } from './core'
+import { extend, createEl, removeEl, setStyle } from '../util/misc';
 
 var LEFT = 37,
 	RIGHT = 39,
@@ -6,14 +6,14 @@ var LEFT = 37,
 	ENTER = 13,
 	TAB = 9;
 
-function TextEditor(args) {
+function TextEditor(options) {
 	var inputEl;
 	var defaultValue;
 
 	this.init = function () {
 		inputEl = createEl({
 			tag: 'input',
-			type: 'text',
+			type: options.type || 'text',
 			className: 'editor-text'
 		});
 		inputEl.addEventListener('keydown', function (e) {
@@ -23,7 +23,7 @@ function TextEditor(args) {
 		});
 		inputEl.focus();
 		inputEl.setSelectionRange(0, inputEl.value.length);
-		args.container.appendChild(inputEl);
+		options.container.appendChild(inputEl);
 	};
 
 	this.destroy = function () {
@@ -43,7 +43,7 @@ function TextEditor(args) {
 	};
 
 	this.loadValue = function (item) {
-		defaultValue = item[args.column.field] || "";
+		defaultValue = item[options.column.field] || "";
 		inputEl.value = defaultValue;
 		inputEl.defaultValue = defaultValue;
 		inputEl.setSelectionRange(0, inputEl.value.length);
@@ -54,7 +54,7 @@ function TextEditor(args) {
 	};
 
 	this.applyValue = function (item, state) {
-		item[args.column.field] = state;
+		item[options.column.field] = state;
 	};
 
 	this.isValueChanged = function () {
@@ -62,8 +62,8 @@ function TextEditor(args) {
 	};
 
 	this.validate = function () {
-		if (args.column.validator) {
-			var validationResults = args.column.validator(inputEl.value);
+		if (options.column.validator) {
+			var validationResults = options.column.validator(inputEl.value);
 			if (!validationResults.valid) {
 				return validationResults;
 			}
@@ -78,10 +78,10 @@ function TextEditor(args) {
 	this.init();
 }
 
-function IntegerEditor(args) {
+function IntegerEditor(options) {
 	var inputEl;
 
-	extend(this, new TextEditor(args));
+	extend(this, new TextEditor(extend({ type: 'number' }, options)));
 
 	this.validate = function () {
 		if (isNaN(inputEl.value)) {
@@ -207,9 +207,7 @@ function CheckboxEditor(args) {
  * KeyDown events are also handled to provide handling for Tab, Shift-Tab, Esc and Ctrl-Enter.
  */
 function LongTextEditor(args) {
-	var input, wrapper;
-	var defaultValue;
-	var scope = this;
+	var input, wrapper, defaultValue, scope = this;
 
 	this.init = function () {
 		var container = document.body, buttonWrapper;
@@ -332,5 +330,5 @@ export {
 	YesNoSelectEditor as YesNoSelect,
 	CheckboxEditor as Checkbox,
 	LongTextEditor as LongText
-	};
+};
 
