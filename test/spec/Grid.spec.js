@@ -1,6 +1,6 @@
 import Grid from 'spark/Grid';
 
-(function(jas) {
+(function(jas, describe, it, expect, beforeEach) {
 	function newEl() {
 		return document.createElement('div');
 	}
@@ -314,7 +314,103 @@ import Grid from 'spark/Grid';
 				grid.setOptions(changedOptions);
 				expect(grid.getOptions()).toEqual(jas.objectContaining(changedOptions));
 			});
-		})
+		});
+		describe('data', function() {
+			var data;
+			beforeEach(function() {
+				data = [
+					{
+						id: 1
+					},
+					{
+						id: 2
+					},
+					{
+						id: 3
+					}
+				];
+			});
+			it('default empty', function() {
+				var grid = new Grid({
+					el: newEl(),
+					columns: []
+				});
+				expect(grid.getData()).toEqual([]);
+			});
+			it('simple data', function() {
+				var grid = new Grid({
+					el: newEl(),
+					columns: [],
+					data: data
+				});
+				expect(grid.getData()).toEqual(data);
+			});
+			it('data length', function() {
+				var grid = new Grid({
+						el: newEl(),
+						columns: [],
+						data: data
+					});
+				expect(grid.getDataLength()).toEqual(3);
+			});
+			it('getDataItem', function() {
+				var grid = new Grid({
+					el: newEl(),
+					columns: [],
+					data: data
+				});
+				expect(grid.getDataItem(1)).toEqual({
+					id: 2
+				});
+			});
+			it('setData', function() {
+				var grid = new Grid({
+					el: newEl(),
+					columns: [],
+					data: data
+				}),
+				newData = [
+					{
+						id: 10
+					},
+					{
+						id: 8
+					}
+				];
+				grid.setData(newData);
+				expect(grid.getDataItem(1)).toEqual({
+					id: 8
+				});
+				expect(grid.getData()).toEqual(newData);
+			});
+		});
+		describe('getEl', function() {
+			it('returns correct element', function() {
+				var el = newEl(),
+				grid = new Grid({
+					el: el,
+					columns: []
+				});
+				expect(grid.getEl()).toBe(el);
+			});
+		});
+		describe('getUid', function() {
+			it('unique', function() {
+				var grid1 = new Grid({
+					el: newEl(),
+					columns: []
+				}),
+				grid2 = new Grid({
+					el: newEl(),
+					columns: []
+				}),
+				grid3 = new Grid({
+					el: newEl(),
+					columns: []
+				});
+				expect(grid1.getUid() !== grid2.getUid() && grid2.getUid() !== grid3.getUid() && grid1.getUid() !== grid3.getUid()).toBe(true);
+			});
+		});
 	});
 
-})(jasmine);
+})(jasmine, describe, it, expect, beforeEach);

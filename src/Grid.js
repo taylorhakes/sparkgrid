@@ -1363,11 +1363,11 @@ function Grid(options) {
 		return getDataLength() + (options.enableAddRow ? 1 : 0);
 	}
 
-	function getDataItem(i) {
+	function getDataItem(index) {
 		if (data.getItem) {
-			return data.getItem(i);
+			return data.getItem(index);
 		} else {
-			return data[i];
+			return data[index];
 		}
 	}
 
@@ -1401,8 +1401,8 @@ function Grid(options) {
 		}
 	}
 
-	function getContainerNode() {
-		return container.get(0);
+	function getEl() {
+		return container;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
@@ -3396,7 +3396,7 @@ function Grid(options) {
 		"setSelectionModel": setSelectionModel,
 		"getSelectedRows": getSelectedRows,
 		"setSelectedRows": setSelectedRows,
-		"getContainerNode": getContainerNode,
+		"getEl": getEl,
 		"getUid": getUid,
 
 		"render": render,
