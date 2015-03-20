@@ -117,7 +117,10 @@ function removeEl(el) {
 /**
  * Functional array slice
  */
-var slice = Function.prototype.call.bind(Array.prototype.slice);
+function slice(item, start, end) {
+	return Array.prototype.slice.call(item, start, end);
+}
+//var slice = Function.prototype.call.bind(Array.prototype.slice);
 
 /**
  * Set a CSS style with in pixels

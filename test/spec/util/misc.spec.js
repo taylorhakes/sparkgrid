@@ -169,20 +169,20 @@ import { extend, query, closest, delegate,
 			});
 			it('general attribute', function() {
 				var el = createEl({
-					tagName: 'input',
+					tag: 'input',
 					type: 'button'
 				});
 				expect(el.type).toBe('button');
 			});
 			it('styles', function() {
 				var el = createEl({
-					tagName: 'span',
+					tag: 'span',
 					style: {
-						border: '2px',
+						height: '2px',
 						width: '10px'
 					}
 				});
-				expect(el.style.border).toBe('2px');
+				expect(el.style.height).toBe('2px');
 				expect(el.style.width).toBe('10px');
 			});
 		});

@@ -1,5 +1,5 @@
 import { extend, createEl, delegate,
-	getPx, setPx, slice, closest, toggleClass } from './util/misc';
+	getPx, setPx, slice, closest, toggleClass, removeEl } from './util/misc';
 import Range from './selection/Range';
 import { Event }  from './util/events';
 import EditorLock from './editing/EditorLock';
@@ -1032,7 +1032,7 @@ function Grid(options) {
 	}
 
 	function removeCssRules() {
-		style.remove();
+		removeEl(style);
 		stylesheet = null;
 	}
 

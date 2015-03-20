@@ -1,5 +1,8 @@
-import { Event, extend, Group, GroupTotals, EventControl }  from './core';
-import GroupItemMetadataProvider from './GroupItemMetadataProvider';
+import { extend }  from '../util/misc';
+import Group from '../grouping/Group';
+import GroupTotals from '../grouping/GroupTotals';
+import { Event, EventControl } from '../util/events';
+import GroupItemMetadataProvider from '../plugins/GroupItemMetadataProvider';
 
 /***
  * A sample Model implementation.
@@ -121,14 +124,14 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 		refresh();
 	}
 
-	function setPagingOptions(args) {
-		if (args.pageSize != undefined) {
-			pagesize = args.pageSize;
+	function setPagingOptions(options) {
+		if (options.pageSize != undefined) {
+			pagesize = options.pageSize;
 			pagenum = pagesize ? Math.min(pagenum, Math.max(0, Math.ceil(totalRows / pagesize) - 1)) : 0;
 		}
 
-		if (args.pageNum != undefined) {
-			pagenum = Math.min(args.pageNum, Math.max(0, Math.ceil(totalRows / pagesize) - 1));
+		if (options.pageNum != undefined) {
+			pagenum = Math.min(options.pageNum, Math.max(0, Math.ceil(totalRows / pagesize) - 1));
 		}
 
 		onPagingInfoChanged.notify(getPagingInfo(), null, self);
@@ -726,6 +729,10 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 		return {totalRows: filteredItems.length, rows: paged};
 	}
 
+	 function getFilteredItems() {
+		 return filteredItems;
+	 }
+
 	function getRowDiffs(rows, newRows) {
 		var item, r, eitherIsNonData, diff = [];
 		var from = 0, to = newRows.length;
@@ -946,6 +953,7 @@ import GroupItemMetadataProvider from './GroupItemMetadataProvider';
 		"getItems": getItems,
 		"setItems": setItems,
 		"setFilter": setFilter,
+		"getFilteredItems": getFilteredItems,
 		"sort": sort,
 		"fastSort": fastSort,
 		"reSort": reSort,

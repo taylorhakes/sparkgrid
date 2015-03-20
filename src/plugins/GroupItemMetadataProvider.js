@@ -9,8 +9,6 @@ import { extend, Group } from '../util/misc';
  * If "grid.registerPlugin(...)" is not called, expand & collapse will not work.
  *
  * @class GroupItemMetadataProvider
- * @module Data
- * @namespace Slick.Data
  * @constructor
  * @param options
  */

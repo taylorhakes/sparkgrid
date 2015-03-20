@@ -303,20 +303,6 @@
 
         var h_runfilters = null;
 
-        // wire up the slider to apply the filter to the model
-        //$("#pcSlider,#pcSlider2").slider({
-        //	"range": "min",
-        //	"slide": function (event, ui) {
-        //		Spark.GlobalEditorLock.cancelCurrentEdit();
-        //
-        //		if (percentCompleteThreshold != ui.value) {
-        //			window.clearTimeout(h_runfilters);
-        //			h_runfilters = window.setTimeout(updateFilter, 10);
-        //			percentCompleteThreshold = ui.value;
-        //		}
-        //	}
-        //});
-
         function onKeyUpSearch(e) {
             core.GlobalEditorLock.cancelCurrentEdit();
 

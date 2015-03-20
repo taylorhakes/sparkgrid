@@ -15,6 +15,8 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+		'css/spark.css',
+		'css/material-theme.css',
       'test/**/*.spec.js'
     ],
 
