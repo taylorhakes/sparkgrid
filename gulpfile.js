@@ -5,6 +5,7 @@ var source = require('vinyl-source-stream');
 var babel = require('gulp-babel');
 var watch = require('gulp-watch');
 var logger = require('gulp-logger');
+var jshint = require('gulp-jshint');
 
 var path = {
 	source:'src/**/*.js',
@@ -26,5 +27,11 @@ gulp.task('build', function () {
 	return gulp.src(path.source)
 		.pipe(babel({modules:'umd'}))
 		.pipe(gulp.dest(path.output));
+});
+
+gulp.task('lint', function() {
+	return gulp.src('./src/data/*.js')
+		.pipe(jshint())
+		.pipe(jshint.reporter('default'));
 });
 

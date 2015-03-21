@@ -170,6 +170,29 @@ describe('DataView', function() {
 					id: 2
 				}
 			]);
-		})
+		});
+		it('resort', function() {
+			dv = new DataView();
+			dv.setItems(data);
+			dv.sort(function(a, b) {
+				if (a.id == b.id) return 0;
+				return a.id > b.id ? -1 : 1;
+			}, false);
+			dv.reSort();
+			expect(dv.getItems()).toEqual([
+				{
+					id: 0
+				},
+				{
+					id: 1
+				},
+				{
+					id: 2
+				}
+			]);
+		});
+	});
+	describe('change grouping', function() {
+		it()
 	});
 });

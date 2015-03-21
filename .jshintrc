@@ -1,0 +1,6 @@
+{
+ "esnext": true,
+  "camelcase": false,
+  "newcap": false,
+  "quotmark": "single"
+}

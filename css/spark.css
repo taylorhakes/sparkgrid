@@ -5,11 +5,60 @@ No built-in (selected, editable, highlight, flashing, invalid, loading, :focus) 
 classes should alter those!
 */
 
+.spark {
+    overflow: hidden;
+    outline: 0;
+}
 .spark, .spark .spark-header-columns, .spark .spark-canvas, .spark .spark-viewport {
     box-sizing: content-box;
 }
 .spark * {
     box-sizing: border-box;
+}
+
+.spark-focus-sink {
+    width: 0;
+    height: 0;
+    top: 0;
+    left: 0;
+}
+
+.spark-header {
+    overflow: hidden;
+    position: relative;
+}
+
+.spark-header-columns {
+    left: -1000px;
+}
+
+.spark-headerrow {
+    overflow: hidden;
+    position: relative;
+}
+
+.spark-headerrow-spacer {
+    height: 1px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.spark-top-panel-scroller {
+    overflow: hidden;
+    position: relative;
+}
+
+.spark-top-panel {
+    width: 10000px;
+}
+
+.spark-viewport {
+    width: 100%;
+    overflow: auto;
+    outline: 0;
+    position: relative;
+    overflow-y: auto;
 }
 
 .spark-row {

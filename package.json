@@ -49,7 +49,8 @@
     "karma-babel-preprocessor": "^4.0.1",
     "gulp-babel": "^4.0.0",
     "babelify": "^5.0.4",
-    "karma-browserify": "^4.0.0"
+    "karma-browserify": "^4.0.0",
+    "gulp-jshint": "^1.9.4"
   },
   "dependencies": {
     "gulp-logger": "0.0.2"
