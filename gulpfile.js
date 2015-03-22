@@ -30,7 +30,10 @@ gulp.task('build', function () {
 });
 
 gulp.task('lint', function() {
-	return gulp.src('./src/data/*.js')
+	return gulp.src([
+		'./src/data/DataView.js',
+		'./src/Grid.js'
+	])
 		.pipe(jshint())
 		.pipe(jshint.reporter('default'));
 });

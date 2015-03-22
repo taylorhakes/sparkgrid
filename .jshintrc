@@ -2,5 +2,6 @@
  "esnext": true,
   "camelcase": false,
   "newcap": false,
-  "quotmark": "single"
+  "quotmark": "single",
+  "eqeqeq": true
 }
