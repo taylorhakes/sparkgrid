@@ -98,7 +98,7 @@ class DataView {
 			groupsByVal = {},
 			r,
 			level = parentGroup ? parentGroup.level + 1 : 0,
-			gi = groupingInfos[level];
+			gi = this._groupingInfos[level];
 
 		for (let i = 0, l = gi.predefinedValues.length; i < l; i++) {
 			val = gi.predefinedValues[i];
@@ -170,7 +170,7 @@ class DataView {
 		totals.initialized = true;
 	}
 	_addGroupTotals(group) {
-		let gi = groupingInfos[group.level],
+		let gi = this._groupingInfos[group.level],
 			totals = new GroupTotals();
 
 		totals.group = group;
@@ -212,7 +212,7 @@ class DataView {
 		level = level || 0;
 
 
-		let gi = groupingInfos[level];
+		let gi = this._groupingInfos[level];
 		let groupedRows = [], rows, gl = 0, g;
 
 		for (let i = 0, l = groups.length; i < l; i++) {
@@ -260,7 +260,7 @@ class DataView {
 			item = items[i];
 			if (cache[i]) {
 				retval[idx++] = item;
-			} else if (filter(item, args)) {
+			} else if (this._filter(item, args)) {
 				retval[idx++] = item;
 				cache[i] = true;
 			}
@@ -305,7 +305,7 @@ class DataView {
 			from = 0, to = newRows.length;
 
 		if (this._refreshHints && this._refreshHints.ignoreDiffsBefore) {
-			from = Math.max(0, Math.min(newRows.length, refreshHints.ignoreDiffsBefore));
+			from = Math.max(0, Math.min(newRows.length, this._refreshHints.ignoreDiffsBefore));
 		}
 
 		if (this._refreshHints && this._refreshHints.ignoreDiffsAfter) {
@@ -322,7 +322,7 @@ class DataView {
 				if ((this._groupingInfos.length && (eitherIsNonData = (item.__nonDataRow) || (r.__nonDataRow)) && item.__group !== r.__group || item.__group && !item.equals(r)) || (eitherIsNonData && // no good way to compare totals since they are arbitrary DTOs
 						// deep object comparison is pretty expensive
 						// always considering them 'dirty' seems easier for the time being
-					(item.__groupTotals || r.__groupTotals)) || item[this._idProperty] !== r[this._idProperty] || (this._updated && this._updated[item[idProperty]])) {
+					(item.__groupTotals || r.__groupTotals)) || item[this._idProperty] !== r[this._idProperty] || (this._updated && this._updated[item[this._idProperty]])) {
 					diff[diff.length] = i;
 				}
 			}
@@ -559,7 +559,7 @@ class DataView {
 	 * @returns {Object}
 	 */
 	getItemById(id) {
-		return this._items[idxById[id]];
+		return this._items[this._idxById[id]];
 	}
 
 	/**
@@ -899,7 +899,7 @@ class DataView {
 				this._ensureRowsByIdCache();
 				let newHash = {};
 				for (let id in hashById) {
-					let row = rowsById[id];
+					let row = this._rowsById[id];
 					if (row !== undefined) {
 						newHash[row] = hashById[id];
 					}
