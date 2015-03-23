@@ -3,5 +3,9 @@
   "camelcase": false,
   "newcap": false,
   "quotmark": "single",
-  "eqeqeq": true
+  "eqeqeq": true,
+  "eqnull": true,
+  "browser": true,
+  "undef": true,
+  "globals": {}
 }

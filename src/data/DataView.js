@@ -143,7 +143,7 @@ class DataView {
 	_calculateTotals(totals) {
 		let group = totals.group,
 			gi = this._groupingInfos[group.level],
-			isLeafLevel = (group.level == this._groupingInfos.length),
+			isLeafLevel = (group.level === this._groupingInfos.length),
 			agg,
 			idx = gi.aggregators.length;
 
@@ -322,7 +322,7 @@ class DataView {
 				if ((this._groupingInfos.length && (eitherIsNonData = (item.__nonDataRow) || (r.__nonDataRow)) && item.__group !== r.__group || item.__group && !item.equals(r)) || (eitherIsNonData && // no good way to compare totals since they are arbitrary DTOs
 						// deep object comparison is pretty expensive
 						// always considering them 'dirty' seems easier for the time being
-					(item.__groupTotals || r.__groupTotals)) || item[this._idProperty] != r[this._idProperty] || (this._updated && this._updated[item[idProperty]])) {
+					(item.__groupTotals || r.__groupTotals)) || item[this._idProperty] !== r[this._idProperty] || (this._updated && this._updated[item[idProperty]])) {
 					diff[diff.length] = i;
 				}
 			}
@@ -332,7 +332,7 @@ class DataView {
 	_recalc(items) {
 		this._rowsById = null;
 
-		if (this._refreshHints.isFilterNarrowing != this._prevRefreshHints.isFilterNarrowing || this._refreshHints.isFilterExpanding != this._prevRefreshHints.isFilterExpanding) {
+		if (this._refreshHints.isFilterNarrowing !== this._prevRefreshHints.isFilterNarrowing || this._refreshHints.isFilterExpanding !== this._prevRefreshHints.isFilterExpanding) {
 			this._filterCache = [];
 		}
 
@@ -805,10 +805,10 @@ class DataView {
 		this._prevRefreshHints = this._refreshHints;
 		this._refreshHints = {};
 
-		if (totalRowsBefore != this._totalRows) {
+		if (totalRowsBefore !== this._totalRows) {
 			this.onPagingInfoChanged.notify(this.getPagingInfo(), null, this);
 		}
-		if (countBefore != this._rows.length) {
+		if (countBefore !== this._rows.length) {
 			this.onRowCountChanged.notify({previous: countBefore, current: this._rows.length}, null, this);
 		}
 		if (diff.length > 0) {
@@ -829,7 +829,7 @@ class DataView {
 			onSelectedRowIdsChanged = new Event();
 
 		let setSelectedRowIds = (rowIds) => {
-			if (selectedRowIds.join(',') == rowIds.join(',')) {
+			if (selectedRowIds.join(',') === rowIds.join(',')) {
 				return;
 			}
 
@@ -918,7 +918,7 @@ class DataView {
 			if (inHandler) {
 				return;
 			}
-			if (key != args.key) {
+			if (key !== args.key) {
 				return;
 			}
 			if (args.hash) {
