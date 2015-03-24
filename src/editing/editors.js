@@ -43,7 +43,7 @@ class TextEditor {
 	}
 
 	loadValue(item) {
-		this._defaultValue = item[options.column.field] || '';
+		this._defaultValue = item[this._options.column.field] || '';
 		this._inputEl.value = this._defaultValue;
 		this._inputEl.defaultValue = this._defaultValue;
 		this._inputEl.setSelectionRange(0, this._inputEl.value.length);
@@ -122,10 +122,10 @@ class YesNoSelectEditor {
 	}
 
 	loadValue(item) {
-		this._defaultValue = item[this._options.column.field]
+		this._defaultValue = item[this._options.column.field];
 		this._selectEl.value = this._defaultValue ? 'yes' : 'no';
 		this._selectEl.select();
-	};
+	}
 
 	serializeValue() {
 		return this._selectEl.value === 'yes';
@@ -322,7 +322,7 @@ function LongTextEditor(args) {
 
 export {
 	TextEditor as Text,
-	IntegerEditor as Integer,
+	NumberEditor as Number,
 	YesNoSelectEditor as YesNoSelect,
 	CheckboxEditor as Checkbox,
 	LongTextEditor as LongText

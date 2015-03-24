@@ -192,7 +192,7 @@ describe('DataView', function() {
 			]);
 		});
 	});
-	describe('change grouping', function() {
-		it()
-	});
+	//describe('change grouping', function() {
+	//	it()
+	//});
 });

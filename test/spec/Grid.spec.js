@@ -35,7 +35,7 @@ import { q } from './util';
 			cellFlashingCssClass: "lights",
 			selectedCellCssClass: "itsmine",
 			multiSelect: false,
-			enableTextSelectionOnCells: true,
+			enableTextSelectionOnCells: false,
 			dataItemColumnValueExtractor: dataColumnValueExtractor,
 			fullWidthRows: true,
 			multiColumnSort: true,
@@ -97,7 +97,7 @@ import { q } from './util';
 					cellFlashingCssClass: "flashing",
 					selectedCellCssClass: "selected",
 					multiSelect: true,
-					enableTextSelectionOnCells: false,
+					enableTextSelectionOnCells: true,
 					dataItemColumnValueExtractor: null,
 					fullWidthRows: false,
 					multiColumnSort: false,
@@ -134,7 +134,7 @@ import { q } from './util';
 					cellFlashingCssClass: "lights",
 					selectedCellCssClass: "itsmine",
 					multiSelect: false,
-					enableTextSelectionOnCells: true,
+					enableTextSelectionOnCells: false,
 					dataItemColumnValueExtractor: dataColumnValueExtractor,
 					fullWidthRows: true,
 					multiColumnSort: true,
@@ -412,52 +412,52 @@ import { q } from './util';
 				expect(grid1.getUid() !== grid2.getUid() && grid2.getUid() !== grid3.getUid() && grid1.getUid() !== grid3.getUid()).toBe(true);
 			});
 		});
-		//describe('functional tests', function() {
-		//	describe('check data rendered correctly', function() {
-		//		var el;
-		//		beforeEach(function() {
-		//			el = newEl();
-		//			document.body.appendChild(el);
-		//		});
-		//		afterEach(function() {
-		//			if (el.parentNode) {
-		//				el.parentNode.removeChild(el);
-		//			}
-		//		});
-		//		it('basic data', function() {
-		//			el.style.height = '200px';
-		//
-		//			var data = [];
-		//
-		//			for(var i = 0; i < 25; i++) {
-		//				data.push({
-		//					id: 'id' + i,
-		//					name: 'name' + i
-		//				})
-		//			}
-		//
-		//			var grid = new Grid({
-		//				el: el,
-		//				columns: [
-		//					{ id: 'id', name: 'Id', field: 'id'},
-		//					{ id: 'name', name: 'Name', field: 'name'}
-		//				],
-		//				data: data
-		//			});
-		//
-		//			var rowEls = q('.spark-canvas .spark-row');
-		//			rowEls.forEach(function(el, index) {
-		//				expect(el.children[0].innerHTML).toBe('id' + index);
-		//				expect(el.children[1].innerHTML).toBe('name' + index);
-		//			});
-		//			expect(rowEls.length).toBe(15);
-		//			expect(grid.getViewport()).toEqual(jas.objectContaining({
-		//				top: 0,
-		//				bottom: 7
-		//			}));
-		//		});
-		//	});
-		//});
+		describe('functional tests', function() {
+			describe('check data rendered correctly', function() {
+				var el;
+				beforeEach(function() {
+					el = newEl();
+					document.body.appendChild(el);
+				});
+				afterEach(function() {
+					if (el.parentNode) {
+						el.parentNode.removeChild(el);
+					}
+				});
+				it('basic data', function() {
+					el.style.height = '200px';
+
+					var data = [];
+
+					for(var i = 0; i < 25; i++) {
+						data.push({
+							id: 'id' + i,
+							name: 'name' + i
+						})
+					}
+
+					var grid = new Grid({
+						el: el,
+						columns: [
+							{ id: 'id', name: 'Id', field: 'id'},
+							{ id: 'name', name: 'Name', field: 'name'}
+						],
+						data: data
+					});
+
+					var rowEls = q('.spark-canvas .spark-row');
+					rowEls.forEach(function(el, index) {
+						expect(el.children[0].innerHTML).toBe('id' + index);
+						expect(el.children[1].innerHTML).toBe('name' + index);
+					});
+					expect(rowEls.length).toBe(15);
+					expect(grid.getVisibleRange()).toEqual(jas.objectContaining({
+						top: 0,
+						bottom: 7
+					}));
+				});
+			});
+		});
 	});
 
 })(jasmine, describe, it, expect, beforeEach);
