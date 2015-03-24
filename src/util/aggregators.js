@@ -1,48 +1,52 @@
-function AvgAggregator(field) {
-	this.field_ = field;
+class Avg {
+	constructor(field) {
+		this.field_ = field;
+	}
 
-	this.init = function () {
+	init() {
 		this.count_ = 0;
 		this.nonNullCount_ = 0;
 		this.sum_ = 0;
-	};
+	}
 
-	this.accumulate = function (item) {
-		var val = item[this.field_];
+	accumulate(item) {
+		let val = item[this.field_];
 		this.count_++;
-		if (val != null && val !== "" && val !== NaN) {
+		if (val != null && val !== '' && isNaN(val)) {
 			this.nonNullCount_++;
 			this.sum_ += parseFloat(val);
 		}
-	};
+	}
 
-	this.storeResult = function (groupTotals) {
+	storeResult(groupTotals) {
 		if (!groupTotals.avg) {
 			groupTotals.avg = {};
 		}
-		if (this.nonNullCount_ != 0) {
+		if (this.nonNullCount_ !== 0) {
 			groupTotals.avg[this.field_] = this.sum_ / this.nonNullCount_;
 		}
-	};
+	}
 }
 
-function MinAggregator(field) {
-	this.field_ = field;
+class Min {
+	constructor(field) {
+		this.field_ = field;
+	}
 
-	this.init = function () {
+	init() {
 		this.min_ = null;
-	};
+	}
 
-	this.accumulate = function (item) {
-		var val = item[this.field_];
-		if (val != null && val !== "" && val !== NaN) {
+	accumulate(item) {
+		let val = item[this.field_];
+		if (val != null && val !== '' && isNaN(val)) {
 			if (this.min_ == null || val < this.min_) {
 				this.min_ = val;
 			}
 		}
-	};
+	}
 
-	this.storeResult = function (groupTotals) {
+	storeResult(groupTotals) {
 		if (!groupTotals.min) {
 			groupTotals.min = {};
 		}
@@ -50,23 +54,25 @@ function MinAggregator(field) {
 	}
 }
 
-function MaxAggregator(field) {
-	this.field_ = field;
+class Max {
+	constructor(field) {
+		this.field_ = field;
+	}
 
-	this.init = function () {
+	init() {
 		this.max_ = null;
-	};
+	}
 
-	this.accumulate = function (item) {
-		var val = item[this.field_];
-		if (val != null && val !== "" && val !== NaN) {
+	accumulate(item) {
+		let val = item[this.field_];
+		if (val != null && val !== '' && isNaN(val)) {
 			if (this.max_ == null || val > this.max_) {
 				this.max_ = val;
 			}
 		}
-	};
+	}
 
-	this.storeResult = function (groupTotals) {
+	storeResult(groupTotals) {
 		if (!groupTotals.max) {
 			groupTotals.max = {};
 		}
@@ -74,21 +80,23 @@ function MaxAggregator(field) {
 	}
 }
 
-function SumAggregator(field) {
-	this.field_ = field;
+class Sum {
+	constructor(field) {
+		this.field_ = field;
+	}
 
-	this.init = function () {
+	init() {
 		this.sum_ = null;
-	};
+	}
 
-	this.accumulate = function (item) {
-		var val = item[this.field_];
-		if (val != null && val !== "" && val !== NaN) {
+	accumulate(item) {
+		let val = item[this.field_];
+		if (val != null && val !== '' && isNaN(val)) {
 			this.sum_ += parseFloat(val);
 		}
-	};
+	}
 
-	this.storeResult = function (groupTotals) {
+	storeResult(groupTotals) {
 		if (!groupTotals.sum) {
 			groupTotals.sum = {};
 		}
@@ -96,9 +104,9 @@ function SumAggregator(field) {
 	}
 }
 
-export default {
-	'Avg': AvgAggregator,
-	'Min': MinAggregator,
-	'Max': MaxAggregator,
-	'Sum': SumAggregator
+export {
+	Avg,
+	Min,
+	Max,
+	Sum
 };

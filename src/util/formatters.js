@@ -1,5 +1,5 @@
 function PercentComplete(row, cell, value, columnDef, dataContext) {
-	var className;
+	let className;
 	if (value == null) {
 		return '';
 	}
@@ -13,7 +13,7 @@ function PercentComplete(row, cell, value, columnDef, dataContext) {
 }
 
 function PercentCompleteBar(row, cell, value, columnDef, dataContext) {
-	var className;
+	let className;
 
 	if (value == null) {
 		return '';

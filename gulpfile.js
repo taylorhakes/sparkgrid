@@ -32,7 +32,12 @@ gulp.task('build', function () {
 gulp.task('lint', function() {
 	return gulp.src([
 		'./src/data/DataView.js',
-		'./src/Grid.js'
+		'./src/Grid.js',
+		'./src/util/*.js',
+		'./src/selection/*.js',
+		'./src/grouping/*.js',
+		'./src/editing/*.js',
+		'./src/plugins/RowSelectionModel.js'
 	])
 		.pipe(jshint())
 		.pipe(jshint.reporter('default'));

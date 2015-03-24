@@ -3,8 +3,10 @@
  * @class NonDataItem
  * @constructor
  */
-function NonDataItem() {
-	this.__nonDataRow = true;
+class NonDataItem {
+	constructor() {
+		this.__nonDataRow = true;
+	}
 }
 
 export default NonDataItem;

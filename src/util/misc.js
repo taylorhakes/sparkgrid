@@ -1,10 +1,10 @@
-var matchesSelector = null,
+let matchesSelector = null,
 	selectors = ['matches', 'mozMatchesSelector', 'webkitMatchesSelector', 'msMatchesSelector'],
 	i = 0,
 	len = selectors.length;
 
 for (; i < len; i++) {
-	var sel = selectors[i];
+	let sel = selectors[i];
 	if (document.body[sel]) {
 		matchesSelector = sel;
 	}
@@ -16,11 +16,10 @@ for (; i < len; i++) {
  * @returns {Object}
  */
 function extend(obj /* ...objects */) {
-	var i, len, source;
-	for (i = 1, len = arguments.length; i < len; i++) {
-		source = arguments[i];
+	for (let i = 1, len = arguments.length; i < len; i++) {
+		let source = arguments[i];
 		if (source) {
-			for (var prop in source) {
+			for (let prop in source) {
 				if (source.hasOwnProperty(prop)) {
 					obj[prop] = source[prop];
 				}
@@ -49,7 +48,7 @@ function closest(el, selector, lastEl) {
 		if (!el || el === lastEl || (typeof lastEl === 'string' && el[matchesSelector](lastEl))) {
 			return null;
 		}
-		el = el.parentNode
+		el = el.parentNode;
 	}
 }
 
@@ -61,18 +60,18 @@ function closest(el, selector, lastEl) {
  * @param {function} fn
  */
 function delegate(elem, event, selector, fn) {
-	var events = event.split(" "),
-		i = 0,
-		len = events.length;
+	let events = event.split(' ');
 
-	for (; i < len; i++) {
-		var ev = events[i];
-		elem.addEventListener(ev, function (e) {
-			var delEl = closest(e.target, selector, elem);
-			if (delEl) {
-				fn.call(delEl, e);
-			}
-		});
+	function handleEvent(e) {
+		let delEl = closest(e.target, selector, elem);
+		if (delEl) {
+			fn.call(delEl, e);
+		}
+	}
+
+	for (i = 0, len = events.length; i < len; i++) {
+		let ev = events[i];
+		elem.addEventListener(ev, handleEvent);
 	}
 }
 
@@ -82,7 +81,7 @@ function delegate(elem, event, selector, fn) {
  * @returns {HTMLElement}
  */
 function createEl(options) {
-	var el = document.createElement(options.tag);
+	let el = document.createElement(options.tag);
 	if (options.style) {
 		setStyle(el, options.style);
 	}
@@ -129,7 +128,7 @@ function slice(item, start, end) {
  * @param {string|number} val
  */
 function setPx(el, prop, val) {
-	el.style[prop] = val + "px";
+	el.style[prop] = val + 'px';
 }
 
 /**
@@ -147,10 +146,10 @@ function getPx(el, prop) {
  * @param {HTMLElement} el
  */
 function toggle(el) {
-	if (el.style.display === "none") {
-		el.style.display = "";
+	if (el.style.display === 'none') {
+		el.style.display = '';
 	} else {
-		el.style.display = "none";
+		el.style.display = 'none';
 	}
 }
 

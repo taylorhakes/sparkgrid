@@ -6,8 +6,10 @@
  * @class EditorLock
  * @constructor
  */
-function EditorLock() {
-	var activeEditController = null;
+class EditorLock {
+	constructor() {
+		this._activeEditController = null;
+	}
 
 	/***
 	 * Returns true if a specified edit controller is active (has the edit lock).
@@ -16,9 +18,9 @@ function EditorLock() {
 	 * @param editController {EditController}
 	 * @return {Boolean}
 	 */
-	this.isActive = function (editController) {
-		return (editController ? activeEditController === editController : activeEditController !== null);
-	};
+	isActive(editController) {
+		return (editController ? this._activeEditController === editController : this._activeEditController !== null);
+	}
 
 	/***
 	 * Sets the specified edit controller as the active edit controller (acquire edit lock).
@@ -26,21 +28,21 @@ function EditorLock() {
 	 * @method activate
 	 * @param editController {EditController} edit controller acquiring the lock
 	 */
-	this.activate = function (editController) {
-		if (editController === activeEditController) { // already activated?
+	activate(editController) {
+		if (editController === this._activeEditController) { // already activated?
 			return;
 		}
-		if (activeEditController !== null) {
-			throw "SlickGrid.EditorLock.activate: an editController is still active, can't activate another editController";
+		if (this._activeEditController !== null) {
+			throw new Error('SlickGrid.EditorLock.activate: an editController is still active, can\'t activate another editController');
 		}
 		if (!editController.commitCurrentEdit) {
-			throw "SlickGrid.EditorLock.activate: editController must implement .commitCurrentEdit()";
+			throw new Error('SlickGrid.EditorLock.activate: editController must implement .commitCurrentEdit()');
 		}
 		if (!editController.cancelCurrentEdit) {
-			throw "SlickGrid.EditorLock.activate: editController must implement .cancelCurrentEdit()";
+			throw new Error('SlickGrid.EditorLock.activate: editController must implement .cancelCurrentEdit()');
 		}
-		activeEditController = editController;
-	};
+		this._activeEditController = editController;
+	}
 
 	/***
 	 * Unsets the specified edit controller as the active edit controller (release edit lock).
@@ -48,35 +50,35 @@ function EditorLock() {
 	 * @method deactivate
 	 * @param editController {EditController} edit controller releasing the lock
 	 */
-	this.deactivate = function (editController) {
-		if (activeEditController !== editController) {
-			throw "SlickGrid.EditorLock.deactivate: specified editController is not the currently active one";
+	deactivate(editController) {
+		if (this._activeEditController !== editController) {
+			throw new Error('SlickGrid.EditorLock.deactivate: specified editController is not the currently active one');
 		}
-		activeEditController = null;
-	};
+		this._activeEditController = null;
+	}
 
 	/***
-	 * Attempts to commit the current edit by calling "commitCurrentEdit" method on the active edit
+	 * Attempts to commit the current edit by calling 'commitCurrentEdit' method on the active edit
 	 * controller and returns whether the commit attempt was successful (commit may fail due to validation
-	 * errors, etc.).  Edit controller's "commitCurrentEdit" must return true if the commit has succeeded
+	 * errors, etc.).  Edit controller's 'commitCurrentEdit' must return true if the commit has succeeded
 	 * and false otherwise.  If no edit controller is active, returns true.
 	 * @method commitCurrentEdit
 	 * @return {Boolean}
 	 */
-	this.commitCurrentEdit = function () {
-		return (activeEditController ? activeEditController.commitCurrentEdit() : true);
-	};
+	commitCurrentEdit() {
+		return (this._activeEditController ? this._activeEditController.commitCurrentEdit() : true);
+	}
 
 	/***
-	 * Attempts to cancel the current edit by calling "cancelCurrentEdit" method on the active edit
+	 * Attempts to cancel the current edit by calling 'cancelCurrentEdit' method on the active edit
 	 * controller and returns whether the edit was successfully cancelled.  If no edit controller is
 	 * active, returns true.
 	 * @method cancelCurrentEdit
 	 * @return {Boolean}
 	 */
-	this.cancelCurrentEdit = function cancelCurrentEdit() {
-		return (activeEditController ? activeEditController.cancelCurrentEdit() : true);
-	};
+	cancelCurrentEdit() {
+		return (this._activeEditController ? this._activeEditController.cancelCurrentEdit() : true);
+	}
 }
 
 export default EditorLock;

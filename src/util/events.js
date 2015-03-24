@@ -6,25 +6,27 @@
  * @class EventControl
  * @constructor
  */
-function EventControl() {
-	var isStopped = false;
+class EventControl {
+	constructor() {
+		this._isStopped = false;
+	}
 
 	/***
 	 * Stops event from propagating up the DOM tree.
 	 * @method stop
 	 */
-	this.stop = function () {
-		isStopped = true;
-	};
+	stop() {
+		this._isStopped = true;
+	}
 
 	/***
 	 * Returns whether stopPropagation was called on this event object.
 	 * @method isStopped
 	 * @return {Boolean}
 	 */
-	this.isStopped = function () {
-		return isStopped;
-	};
+	isStopped() {
+		return this._isStopped;
+	}
 }
 
 /***
@@ -32,8 +34,10 @@ function EventControl() {
  * @class Event
  * @constructor
  */
-function Event() {
-	var handlers = [];
+class Event {
+	constructor() {
+		this._handlers = [];
+	}
 
 	/***
 	 * Adds an event handler to be called when the event is fired.
@@ -42,22 +46,22 @@ function Event() {
 	 * @method subscribe
 	 * @param fn {Function} Event handler.
 	 */
-	this.subscribe = function (fn) {
-		handlers.push(fn);
-	};
+	subscribe(fn) {
+		this._handlers.push(fn);
+	}
 
 	/***
 	 * Removes an event handler added with <code>subscribe(fn)</code>.
 	 * @method unsubscribe
 	 * @param fn {Function} Event handler to be removed.
 	 */
-	this.unsubscribe = function (fn) {
-		for (var i = handlers.length - 1; i >= 0; i--) {
-			if (handlers[i] === fn) {
-				handlers.splice(i, 1);
+	unsubscribe(fn) {
+		for (let i = this._handlers.length - 1; i >= 0; i--) {
+			if (this._handlers[i] === fn) {
+				this._handlers.splice(i, 1);
 			}
 		}
-	};
+	}
 
 	/***
 	 * Fires an event notifying all subscribers.
@@ -72,12 +76,12 @@ function Event() {
 	 *      The scope ("this") within which the handler will be executed.
 	 *      If not specified, the scope will be set to the <code>Event</code> instance.
 	 */
-	this.notify = function (data, e, scope) {
-		var eventControl = new EventControl();
+	notify(data, e, scope) {
+		let eventControl = new EventControl();
 		scope = scope || this;
 
-		for (var i = 0; i < handlers.length; i++) {
-			handlers[i].call(scope, {
+		for (let i = 0; i < this._handlers.length; i++) {
+			this._handlers[i].call(scope, {
 				event: e,
 				data: data,
 				stop: eventControl.stop
@@ -85,41 +89,43 @@ function Event() {
 		}
 
 		return !eventControl.isStopped();
-	};
+	}
 }
 
-function EventHandler() {
-	var handlers = [];
+class EventHandler {
+	constructor() {
+		this._handlers = [];
+	}
 
-	this.subscribe = function (event, handler) {
-		handlers.push({
+	subscribe(event, handler) {
+		this._handlers.push({
 			event: event,
 			handler: handler
 		});
 		event.subscribe(handler);
 
 		return this;  // allow chaining
-	};
+	}
 
-	this.unsubscribe = function (event, handler) {
-		var i = handlers.length;
+	unsubscribe(event, handler) {
+		let i = this._handlers.length;
 		while (i--) {
-			if (handlers[i].event === event && handlers[i].handler === handler) {
-				handlers.splice(i, 1);
+			if (this._handlers[i].event === event && this._handlers[i].handler === handler) {
+				this._handlers.splice(i, 1);
 				event.unsubscribe(handler);
 				return;
 			}
 		}
 
 		return this;  // allow chaining
-	};
+	}
 
-	this.unsubscribeAll = function () {
-		var i = handlers.length;
+	unsubscribeAll() {
+		let i = this._handlers.length;
 		while (i--) {
-			handlers[i].event.unsubscribe(handlers[i].handler);
+			this._handlers[i].event.unsubscribe(this._handlers[i].handler);
 		}
-		handlers = [];
+		this._handlers = [];
 
 		return this;  // allow chaining
 	}
@@ -129,4 +135,4 @@ export {
 	Event,
 	EventHandler,
 	EventControl
-}
+};

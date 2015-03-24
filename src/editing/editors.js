@@ -1,69 +1,69 @@
 import { extend, createEl, removeEl, setStyle } from '../util/misc';
 
-var LEFT = 37,
+const LEFT = 37,
 	RIGHT = 39,
 	ESCAPE = 27,
 	ENTER = 13,
 	TAB = 9;
 
-function TextEditor(options) {
-	var inputEl;
-	var defaultValue;
-
-	this.init = function () {
-		inputEl = createEl({
+class TextEditor {
+	constructor(options) {
+		this._defaultValue = null;
+		this._options = options;
+		this._inputEl = createEl({
 			tag: 'input',
-			type: options.type || 'text',
+			type: this._options.type || 'text',
 			className: 'editor-text'
 		});
-		inputEl.addEventListener('keydown', function (e) {
+		this._inputEl.addEventListener('keydown', function (e) {
 			if (e.keyCode === LEFT || e.keyCode === RIGHT) {
 				e.stopPropagation();
 			}
 		});
-		inputEl.focus();
-		inputEl.setSelectionRange(0, inputEl.value.length);
-		options.container.appendChild(inputEl);
-	};
+		this._inputEl.focus();
+		this._inputEl.setSelectionRange(0, this._inputEl.value.length);
+		this._options.container.appendChild(this._inputEl);
 
-	this.destroy = function () {
-		inputEl.remove();
-	};
+	}
 
-	this.focus = function () {
-		inputEl.focus();
-	};
+	destroy() {
+		removeEl(this._inputEl);
+	}
 
-	this.getValue = function () {
-		return inputEl.value;
-	};
+	focus() {
+		this._inputEl.focus();
+	}
 
-	this.setValue = function (val) {
-		inputEl.value = val;
-	};
+	getValue() {
+		return this._inputEl.value;
+	}
 
-	this.loadValue = function (item) {
-		defaultValue = item[options.column.field] || "";
-		inputEl.value = defaultValue;
-		inputEl.defaultValue = defaultValue;
-		inputEl.setSelectionRange(0, inputEl.value.length);
-	};
+	setValue(val) {
+		this._inputEl.value = val;
+	}
 
-	this.serializeValue = function () {
-		return inputEl.value;
-	};
+	loadValue(item) {
+		this._defaultValue = item[options.column.field] || '';
+		this._inputEl.value = this._defaultValue;
+		this._inputEl.defaultValue = this._defaultValue;
+		this._inputEl.setSelectionRange(0, this._inputEl.value.length);
+	}
 
-	this.applyValue = function (item, state) {
-		item[options.column.field] = state;
-	};
+	serializeValue() {
+		return this._inputEl.value;
+	}
 
-	this.isValueChanged = function () {
-		return (!(inputEl.value == "" && defaultValue == null)) && (inputEl.value != defaultValue);
-	};
+	applyValue(item, state) {
+		item[this._options.column.field] = state;
+	}
 
-	this.validate = function () {
-		if (options.column.validator) {
-			var validationResults = options.column.validator(inputEl.value);
+	isValueChanged() {
+		return (!(this._inputEl.value === '' && this._defaultValue == null)) && (this._inputEl.value !== this._defaultValue);
+	}
+
+	validate() {
+		if (this._options.column.validator) {
+			let validationResults = this._options.column.validator(this._inputEl.value);
 			if (!validationResults.valid) {
 				return validationResults;
 			}
@@ -73,21 +73,19 @@ function TextEditor(options) {
 			valid: true,
 			msg: null
 		};
-	};
-
-	this.init();
+	}
 }
 
-function IntegerEditor(options) {
-	var inputEl;
+class NumberEditor extends TextEditor {
+	constructor(options) {
+		super(extend({ type: 'number' }, options));
+	}
 
-	extend(this, new TextEditor(extend({ type: 'number' }, options)));
-
-	this.validate = function () {
-		if (isNaN(inputEl.value)) {
+	validate() {
+		if (isNaN(this._inputEl.value)) {
 			return {
 				valid: false,
-				msg: "Please enter a valid integer"
+				msg: 'Please enter a valid number'
 			};
 		}
 
@@ -95,65 +93,63 @@ function IntegerEditor(options) {
 			valid: true,
 			msg: null
 		};
-	};
-	this.serializeValue = function () {
-		return parseInt(inputEl.value, 10) || 0;
-	};
+	}
+	serializeValue() {
+		return parseFloat(this.inputEl.value) || 0;
+	}
 }
 
-function YesNoSelectEditor(args) {
-	var selectEl;
-	var defaultValue;
-
-	this.init = function () {
-		selectEl = createEl({
+class YesNoSelectEditor {
+	constructor(options) {
+		this._defaultValue = null;
+		this._options = options;
+		this._selectEl = createEl({
 			tag: 'select',
 			tabIndex: '0',
 			className: 'editor-yesno'
 		});
-		selectEl.innerHTML = '<OPTION value="yes">Yes</OPTION><OPTION value="no">No</OPTION>';
-		args.container.appendChild(selectEl);
-		selectEl.focus();
+		this._selectEl.innerHTML = '<OPTION value="yes">Yes</OPTION><OPTION value="no">No</OPTION>';
+		this._options.container.appendChild(this._selectEl);
+		this._selectEl.focus();
+	}
+
+	destroy() {
+		removeEl(this._selectEl);
+	}
+
+	focus() {
+		this._selectEl.focus();
+	}
+
+	loadValue(item) {
+		this._defaultValue = item[this._options.column.field]
+		this._selectEl.value = this._defaultValue ? 'yes' : 'no';
+		this._selectEl.select();
 	};
 
-	this.destroy = function () {
-		selectEl.remove();
-	};
+	serializeValue() {
+		return this._selectEl.value === 'yes';
+	}
 
-	this.focus = function () {
-		selectEl.focus();
-	};
+	applyValue(item, state) {
+		item[this._options.column.field] = state;
+	}
 
-	this.loadValue = function (item) {
-		selectEl.val((defaultValue = item[args.column.field]) ? "yes" : "no");
-		selectEl.select();
-	};
+	isValueChanged() {
+		return this._selectEl.value !== this._defaultValue;
+	}
 
-	this.serializeValue = function () {
-		return (selectEl.value == "yes");
-	};
-
-	this.applyValue = function (item, state) {
-		item[args.column.field] = state;
-	};
-
-	this.isValueChanged = function () {
-		return (selectEl.value != defaultValue);
-	};
-
-	this.validate = function () {
+	validate() {
 		return {
 			valid: true,
 			msg: null
 		};
-	};
-
-	this.init();
+	}
 }
 
 function CheckboxEditor(args) {
-	var select;
-	var defaultValue;
+	let select,
+		defaultValue;
 
 	this.init = function () {
 		select = createEl({
@@ -202,15 +198,15 @@ function CheckboxEditor(args) {
 }
 
 /*
- * An example of a "detached" editor.
+ * An example of a 'detached' editor.
  * The UI is added onto document BODY and .position(), .show() and .hide() are implemented.
  * KeyDown events are also handled to provide handling for Tab, Shift-Tab, Esc and Ctrl-Enter.
  */
 function LongTextEditor(args) {
-	var input, wrapper, defaultValue, scope = this;
+	let input, wrapper, defaultValue, scope = this;
 
 	this.init = function () {
-		var container = document.body, buttonWrapper;
+		let container = document.body, buttonWrapper;
 
 		wrapper = createEl({
 			tag: 'div',
@@ -240,10 +236,10 @@ function LongTextEditor(args) {
 		wrapper.innerHTML = '<DIV style="text-align:right"><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></DIV>';
 		wrapper.appendChild(input);
 
-		var buttons = wrapper.querySelectorAll("button");
-		buttons[0].addEventListener("click", this.save);
-		buttons[buttons.length - 1].addEventListener("click", this.cancel);
-		input.addEventListener("keydown", this.handleKeyDown);
+		let buttons = wrapper.querySelectorAll('button');
+		buttons[0].addEventListener('click', this.save);
+		buttons[buttons.length - 1].addEventListener('click', this.cancel);
+		input.addEventListener('keydown', this.handleKeyDown);
 
 		scope.position(args.position);
 		input.focus();
@@ -251,15 +247,15 @@ function LongTextEditor(args) {
 	};
 
 	this.handleKeyDown = function (e) {
-		if (e.which == ENTER && e.ctrlKey) {
+		if (e.which === ENTER && e.ctrlKey) {
 			scope.save();
-		} else if (e.which == ESCAPE) {
+		} else if (e.which === ESCAPE) {
 			e.preventDefault();
 			scope.cancel();
-		} else if (e.which == TAB && e.shiftKey) {
+		} else if (e.which === TAB && e.shiftKey) {
 			e.preventDefault();
 			args.grid.navigatePrev();
-		} else if (e.which == TAB) {
+		} else if (e.which === TAB) {
 			e.preventDefault();
 			args.grid.navigateNext();
 		}
@@ -311,7 +307,7 @@ function LongTextEditor(args) {
 	};
 
 	this.isValueChanged = function () {
-		return (!(input.value == "" && defaultValue == null)) && (input.value != defaultValue);
+		return (!(input.value === '' && defaultValue == null)) && (input.value !== defaultValue);
 	};
 
 	this.validate = function () {
