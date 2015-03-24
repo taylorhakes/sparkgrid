@@ -37,7 +37,7 @@ let defaults = {
 		cellFlashingCssClass: 'flashing',
 		selectedCellCssClass: 'selected',
 		multiSelect: true,
-		enableTextSelectionOnCells: false,
+		enableTextSelectionOnCells: true,
 		dataItemColumnValueExtractor: null,
 		fullWidthRows: false,
 		multiColumnSort: false,
@@ -308,109 +308,15 @@ class Grid {
 		// Pre-calculate cell boundaries.
 		this._columnPosLeft = [];
 		this._columnPosRight = [];
-		var x = 0;
-		for (var i = 0, ii = this._columns.length; i < ii; i++) {
+		let x = 0;
+		for (let i = 0, ii = this._columns.length; i < ii; i++) {
 			this._columnPosLeft[i] = x;
 			this._columnPosRight[i] = x +  this._columns[i].width;
 			x +=  this._columns[i].width;
 		}
 	}
-	init() {
-		let container = this._container,
-			canvas = this._canvas;
-
-		// Block users from annoying mistake
-		if (this._initialized) {
-			throw new Error('Grid is already initialized');
-		}
-		this._initialized = true;
-
-		let computedStyle = window.getComputedStyle(container);
-		this._viewportW = parseFloat(computedStyle.width);
-
-		// header columns and cells may have different padding/border skewing width calculations (box-sizing, hello?)
-		// calculate the diff so we can set consistent sizes
-		this._measureCellPaddingAndBorder();
-
-		if (!this._options.enableTextSelectionOnCells) {
-			// disable text selection in grid cells except in input and textarea elements
-			// (this is IE-specific, because selectstart event will only fire in IE)
-			this._viewport.addEventListener('selectstart.ui', function (event) {
-				return !!~('input,textarea').indexOf(event.target.tagName.toLowerCase());
-			});
-		}
-
-		this._updateColumnSizeInfo();
-		this._createColumnHeaders();
-		this._setupColumnSort();
-		this._createCssRules();
-		this.resizeCanvas();
-		this._bindAncestorScrollEvents();
-
-		container.addEventListener('resize.sparkgrid', this.resizeCanvas.bind(this));
-		this._viewport.addEventListener('scroll', this._handleScroll.bind(this));
-		this._viewport.addEventListener('click', this._handleClick.bind(this));
-		this._headerScroller.addEventListener('contextmenu', this._handleHeaderContextMenu.bind(this));
-		this._headerScroller.addEventListener('click', this._handleHeaderClick.bind(this));
-		delegate(this._headerScroller, 'mouseover', '.spark-header-column', this._handleHeaderMouseEnter.bind(this));
-		delegate(this._headerScroller, 'mouseout', '.spark-header-column', this._handleHeaderMouseLeave.bind(this));
-		this._headerRowScroller.addEventListener('scroll', this._handleHeaderRowScroll.bind(this));
-
-		this._focusSink.addEventListener('keydown', this._handleKeyDown.bind(this));
-		this._focusSink2.addEventListener('keydown', this._handleKeyDown.bind(this));
-
-		canvas.addEventListener('keydown', this._handleKeyDown.bind(this));
-		canvas.addEventListener('click', this._handleClick.bind(this));
-		canvas.addEventListener('dblclick', this._handleDblClick.bind(this));
-		canvas.addEventListener('contextmenu', this._handleContextMenu.bind(this));
-		canvas.addEventListener('draginit', this._handleDragInit.bind(this));
-		canvas.addEventListener('dragstart', this._handleDragStart.bind(this)); // {distance: 3}
-		canvas.addEventListener('drag', this._handleDrag.bind(this));
-		canvas.addEventListener('dragend', this._handleDragEnd.bind(this));
-
-		delegate(canvas, 'mouseover', '.spark-cell', this._handleMouseEnter.bind(this));
-		delegate(canvas, 'mouseout', '.spark-cell', this._handleMouseLeave.bind(this));
-
-		// Work around http://crbug.com/312427.
-		if (navigator.userAgent.toLowerCase().match(/webkit/) && navigator.userAgent.toLowerCase().match(/macintosh/)) {
-			canvas.addEventListener('mousewheel', this._handleMouseWheel.bind(this));
-		}
-	}
-	registerPlugin(plugin) {
-		this._plugins.unshift(plugin);
-		plugin.init(this);
-	}
-	unregisterPlugin(plugin) {
-		var index = this._plugins.indexOf(plugin);
-		if (~index) {
-			if (this._plugins[index].destroy) {
-				this._plugins[index].destroy();
-			}
-			this._plugins.splice(index, 1);
-		}
-	}
-	setSelectionModel(model) {
-		if (this._selectionModel) {
-			this._selectionModel.onSelectedRangesChanged.unsubscribe(this._handleSelectedRangesChanged.bind(this));
-			if (this._selectionModel.destroy) {
-				this._selectionModel.destroy();
-			}
-		}
-
-		this._selectionModel = model;
-		if (this._selectionModel) {
-			this._selectionModel.init(this);
-			this._selectionModel.onSelectedRangesChanged.subscribe(this._handleSelectedRangesChanged.bind(this));
-		}
-	}
-	getSelectionModel() {
-		return this._selectionModel;
-	}
-	getCanvasNode() {
-		return this._canvas;
-	}
 	_measureScrollbar() {
-		var c = createEl({
+		let c = createEl({
 			tag: 'div',
 			style: {
 				position: 'absolute',
@@ -422,7 +328,7 @@ class Grid {
 			}
 		});
 		document.body.appendChild(c);
-		var dim = {
+		let dim = {
 			width: getPx(c, 'height') - c.clientWidth,
 			height: getPx(c, 'height') - c.clientHeight
 		};
@@ -430,24 +336,25 @@ class Grid {
 		return dim;
 	}
 	_getHeadersWidth() {
-		var headersWidth = 0;
-		for (var i = 0, ii = this._columns.length; i < ii; i++) {
+		let headersWidth = 0;
+		for (let i = 0, ii = this._columns.length; i < ii; i++) {
 			headersWidth += this._columns[i].width;
 		}
 		headersWidth += scrollbarDimensions.width;
 		return Math.max(headersWidth, this._viewportW || 0) + 1000;
 	}
 	_getCanvasWidth() {
-		var availableWidth = this._viewportHasVScroll ? this._viewportW - scrollbarDimensions.width : this._viewportW;
-		var rowWidth = 0;
-		var i = this._columns.length;
+		let availableWidth = this._viewportHasVScroll ? this._viewportW - scrollbarDimensions.width : this._viewportW,
+			rowWidth = 0,
+			i = this._columns.length;
+
 		while (i--) {
 			rowWidth += this._columns[i].width;
 		}
 		return this._options.fullWidthRows ? Math.max(rowWidth, availableWidth) : rowWidth;
 	}
 	_updateCanvasWidth(forceColumnWidthsUpdate) {
-		var oldCanvasWidth = this._canvasWidth;
+		let oldCanvasWidth = this._canvasWidth;
 		this._canvasWidth = this._getCanvasWidth();
 
 		if (this._canvasWidth !== oldCanvasWidth) {
@@ -464,19 +371,20 @@ class Grid {
 		}
 	}
 	_getMaxSupportedCssHeight() {
-		var supportedHeight = 1000000;
+		let supportedHeight = 1000000,
 		// FF reports the height back but still renders blank after ~6M px
-		var testUpTo = navigator.userAgent.toLowerCase().match(/firefox/) ? 6000000 : 1000000000;
-		var div = createEl({
-			tag: 'div',
-			style: {
-				display: 'none'
-			}
-		});
+			testUpTo = navigator.userAgent.toLowerCase().match(/firefox/) ? 6000000 : 1000000000,
+			div = createEl({
+				tag: 'div',
+				style: {
+					display: 'none'
+				}
+			});
+
 		document.body.appendChild(div);
 
 		while (true) {
-			var test = supportedHeight * 2;
+			let test = supportedHeight * 2;
 			setPx(div, 'height', test);
 			if (test > testUpTo || div.offsetHeight !== test) {
 				break;
@@ -489,8 +397,9 @@ class Grid {
 		return supportedHeight;
 	}
 	_bindAncestorScrollEvents() {
-		var elem = this._canvas,
+		let elem = this._canvas,
 			scrollFn = this._handleActiveCellPositionChange.bind(this);
+
 		while ((elem = elem.parentNode) !== document.body && elem != null) {
 			// bind to scroll containers only
 			if (elem === this._viewport || elem.scrollWidth !== elem.clientWidth || elem.scrollHeight !== elem.clientHeight) {
@@ -508,55 +417,15 @@ class Grid {
 		}
 
 		let scrollFn = this._handleActiveCellPositionChange.bind(this);
-		for (var i = 0, len = this._boundAncestors.length; i < len; i++) {
+		for (let i = 0, len = this._boundAncestors.length; i < len; i++) {
 			this._boundAncestors[i].removeEventListener('scroll', scrollFn);
 		}
 
 		this._boundAncestors = null;
 	}
-	updateColumnHeader(columnId, title, toolTip) {
-		if (!this._initialized) {
-			return;
-		}
-		var idx = this.getColumnIndex(columnId);
-		if (idx == null) {
-			return;
-		}
-
-		var columnDef = this._columns[idx];
-		var header = this._headers.children[idx];
-		if (header) {
-			if (title !== undefined) {
-				this._columns[idx].name = title;
-			}
-			if (toolTip !== undefined) {
-				this._columns[idx].toolTip = toolTip;
-			}
-
-			this._trigger('onBeforeHeaderCellDestroy', {
-				node: header,
-				column: columnDef
-			});
-
-			header.setAttribute('title', toolTip || '');
-			header.children[0].innerHTML = title;
-
-			this._trigger('onHeaderCellRendered', {
-				node: header,
-				column: columnDef
-			});
-		}
-	}
-	getHeaderRow() {
-		return this._headerRow;
-	}
-	getHeaderRowColumn(columnId) {
-		var idx = this.getColumnIndex(columnId);
-		return this._headerRow.children[idx];
-	}
 	_createColumnHeaders() {
 		slice(this._headers.querySelectorAll('.spark-header-column')).forEach((el) => {
-			var columnDef = this._columns[+el.dataset.columnIndex];
+			let columnDef = this._columns[+el.dataset.columnIndex];
 			if (columnDef) {
 				this._trigger('onBeforeHeaderCellDestroy', {
 					node: el,
@@ -568,7 +437,7 @@ class Grid {
 		setPx(this._headers, 'width', this._getHeadersWidth());
 
 		slice(this._headerRow.querySelectorAll('.spark-headerrow-column')).forEach((el) => {
-			var columnDef = this._columns[+el.dataset.columnIndex];
+			let columnDef = this._columns[+el.dataset.columnIndex];
 			if (columnDef) {
 				this._trigger('onBeforeHeaderRowCellDestroy', {
 					node: el,
@@ -578,15 +447,14 @@ class Grid {
 		});
 		this._headerRow.innerHTML = '';
 
-		for (var i = 0; i < this._columns.length; i++) {
-			var m = this._columns[i];
-
-			var header = createEl({
-				tag: 'div',
-				id: '' + this._uid + m.id,
-				title: m.toolTip || '',
-				className: 'spark-header-column'
-			});
+		for (let i = 0; i < this._columns.length; i++) {
+			let m = this._columns[i],
+				header = createEl({
+					tag: 'div',
+					id: '' + this._uid + m.id,
+					title: m.toolTip || '',
+					className: 'spark-header-column'
+				});
 			header.innerHTML = '<span class="spark-column-name">' + m.name + '</span>';
 			setPx(header, 'width', m.width - this._headerColumnWidthDiff);
 			header.dataset.columnIndex = i;
@@ -598,7 +466,7 @@ class Grid {
 			if (m.sortable) {
 				header.classList.add('spark-header-sortable');
 
-				var span = createEl({
+				let span = createEl({
 					tag: 'span',
 					className: 'spark-sort-indicator'
 				});
@@ -611,7 +479,7 @@ class Grid {
 			});
 
 			if (this._options.showHeaderRow) {
-				var headerRowCell = createEl({
+				let headerRowCell = createEl({
 					tag: 'div',
 					className: 'spark-headerrow-column l' + i + ' r' + i
 				});
@@ -637,19 +505,19 @@ class Grid {
 				return;
 			}
 
-			var col = closest(e.target, '.spark-header-column');
+			let col = closest(e.target, '.spark-header-column');
 			if (!col) {
 				return;
 			}
 
-			var column = this._columns[+col.dataset.columnIndex];
+			let column = this._columns[+col.dataset.columnIndex];
 			if (column.sortable) {
 				if (!this.getEditorLock()._commitCurrentEdit()) {
 					return;
 				}
 
-				var sortOpts = null;
-				var i = 0;
+				let sortOpts = null,
+					i = 0;
 				for (; i < this._sortColumns.length; i++) {
 					if (this._sortColumns[i].columnId === column.id) {
 						sortOpts = this._sortColumns[i];
@@ -686,8 +554,10 @@ class Grid {
 				} else {
 					this._trigger('onSort', {
 						multiColumnSort: true,
-						sortCols: this._sortColumns.map(function (col) {
-							return {sortCol: this._columns[this.getColumnIndex(col.columnId)], sortAsc: col.sortAsc};
+						sortCols: this._sortColumns.map((col) => {
+							return {
+								sortCol: this._columns[this.getColumnIndex(col.columnId)], sortAsc: col.sortAsc
+							};
 						})
 					}, e);
 				}
@@ -695,10 +565,10 @@ class Grid {
 		});
 	}
 	_setupColumnResize() {
-		var j, c, pageX, columnElements, minPageX, maxPageX, firstResizable, lastResizable;
+		let j, c, pageX, columnElements, minPageX, maxPageX, firstResizable, lastResizable;
 		columnElements = slice(this._headers.children);
 		columnElements.forEach((el, i) => {
-			var handle = el.querySelector('.spark-resizable-handle');
+			let handle = el.querySelector('.spark-resizable-handle');
 			if (handle) {
 				handle.parentNode.removeChild(handle);
 			}
@@ -719,13 +589,13 @@ class Grid {
 			if (i < firstResizable || (this._options.forceFitColumns && i >= lastResizable)) {
 				return;
 			}
-			var handle = createEl({
+			let handle = createEl({
 				tag: 'div',
 				className: 'spark-resizable-handle'
 			});
 
 			let handleDrag = (e) => {
-				var actualMinWidth, d = Math.min(maxPageX, Math.max(minPageX, e.pageX)) - pageX, x;
+				let actualMinWidth, d = Math.min(maxPageX, Math.max(minPageX, e.pageX)) - pageX, x;
 				e.preventDefault();
 				if (d < 0) { // shrink column
 					x = d;
@@ -797,13 +667,12 @@ class Grid {
 			};
 
 			let handleMouseUp = (e) => {
-				var newWidth;
 				document.body.removeEventListener('mouseup', handleMouseUp);
 				document.body.removeEventListener('mousemove', handleDrag);
 				e.target.parentNode.classList.remove('spark-header-column-active');
 				for (j = 0; j < columnElements.length; j++) {
 					c = this._columns[j];
-					newWidth = columnElements[j].clientWidth;
+					let newWidth = columnElements[j].clientWidth;
 
 					if (c.previousWidth !== newWidth && c.rerenderOnResize) {
 						this.invalidateAllRows();
@@ -816,7 +685,8 @@ class Grid {
 			};
 
 			let handleMousedown = (e) => {
-				var shrinkLeewayOnRight = null, stretchLeewayOnRight = null;
+				let shrinkLeewayOnRight = null,
+					stretchLeewayOnRight = null;
 
 				if (!this.getEditorLock()._commitCurrentEdit()) {
 					return false;
@@ -848,7 +718,8 @@ class Grid {
 						}
 					}
 				}
-				var shrinkLeewayOnLeft = 0, stretchLeewayOnLeft = 0;
+				let shrinkLeewayOnLeft = 0,
+					stretchLeewayOnLeft = 0;
 				for (j = 0; j <= i; j++) {
 					// columns on left only affect minPageX
 					c = this._columns[j];
@@ -887,22 +758,23 @@ class Grid {
 		});
 	}
 	_getVBoxDelta(el) {
-		var p = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'];
-		var delta = 0;
-		var i, len;
+		let p = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'],
+			delta = 0,
+			i, len;
+
 		i = 0;
 		len = p.length;
 		for (; i < len; i++) {
-			var val = p[i];
+			let val = p[i];
 			delta += parseFloat(el.style[val]) || 0;
 		}
 		return delta;
 	}
 	_measureCellPaddingAndBorder() {
-		var el;
-		var h = ['borderLeftWidth', 'borderRightWidth', 'paddingLeft', 'paddingRight'];
-		var v = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'];
-		var i, len, val, compStyle;
+		let el,
+			h = ['borderLeftWidth', 'borderRightWidth', 'paddingLeft', 'paddingRight'],
+			v = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'],
+			i, len, val, compStyle;
 
 		el = createEl({
 			tag: 'div',
@@ -915,7 +787,7 @@ class Grid {
 		this._headerColumnWidthDiff = 0;
 		el.parentNode.removeChild(el);
 
-		var r = createEl({
+		let r = createEl({
 			tag: 'div',
 			className: 'spark-row'
 		});
@@ -957,16 +829,16 @@ class Grid {
 			rel: 'stylesheet'
 		});
 		document.body.appendChild(this._style);
-		var rowHeight = (this._options.rowHeight - this._cellHeightDiff);
-		var rules = [
-			'.' + this._uid + ' .spark-header-column { left: 1000px; }',
-			'.' + this._uid + ' .spark-top-panel { height:' + this._options.topPanelHeight + 'px; }',
-			'.' + this._uid + ' .spark-headerrow-columns { height:' + this._options.headerRowHeight + 'px; }',
-			'.' + this._uid + ' .spark-row { height:' + rowHeight + 'px; }',
-			'.' + this._uid + ' .spark-cell { height:' + rowHeight + 'px; }'
-		];
+		let rowHeight = (this._options.rowHeight - this._cellHeightDiff),
+			rules = [
+				'.' + this._uid + ' .spark-header-column { left: 1000px; }',
+				'.' + this._uid + ' .spark-top-panel { height:' + this._options.topPanelHeight + 'px; }',
+				'.' + this._uid + ' .spark-headerrow-columns { height:' + this._options.headerRowHeight + 'px; }',
+				'.' + this._uid + ' .spark-row { height:' + rowHeight + 'px; }',
+				'.' + this._uid + ' .spark-cell { height:' + rowHeight + 'px; }'
+			];
 
-		for (var i = 0; i < this._columns.length; i++) {
+		for (let i = 0; i < this._columns.length; i++) {
 			rules.push('.' + this._uid + ' .l' + i + ' { }');
 			rules.push('.' + this._uid + ' .r' + i + ' { }');
 		}
@@ -998,7 +870,7 @@ class Grid {
 			let cssRules = (this._stylesheet.cssRules || this._stylesheet.rules),
 				columnIdx;
 			for (let i = 0; i < cssRules.length; i++) {
-				var selector = cssRules[i].selectorText,
+				let selector = cssRules[i].selectorText,
 					matchesL = /\.l\d+/.exec(selector),
 					matchesR = /\.r\d+/.exec(selector);
 
@@ -1021,121 +893,12 @@ class Grid {
 		removeEl(this._style);
 		this._stylesheet = null;
 	}
-	destroy() {
-		this.getEditorLock()._cancelCurrentEdit();
-
-		this._trigger('onBeforeDestroy', {});
-
-		var i = this._plugins.length;
-		while (i--) {
-			this.unregisterPlugin(this._plugins[i]);
-		}
-
-		if (this._options.enableColumnReorder) {
-			this._headers.filter(':ui-sortable').sortable('destroy');
-		}
-
-		this._unbindAncestorScrollEvents();
-		this._removeCssRules();
-
-		//canvas.unbind('draginit dragstart dragend drag');
-		this._container.empty().classList.remove(this._uid, 'sparkgrid');
-	}
-	_trigger(evt, args, e) {
-		args = args || {};
-		args.grid = this;
-		return this[evt].notify(args, e, this);
-	}
-	getEditorLock() {
-		return this._options.editorLock;
-	}
-	getEditController() {
-		return this._editController;
-	}
-	getColumnIndex(id) {
-		return this._columnsById[id];
-	}
-	autosizeColumns() {
-		var i, c, widths = [], shrinkLeeway = 0, total = 0, prevTotal, availWidth = this._viewportHasVScroll ? this._viewportW - scrollbarDimensions.width : this._viewportW;
-
-		for (i = 0; i < this._columns.length; i++) {
-			c = this._columns[i];
-			widths.push(c.width);
-			total += c.width;
-			if (c.resizable) {
-				shrinkLeeway += c.width - Math.max(c.minWidth, this._absoluteColumnMinWidth);
-			}
-		}
-
-		// shrink
-		prevTotal = total;
-		while (total > availWidth && shrinkLeeway) {
-			var shrinkProportion = (total - availWidth) / shrinkLeeway;
-			for (i = 0; i < this._columns.length && total > availWidth; i++) {
-				c = this._columns[i];
-				var width = widths[i];
-				if (!c.resizable || width <= c.minWidth || width <= this._absoluteColumnMinWidth) {
-					continue;
-				}
-				var absMinWidth = Math.max(c.minWidth, this._absoluteColumnMinWidth);
-				var shrinkSize = Math.floor(shrinkProportion * (width - absMinWidth)) || 1;
-				shrinkSize = Math.min(shrinkSize, width - absMinWidth);
-				total -= shrinkSize;
-				shrinkLeeway -= shrinkSize;
-				widths[i] -= shrinkSize;
-			}
-			if (prevTotal <= total) {  // avoid infinite loop
-				break;
-			}
-			prevTotal = total;
-		}
-
-		// grow
-		prevTotal = total;
-		while (total < availWidth) {
-			var growProportion = availWidth / total;
-			for (i = 0; i < this._columns.length && total < availWidth; i++) {
-				c = this._columns[i];
-				var currentWidth = widths[i];
-				var growSize;
-
-				if (!c.resizable || c.maxWidth <= currentWidth) {
-					growSize = 0;
-				} else {
-					growSize = Math.min(Math.floor(growProportion * currentWidth) - currentWidth,
-						(c.maxWidth - currentWidth) || 1000000) || 1;
-				}
-				total += growSize;
-				widths[i] += growSize;
-			}
-			if (prevTotal >= total) {  // avoid infinite loop
-				break;
-			}
-			prevTotal = total;
-		}
-
-		var reRender = false;
-		for (i = 0; i < this._columns.length; i++) {
-			if (this._columns[i].rerenderOnResize && this._columns[i].width !== widths[i]) {
-				reRender = true;
-			}
-			this._columns[i].width = widths[i];
-		}
-
-		this._applyColumnHeaderWidths();
-		this._updateCanvasWidth(true);
-		if (reRender) {
-			this.invalidateAllRows();
-			this.render();
-		}
-	}
 	_applyColumnHeaderWidths() {
 		if (!this._initialized) {
 			return;
 		}
-		var h;
-		for (var i = 0, hds = this._headers.children, ii = hds.length; i < ii; i++) {
-			h = hds[i];
+		for (let i = 0, hds = this._headers.children, ii = hds.length; i < ii; i++) {
+			let h = hds[i];
 			if (h.offsetWidth !== this._columns[i].width - this._headerColumnWidthDiff) {
 				h.style.width = (this._columns[i].width - this._headerColumnWidthDiff) + 'px';
 			}
@@ -1144,78 +907,28 @@ class Grid {
 		this._updateColumnSizeInfo();
 	}
 	_applyColumnWidths() {
-		var x = 0, w, rule;
-		for (var i = 0; i < this._columns.length; i++) {
-			w = this._columns[i].width;
+		let x = 0;
+		for (let i = 0; i < this._columns.length; i++) {
+			let w = this._columns[i].width,
+				rule = this._getColumnCssRules(i);
 
-			rule = this._getColumnCssRules(i);
 			rule.left.style.left = x + 'px';
 			rule.right.style.right = (this._canvasWidth - x - w) + 'px';
 
 			x += this._columns[i].width;
 		}
 	}
-	setSortColumn(columnId, ascending) {
-		this.setSortColumns([
-			{columnId: columnId, sortAsc: ascending}
-		]);
-	}
-	setSortColumns(cols) {
-		var i, len, j, el, sEl, sortEls, sortInds, indEl;
-		this._sortColumns = cols;
-
-		var headerColumnEls = slice(this._headers.children);
-
-		i = 0;
-		len = headerColumnEls.length;
-		for (; i < len; i++) {
-			el = headerColumnEls[i];
-			el.classList.remove('spark-header-column-sorted');
-			sortEls = slice(el.querySelectorAll('.spark-sort-indicator'));
-
-			j = 0;
-			len = sortEls.length;
-			for (; j < len; j++) {
-				sEl = sortEls[j];
-				sEl.classList.remove('spark-sort-indicator-asc', 'spark-sort-indicator-desc');
-			}
-		}
-
-		i = 0;
-		len = this._sortColumns.length;
-		for (; i < len; i++) {
-			var col = this._sortColumns[i];
-			if (col.sortAsc == null) {
-				col.sortAsc = true;
-			}
-			var columnIndex = this.getColumnIndex(col.columnId);
-			if (columnIndex != null) {
-				headerColumnEls[columnIndex].classList.add('spark-header-column-sorted');
-				sortInds = headerColumnEls[columnIndex].querySelectorAll('.spark-sort-indicator');
-
-				j = 0;
-				len = sortInds.length;
-				for (; j < len; j++) {
-					indEl = sortInds[j];
-					indEl.classList.add(col.sortAsc ? 'spark-sort-indicator-asc' : 'spark-sort-indicator-desc');
-				}
-			}
-		}
-	}
-	getSortColumns() {
-		return this._sortColumns;
-	}
 	_handleSelectedRangesChanged(info) {
 		this._selectedRows = [];
-		var hash = {},
+		let hash = {},
 			ranges = info.data;
-		for (var i = 0; i < ranges.length; i++) {
-			for (var j = ranges[i].fromRow; j <= ranges[i].toRow; j++) {
+		for (let i = 0; i < ranges.length; i++) {
+			for (let j = ranges[i].fromRow; j <= ranges[i].toRow; j++) {
 				if (!hash[j]) {  // prevent duplicates
 					this._selectedRows.push(j);
 					hash[j] = {};
 				}
-				for (var k = ranges[i].fromCell; k <= ranges[i].toCell; k++) {
+				for (let k = ranges[i].fromCell; k <= ranges[i].toCell; k++) {
 					if (this.canCellBeSelected(j, k)) {
 						hash[j][this._columns[k].id] = this._options.selectedCellCssClass;
 					}
@@ -1227,99 +940,13 @@ class Grid {
 
 		this._trigger('onSelectedRowsChanged', {rows: this.getSelectedRows()}, info.e);
 	}
-	getColumns() {
-		return this._columns;
-	}
-	setColumns(columns) {
-		this._updateColumnCache(columns);
-		this._updateColumnSizeInfo();
-
-		if (this._initialized) {
-			this.invalidateAllRows();
-			this._createColumnHeaders();
-			this._removeCssRules();
-			this._createCssRules();
-			this.resizeCanvas();
-			this._applyColumnWidths();
-			this._handleScroll();
-		}
-	}
-	getOptions() {
-		return this._options;
-	}
-	setOptions(options) {
-		if (!this.getEditorLock().commitCurrentEdit()) {
-			return;
-		}
-
-		this._makeActiveCellNormal();
-
-		if (this._options.enableAddRow !== this._options.enableAddRow) {
-			this.invalidateRow(this.getDataLength());
-		}
-
-		this._options = extend(this._options, options);
-
-		this._viewport.style.overflowY = this._options.autoHeight ? 'hidden' : 'auto';
-		this.render();
-	}
-	setData(newData, scrollToTop) {
-		this._data = newData;
-		this.invalidateAllRows();
-		this.updateRowCount();
-		if (scrollToTop) {
-			this._scrollTo(0);
-		}
-	}
-	getData() {
-		return this._data;
-	}
-	getDataLength() {
-		if (this._data.getLength) {
-			return this._data.getLength();
-		} else {
-			return this._data.length;
-		}
+	_trigger(evt, args, e) {
+		args = args || {};
+		args.grid = this;
+		return this[evt].notify(args, e, this);
 	}
 	_getDataLengthIncludingAddNew() {
 		return this.getDataLength() + (this._options.enableAddRow ? 1 : 0);
-	}
-	getDataItem(index) {
-		if (this._data.getItem) {
-			return this._data.getItem(index);
-		} else {
-			return this._data[index];
-		}
-	}
-	getTopPanel() {
-		return this._topPanel;
-	}
-	setTopPanelVisibility(visible) {
-		if (this._options.showTopPanel !== visible) {
-			this._options.showTopPanel = visible;
-			if (visible) {
-				this._topPanelScroller.style.display = '';
-				this.resizeCanvas();
-			} else {
-				this._topPanelScroller.style.display = 'none';
-				this.resizeCanvas();
-			}
-		}
-	}
-	setHeaderRowVisibility(visible) {
-		if (this._options.showHeaderRow !== visible) {
-			this._options.showHeaderRow = visible;
-			if (visible) {
-				this._topPanelScroller.style.display = '';
-				this.resizeCanvas();
-			} else {
-				this._topPanelScroller.style.display = 'none';
-				this.resizeCanvas();
-			}
-		}
-	}
-	getEl() {
-		return this._container;
 	}
 	_getRowTop(row) {
 		return this._options.rowHeight * row - this._offset;
@@ -1331,14 +958,14 @@ class Grid {
 		y = Math.max(y, 0);
 		y = Math.min(y, this._th - this._viewportH + (this._viewportHasHScroll ? scrollbarDimensions.height : 0));
 
-		var oldOffset = this._offset;
+		let oldOffset = this._offset;
 
 		this._page = Math.min(this._n - 1, Math.floor(y / this._ph));
 		this._offset = Math.round(this._page * this._cj);
-		var newScrollTop = y - this._offset;
+		let newScrollTop = y - this._offset;
 
 		if (this._offset !== oldOffset) {
-			var range = this.getVisibleRange(newScrollTop);
+			let range = this.getVisibleRange(newScrollTop);
 			this._cleanupRows(range);
 			this._updateRowPositions();
 		}
@@ -1351,17 +978,17 @@ class Grid {
 		}
 	}
 	_getFormatter(row, column) {
-		var rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
+		let rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
 
 		// look up by id, then index
-		var columnOverrides = rowMetadata && rowMetadata.columns && (rowMetadata.columns[column.id] || rowMetadata.columns[this.getColumnIndex(column.id)]);
+		let columnOverrides = rowMetadata && rowMetadata.columns && (rowMetadata.columns[column.id] || rowMetadata.columns[this.getColumnIndex(column.id)]);
 
 		return (columnOverrides && columnOverrides.formatter) || (rowMetadata && rowMetadata.formatter) || column.formatter || (this._options.formatterFactory && this._options.formatterFactory._getFormatter(column)) || this._options.defaultFormatter;
 	}
 	_getEditor(row, cell) {
-		var column = this._columns[cell];
-		var rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
-		var columnMetadata = rowMetadata && rowMetadata.columns;
+		let column = this._columns[cell],
+			rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row),
+			columnMetadata = rowMetadata && rowMetadata.columns;
 
 		if (columnMetadata && columnMetadata[column.id] && columnMetadata[column.id].editor !== undefined) {
 			return columnMetadata[column.id].editor;
@@ -1379,15 +1006,14 @@ class Grid {
 		return item[columnDef.field];
 	}
 	_appendRowHtml(stringArray, row, range, dataLength) {
-		var d = this.getDataItem(row);
-		var dataLoading = row < dataLength && !d;
-		var rowCss = 'spark-row' + (dataLoading ? ' loading' : '') + (row === this._activeRow ? ' active' : '') + (row % 2 === 1 ? ' odd' : ' even');
+		let d = this.getDataItem(row),
+			dataLoading = row < dataLength && !d,
+			rowCss = 'spark-row' + (dataLoading ? ' loading' : '') + (row === this._activeRow ? ' active' : '') + (row % 2 === 1 ? ' odd' : ' even'),
+			metadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
 
 		if (!d) {
 			rowCss += ' ' + this._options.addNewRowCssClass;
 		}
-
-		var metadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
 
 		if (metadata && metadata.cssClasses) {
 			rowCss += ' ' + metadata.cssClasses;
@@ -1395,12 +1021,12 @@ class Grid {
 
 		stringArray.push('<div class="' + rowCss + '" style="top:' + this._getRowTop(row) + 'px">');
 
-		var colspan, m;
-		for (var i = 0, ii = this._columns.length; i < ii; i++) {
-			m = this._columns[i];
-			colspan = 1;
+		for (let i = 0, ii = this._columns.length; i < ii; i++) {
+			let m = this._columns[i],
+				colspan = 1;
+
 			if (metadata && metadata.columns) {
-				var columnData = metadata.columns[m.id] || metadata.columns[i];
+				let columnData = metadata.columns[m.id] || metadata.columns[i];
 				colspan = (columnData && columnData.colspan) || 1;
 				if (colspan === '*') {
 					colspan = ii - i;
@@ -1425,15 +1051,15 @@ class Grid {
 		stringArray.push('</div>');
 	}
 	_appendCellHtml(stringArray, row, cell, colspan, item) {
-		var m = this._columns[cell];
-		var cellCss = 'spark-cell l' + cell + ' r' + Math.min(this._columns.length - 1,
+		let m = this._columns[cell],
+			cellCss = 'spark-cell l' + cell + ' r' + Math.min(this._columns.length - 1,
 				cell + colspan - 1) + (m.cssClass ? ' ' + m.cssClass : '');
 		if (row === this._activeRow && cell === this._activeCell) {
 			cellCss += (' active');
 		}
 
 		// TODO:  merge them together in the setter
-		for (var key in this._cellCssClasses) {
+		for (let key in this._cellCssClasses) {
 			if (this._cellCssClasses[key][row] && this._cellCssClasses[key][row][m.id]) {
 				cellCss += (' ' + this._cellCssClasses[key][row][m.id]);
 			}
@@ -1443,7 +1069,7 @@ class Grid {
 
 		// if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
 		if (item) {
-			var value = this._getDataItemValueForColumn(item, m);
+			let value = this._getDataItemValueForColumn(item, m);
 			stringArray.push(this._getFormatter(row, m)(row, cell, value, m, item));
 		}
 
@@ -1453,27 +1079,14 @@ class Grid {
 		this._rowsCache[row].cellColSpans[cell] = colspan;
 	}
 	_cleanupRows(rangeToKeep) {
-		for (var i in this._rowsCache) {
+		for (let i in this._rowsCache) {
 			if (((i = parseInt(i, 10)) !== this._activeRow) && (i < rangeToKeep.top || i > rangeToKeep.bottom)) {
 				this._removeRowFromCache(i);
 			}
 		}
 	}
-	invalidate() {
-		this.updateRowCount();
-		this.invalidateAllRows();
-		this.render();
-	}
-	invalidateAllRows() {
-		if (this._currentEditor) {
-			this._makeActiveCellNormal();
-		}
-		for (var row in this._rowsCache) {
-			this._removeRowFromCache(row);
-		}
-	}
 	_removeRowFromCache(row) {
-		var cacheEntry = this._rowsCache[row];
+		let cacheEntry = this._rowsCache[row];
 		if (!cacheEntry) {
 			return;
 		}
@@ -1490,67 +1103,6 @@ class Grid {
 		this._renderedRows--;
 		this._counter_rows_removed++;
 	}
-	invalidateRows(rows) {
-		var i, rl;
-		if (!rows || !rows.length) {
-			return;
-		}
-		this._vScrollDir = 0;
-		for (i = 0, rl = rows.length; i < rl; i++) {
-			if (this._currentEditor && this._activeRow === rows[i]) {
-				this._makeActiveCellNormal();
-			}
-			if (this._rowsCache[rows[i]]) {
-				this._removeRowFromCache(rows[i]);
-			}
-		}
-	}
-	invalidateRow(row) {
-		this.invalidateRows([row]);
-	}
-	updateCell(row, cell) {
-		var cellNode = this.getCellNode(row, cell);
-		if (!cellNode) {
-			return;
-		}
-
-		var m = this._columns[cell], d = this.getDataItem(row);
-		if (this._currentEditor && this._activeRow === row && this._activeCell === cell) {
-			this._currentEditor.loadValue(d);
-		} else {
-			cellNode.innerHTML = d ? this._getFormatter(row, m)(row, cell, this._getDataItemValueForColumn(d, m), m, d) : '';
-			this._invalidatePostProcessingResults(row);
-		}
-	}
-	updateRow(row) {
-		var cacheEntry = this._rowsCache[row];
-		if (!cacheEntry) {
-			return;
-		}
-
-		this._ensureCellNodesInRowsCache(row);
-
-		var d = this.getDataItem(row);
-
-		for (var columnIdx in cacheEntry.cellNodesByColumnIdx) {
-			if (!cacheEntry.cellNodesByColumnIdx.hasOwnProperty(columnIdx)) {
-				continue;
-			}
-
-			columnIdx = columnIdx | 0;
-			var m = this._columns[columnIdx], node = cacheEntry.cellNodesByColumnIdx[columnIdx];
-
-			if (row === this._activeRow && columnIdx === this._activeCell && this._currentEditor) {
-				this._currentEditor.loadValue(d);
-			} else if (d) {
-				node.innerHTML = this._getFormatter(row, m)(row, columnIdx, this._getDataItemValueForColumn(d, m), m, d);
-			} else {
-				node.innerHTML = '';
-			}
-		}
-
-		this._invalidatePostProcessingResults(row);
-	}
 	_getViewportHeight() {
 		let container = this._container;
 
@@ -1560,149 +1112,13 @@ class Grid {
 			(this._options.showTopPanel ? this._options.topPanelHeight + this._getVBoxDelta(this._topPanelScroller) : 0) -
 			(this._options.showHeaderRow ? this._options.headerRowHeight + this._getVBoxDelta(this._headerRowScroller) : 0);
 	}
-	resizeCanvas() {
-		if (!this._initialized) {
-			return;
-		}
-		if (this._options.autoHeight) {
-			this._viewportH = this._options.rowHeight * this._getDataLengthIncludingAddNew();
-		} else {
-			this._viewportH = this._getViewportHeight();
-		}
-
-		this._numVisibleRows = Math.ceil(this._viewportH / this._options.rowHeight);
-		this._viewportW = this._container.clientWidth;
-		if (!this._options.autoHeight) {
-			setPx(this._viewport, 'height', this._viewportH);
-		}
-
-		if (this._options.forceFitColumns) {
-			this.autosizeColumns();
-		}
-
-		this.updateRowCount();
-		this._handleScroll();
-		// Since the width has changed, force the render() to reevaluate virtually rendered cells.
-		this._lastRenderedScrollLeft = -1;
-		this.render();
-	}
-	updateRowCount() {
-		if (!this._initialized) {
-			return;
-		}
-
-		var dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
-		var numberOfRows = dataLengthIncludingAddNew + (this._options.leaveSpaceForNewRows ? this._numVisibleRows - 1 : 0);
-
-		var oldViewportHasVScroll = this._viewportHasVScroll;
-		// with autoHeight, we do not need to accommodate the vertical scroll bar
-		this._viewportHasVScroll = !this._options.autoHeight && (numberOfRows * this._options.rowHeight > this._viewportH);
-
-		this._makeActiveCellNormal();
-
-		// remove the rows that are now outside of the data range
-		// this helps avoid redundant calls to .removeRow() when the size of the data decreased by thousands of rows
-		var l = dataLengthIncludingAddNew - 1;
-		for (var i in this._rowsCache) {
-			if (i >= l) {
-				this._removeRowFromCache(i);
-			}
-		}
-
-		if (this._activeCellNode && this._activeRow > l) {
-			this.resetActiveCell();
-		}
-
-		var oldH = this._h;
-		this._th = Math.max(this._options.rowHeight * numberOfRows, this._viewportH - scrollbarDimensions.height);
-		if (this._th < maxSupportedCssHeight) {
-			// just one page
-			this._h = this._ph = this._th;
-			this._n = 1;
-			this._cj = 0;
-		} else {
-			// break into pages
-			this._h = maxSupportedCssHeight;
-			this._ph = this._h / 100;
-			this._n = Math.floor(this._th / this._ph);
-			this._cj = (this._th - this._h) / (this._n - 1);
-		}
-
-		if (this._h !== oldH) {
-			setPx(this._canvas, 'height', this._h);
-			this._scrollTop = this._viewport.scrollTop;
-		}
-
-		var oldScrollTopInRange = (this._scrollTop + this._offset <= this._th - this._viewportH);
-
-		if (this._th === 0 || this._scrollTop === 0) {
-			this._page = this._offset = 0;
-		} else if (oldScrollTopInRange) {
-			// maintain virtual position
-			this._scrollTo(this._scrollTop + this._offset);
-		} else {
-			// scroll to bottom
-			this._scrollTo(this._th - this._viewportH);
-		}
-
-		if (this._h !== oldH && this._options.autoHeight) {
-			this.resizeCanvas();
-		}
-
-		if (this._options.forceFitColumns && oldViewportHasVScroll !== this._viewportHasVScroll) {
-			this.autosizeColumns();
-		}
-		this._updateCanvasWidth(false);
-	}
-	getVisibleRange(viewportTop, viewportLeft) {
-		if (viewportTop == null) {
-			viewportTop = this._scrollTop;
-		}
-		if (viewportLeft == null) {
-			viewportLeft = this._scrollLeft;
-		}
-
-		return {
-			top: this._getRowFromPosition(viewportTop),
-			bottom: this._getRowFromPosition(viewportTop + this._viewportH) + 1,
-			leftPx: viewportLeft,
-			rightPx: viewportLeft + this._viewportW
-		};
-	}
-	getRenderedRange(viewportTop, viewportLeft) {
-		var range = this.getVisibleRange(viewportTop, viewportLeft);
-		var buffer = Math.round(this._viewportH / this._options.rowHeight);
-		var minBuffer = 3;
-
-		if (this._vScrollDir === -1) {
-			range.top -= buffer;
-			range.bottom += minBuffer;
-		} else if (this._vScrollDir === 1) {
-			range.top -= minBuffer;
-			range.bottom += buffer;
-		} else {
-			range.top -= minBuffer;
-			range.bottom += minBuffer;
-		}
-
-		range.top = Math.max(0, range.top);
-		range.bottom = Math.min(this._getDataLengthIncludingAddNew() - 1, range.bottom);
-
-		range.leftPx -= this._viewportW;
-		range.rightPx += this._viewportW;
-
-		range.leftPx = Math.max(0, range.leftPx);
-		range.rightPx = Math.min(this._canvasWidth, range.rightPx);
-
-		return range;
-	}
 	_ensureCellNodesInRowsCache(row) {
-		var cacheEntry = this._rowsCache[row];
+		let cacheEntry = this._rowsCache[row];
 		if (cacheEntry) {
 			if (cacheEntry.cellRenderQueue.length) {
-				var lastChild = cacheEntry.rowNode.lastChild;
+				let lastChild = cacheEntry.rowNode.lastChild;
 				while (cacheEntry.cellRenderQueue.length) {
-					var columnIdx = cacheEntry.cellRenderQueue.pop();
+					let columnIdx = cacheEntry.cellRenderQueue.pop();
 					cacheEntry.cellNodesByColumnIdx[columnIdx] = lastChild;
 					lastChild = lastChild.previousSibling;
 				}
@@ -1710,12 +1126,12 @@ class Grid {
 		}
 	}
 	_cleanUpCells(range, row) {
-		var totalCellsRemoved = 0;
-		var cacheEntry = this._rowsCache[row];
+		let totalCellsRemoved = 0,
+			cacheEntry = this._rowsCache[row];
 
 		// Remove cells outside the range.
-		var cellsToRemove = [];
-		for (var i in cacheEntry.cellNodesByColumnIdx) {
+		let cellsToRemove = [];
+		for (let i in cacheEntry.cellNodesByColumnIdx) {
 			// I really hate it when people mess with Array.prototype.
 			if (!cacheEntry.cellNodesByColumnIdx.hasOwnProperty(i)) {
 				continue;
@@ -1724,7 +1140,7 @@ class Grid {
 			// This is a string, so it needs to be cast back to a number.
 			i = i | 0;
 
-			var colspan = cacheEntry.cellColSpans[i];
+			let colspan = cacheEntry.cellColSpans[i];
 			if (this._columnPosLeft[i] > range.rightPx || this._columnPosRight[Math.min(this._columns.length - 1,
 					i + colspan - 1)] < range.leftPx) {
 				if (!(row === this._activeRow && i === this._activeCell)) {
@@ -1733,7 +1149,7 @@ class Grid {
 			}
 		}
 
-		var cellToRemove;
+		let cellToRemove;
 		while ((cellToRemove = cellsToRemove.pop()) != null) {
 			cacheEntry.rowNode.removeChild(cacheEntry.cellNodesByColumnIdx[cellToRemove]);
 			delete cacheEntry.cellColSpans[cellToRemove];
@@ -1745,14 +1161,14 @@ class Grid {
 		}
 	}
 	_cleanUpAndRenderCells(range) {
-		var cacheEntry;
-		var stringArray = [];
-		var processedRows = [];
-		var cellsAdded;
-		var totalCellsAdded = 0;
-		var colspan;
+		let cacheEntry,
+			stringArray = [],
+			processedRows = [],
+			cellsAdded,
+			totalCellsAdded = 0,
+			colspan;
 
-		for (var row = range.top, btm = range.bottom; row <= btm; row++) {
+		for (let row = range.top, btm = range.bottom; row <= btm; row++) {
 			cacheEntry = this._rowsCache[row];
 			if (!cacheEntry) {
 				continue;
@@ -1766,13 +1182,12 @@ class Grid {
 			// Render missing cells.
 			cellsAdded = 0;
 
-			var metadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
+			let metadata = this._data.getItemMetadata && this._data.getItemMetadata(row),
+				d = this.getDataItem(row);
 			metadata = metadata && metadata.columns;
 
-			var d = this.getDataItem(row);
-
 			// TODO:  shorten this loop (index? heuristics? binary search?)
-			for (var i = 0, ii = this._columns.length; i < ii; i++) {
+			for (let i = 0, ii = this._columns.length; i < ii; i++) {
 				// Cells to the right are outside the range.
 				if (this._columnPosLeft[i] > range.rightPx) {
 					break;
@@ -1786,7 +1201,7 @@ class Grid {
 
 				colspan = 1;
 				if (metadata) {
-					var columnData = metadata[this._columns[i].id] || metadata[i];
+					let columnData = metadata[this._columns[i].id] || metadata[i];
 					colspan = (columnData && columnData.colspan) || 1;
 					if (colspan === '*') {
 						colspan = ii - i;
@@ -1811,16 +1226,15 @@ class Grid {
 			return;
 		}
 
-		var x = document.createElement('div');
+		let x = document.createElement('div');
 		x.innerHTML = stringArray.join('');
 
-		var processedRow;
-		var node;
+		let processedRow;
 		while ((processedRow = processedRows.pop()) != null) {
 			cacheEntry = this._rowsCache[processedRow];
-			var columnIdx;
+			let columnIdx;
 			while ((columnIdx = cacheEntry.cellRenderQueue.pop()) != null) {
-				node = x.lastChild;
+				let node = x.lastChild;
 				cacheEntry.rowNode.appendChild(node);
 				cacheEntry.cellNodesByColumnIdx[columnIdx] = node;
 			}
@@ -1890,38 +1304,12 @@ class Grid {
 		this._startPostProcessing();
 	}
 	_updateRowPositions() {
-		for (var row in this._rowsCache) {
+		for (let row in this._rowsCache) {
 			this._rowsCache[row].rowNode.style.top = this._getRowTop(row) + 'px';
 		}
 	}
-	render() {
-		if (!this._initialized) {
-			return;
-		}
-		var vRange = this.getVisibleRange();
-		var rRange = this.getRenderedRange();
-
-		// remove rows no longer in the viewport
-		this._cleanupRows(rRange);
-
-		// add new rows & missing cells in existing rows
-		if (this._lastRenderedScrollLeft !== this._scrollLeft) {
-			this._cleanUpAndRenderCells(rRange);
-		}
-
-		// render missing rows
-		this._renderRows(rRange);
-
-		this._postProcessFromRow = vRange.top;
-		this._postProcessToRow = Math.min(this._getDataLengthIncludingAddNew() - 1, vRange.bottom);
-		this._startPostProcessing();
-
-		this._lastRenderedScrollTop = this._scrollTop;
-		this._lastRenderedScrollLeft = this._scrollLeft;
-		this._h_render = null;
-	}
 	_handleHeaderRowScroll() {
-		var scrollLeft = this._headerRowScroller.scrollLeft;
+		let scrollLeft = this._headerRowScroller.scrollLeft;
 		if (scrollLeft !== this._viewport.scrollLeft) {
 			this._viewport.scrollLeft = scrollLeft;
 		}
@@ -1929,8 +1317,9 @@ class Grid {
 	_handleScroll() {
 		this._scrollTop = this._viewport.scrollTop;
 		this._scrollLeft = this._viewport.scrollLeft;
-		var vScrollDist = Math.abs(this._scrollTop - this._prevScrollTop);
-		var hScrollDist = Math.abs(this._scrollLeft - this._prevScrollLeft);
+
+		let vScrollDist = Math.abs(this._scrollTop - this._prevScrollTop),
+			hScrollDist = Math.abs(this._scrollLeft - this._prevScrollLeft);
 
 		if (hScrollDist) {
 			this._prevScrollLeft = this._scrollLeft;
@@ -1947,7 +1336,7 @@ class Grid {
 			if (vScrollDist < this._viewportH) {
 				this._scrollTo(this._scrollTop + this._offset);
 			} else {
-				var oldOffset = this._offset;
+				let oldOffset = this._offset;
 				if (this._h === this._viewportH) {
 					this._page = 0;
 				} else {
@@ -1980,10 +1369,11 @@ class Grid {
 		this._trigger('onScroll', {scrollLeft: this._scrollLeft, scrollTop: this._scrollTop});
 	}
 	_asyncPostProcessRows() {
-		var dataLength = this.getDataLength();
+		let dataLength = this.getDataLength();
 		while (this._postProcessFromRow <= this._postProcessToRow) {
-			var row = (this._vScrollDir >= 0) ? this._postProcessFromRow++ : this._postProcessToRow--;
-			var cacheEntry = this._rowsCache[row];
+			let row = (this._vScrollDir >= 0) ? this._postProcessFromRow++ : this._postProcessToRow--,
+				cacheEntry = this._rowsCache[row];
+
 			if (!cacheEntry || row >= dataLength) {
 				continue;
 			}
@@ -1993,16 +1383,16 @@ class Grid {
 			}
 
 			this._ensureCellNodesInRowsCache(row);
-			for (var columnIdx in cacheEntry.cellNodesByColumnIdx) {
+			for (let columnIdx in cacheEntry.cellNodesByColumnIdx) {
 				if (!cacheEntry.cellNodesByColumnIdx.hasOwnProperty(columnIdx)) {
 					continue;
 				}
 
 				columnIdx = columnIdx | 0;
 
-				var m = this._columns[columnIdx];
+				let m = this._columns[columnIdx];
 				if (m.asyncPostRender && !this._postProcessedRows[row][columnIdx]) {
-					var node = cacheEntry.cellNodesByColumnIdx[columnIdx];
+					let node = cacheEntry.cellNodesByColumnIdx[columnIdx];
 					if (node) {
 						m.asyncPostRender(node, row, this.getDataItem(row), m);
 					}
@@ -2015,8 +1405,8 @@ class Grid {
 		}
 	}
 	_updateCellCssStylesOnRenderedRows(addedHash, removedHash) {
-		var node, columnId, addedRowHash, removedRowHash;
-		for (var row in this._rowsCache) {
+		let node, columnId, addedRowHash, removedRowHash;
+		for (let row in this._rowsCache) {
 			removedRowHash = removedHash && removedHash[row];
 			addedRowHash = addedHash && addedHash[row];
 
@@ -2043,55 +1433,8 @@ class Grid {
 			}
 		}
 	}
-	addCellCssStyles(key, hash) {
-		if (this._cellCssClasses[key]) {
-			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');
-		}
-
-		this._cellCssClasses[key] = hash;
-		this._updateCellCssStylesOnRenderedRows(hash, null);
-
-		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
-	}
-	removeCellCssStyles(key) {
-		if (!this._cellCssClasses[key]) {
-			return;
-		}
-
-		this._updateCellCssStylesOnRenderedRows(null, this._cellCssClasses[key]);
-		delete this._cellCssClasses[key];
-
-		this._trigger('onCellCssStylesChanged', {key: key, hash: null});
-	}
-	setCellCssStyles(key, hash) {
-		var prevHash = this._cellCssClasses[key];
-
-		this._cellCssClasses[key] = hash;
-		this._updateCellCssStylesOnRenderedRows(hash, prevHash);
-
-		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
-	}
-	getCellCssStyles(key) {
-		return this._cellCssClasses[key];
-	}
-	flashCell(row, cell, speed) {
-		speed = speed || 100;
-
-		if (this._rowsCache[row]) {
-			toggleCellClass(4, this.getCellNode(row, cell));
-		}
-		function toggleCellClass(times, cellLocal) {
-			if (!times) {
-				return;
-			}
-			setTimeout(function () {
-				toggleClass(cellLocal, this._options.cellFlashingCssClass);
-				toggleCellClass(times - 1, cellLocal);
-			}, speed);
-		}
-	}
 	_handleMouseWheel(e) {
-		var rowNode = closest(e.target, '.spark-row');
+		let rowNode = closest(e.target, '.spark-row');
 		if (rowNode !== this._rowNodeFromLastMouseWheelEvent) {
 			if (this._zombieRowNodeFromLastMouseWheelEvent && this._zombieRowNodeFromLastMouseWheelEvent !== rowNode) {
 				this._canvas.removeChild(this._zombieRowNodeFromLastMouseWheelEvent);
@@ -2101,12 +1444,12 @@ class Grid {
 		}
 	}
 	_handleDragInit(e, dd) {
-		var cell = this.getCellFromEvent(e);
+		let cell = this.getCellFromEvent(e);
 		if (!cell || !this._cellExists(cell.row, cell.cell)) {
 			return false;
 		}
 
-		var retval = this._trigger('onDragInit', dd, e);
+		let retval = this._trigger('onDragInit', dd, e);
 		if (e.isImmediatePropagationStopped()) {
 			return retval;
 		}
@@ -2116,12 +1459,12 @@ class Grid {
 		return false;
 	}
 	_handleDragStart(e, dd) {
-		var cell = this.getCellFromEvent(e);
+		let cell = this.getCellFromEvent(e);
 		if (!cell || !this._cellExists(cell.row, cell.cell)) {
 			return false;
 		}
 
-		var retval = this._trigger('onDragStart', dd, e);
+		let retval = this._trigger('onDragStart', dd, e);
 		if (e.isImmediatePropagationStopped()) {
 			return retval;
 		}
@@ -2136,7 +1479,7 @@ class Grid {
 	}
 	_handleKeyDown(e) {
 		this._trigger('onKeyDown', {row: this._activeRow, cell: this._activeCell}, e);
-		var handled = false/*e.isImmediatePropagationStopped()*/;
+		let handled = false/*e.isImmediatePropagationStopped()*/;
 
 		if (!handled) {
 			if (!e.shiftKey && !e.altKey && !e.ctrlKey) {
@@ -2206,7 +1549,7 @@ class Grid {
 			}
 		}
 
-		var cell = this.getCellFromEvent(e);
+		let cell = this.getCellFromEvent(e);
 		if (!cell || (this._currentEditor !== null && this._activeRow === cell.row && this._activeCell === cell.cell)) {
 			return;
 		}
@@ -2223,7 +1566,7 @@ class Grid {
 		}
 	}
 	_handleContextMenu(e) {
-		var cell = closest(e.target, '.spark-cell');
+		let cell = closest(e.target, '.spark-cell');
 		if (!cell) {
 			return;
 		}
@@ -2236,7 +1579,7 @@ class Grid {
 		this._trigger('onContextMenu', {}, e);
 	}
 	_handleDblClick(e) {
-		var cell = this.getCellFromEvent(e);
+		let cell = this.getCellFromEvent(e);
 		if (!cell || (this._currentEditor !== null && this._activeRow === cell.row && this._activeCell === cell.cell)) {
 			return;
 		}
@@ -2258,13 +1601,13 @@ class Grid {
 		}, e);
 	}
 	_handleHeaderContextMenu(e) {
-		var header = closest(e.target, '.spark-header-column');
-		var column = header && this._columns[+header.dataset.columnIndex];
+		let header = closest(e.target, '.spark-header-column'),
+			column = header && this._columns[+header.dataset.columnIndex];
 		this._trigger('onHeaderContextMenu', {column: column}, e);
 	}
 	_handleHeaderClick(e) {
-		var header = closest(e.target, '.spark-header-column');
-		var column = header && this._columns[+header.dataset.columnIndex];
+		let header = closest(e.target, '.spark-header-column'),
+			column = header && this._columns[+header.dataset.columnIndex];
 		if (column) {
 			this._trigger('onHeaderClick', {column: column}, e);
 		}
@@ -2278,102 +1621,22 @@ class Grid {
 	_cellExists(row, cell) {
 		return !(row < 0 || row >= this.getDataLength() || cell < 0 || cell >= this._columns.length);
 	}
-	getCellFromPoint(x, y) {
-		var row = this._getRowFromPosition(y);
-		var cell = 0;
-
-		var w = 0;
-		for (var i = 0; i < this._columns.length && w < x; i++) {
-			w += this._columns[i].width;
-			cell++;
-		}
-
-		if (cell < 0) {
-			cell = 0;
-		}
-
-		return {row: row, cell: cell - 1};
-	}
 	_getCellFromNode(cellNode) {
 		// read column number from .l<columnNumber> CSS class
-		var cls = /l\d+/.exec(cellNode.className);
+		let cls = /l\d+/.exec(cellNode.className);
 		if (!cls) {
 			throw new Error('getCellFromNode: cannot get cell - ' + cellNode.className);
 		}
 		return parseInt(cls[0].substr(1, cls[0].length - 1), 10);
 	}
 	_getRowFromNode(rowNode) {
-		for (var row in this._rowsCache) {
+		for (let row in this._rowsCache) {
 			if (this._rowsCache[row].rowNode === rowNode) {
 				return row | 0;
 			}
 		}
 
 		return null;
-	}
-	getCellFromEvent(e) {
-		var cell = closest(e.target, '.spark-cell');
-		if (!cell) {
-			return null;
-		}
-
-		var row = this._getRowFromNode(cell.parentNode);
-		cell = this._getCellFromNode(cell);
-
-		if (row == null || cell == null) {
-			return null;
-		} else {
-			return {
-				row: row,
-				cell: cell
-			};
-		}
-	}
-	getCellNodeBox(row, cell) {
-		if (!this._cellExists(row, cell)) {
-			return null;
-		}
-
-		var y1 = this._getRowTop(row);
-		var y2 = y1 + this._options.rowHeight - 1;
-		var x1 = 0;
-		for (var i = 0; i < cell; i++) {
-			x1 += this._columns[i].width;
-		}
-		var x2 = x1 + this._columns[cell].width;
-
-		return {
-			top: y1,
-			left: x1,
-			bottom: y2,
-			right: x2
-		};
-	}
-	resetActiveCell() {
-		this._setActiveCellInternal(null, false);
-	}
-	setFocus() {
-		if (this._tabbingDirection === -1) {
-			this._focusSink.focus();
-		} else {
-			this._focusSink2.focus();
-		}
-	}
-	scrollCellIntoView(row, cell, doPaging) {
-		this.scrollRowIntoView(row, doPaging);
-
-		var colspan = this._getColspan(row, cell);
-		var left = this._columnPosLeft[cell], right = this._columnPosRight[cell + (colspan > 1 ? colspan - 1 : 0)], scrollRight = this._scrollLeft + this._viewportW;
-
-		if (left < this._scrollLeft) {
-			this._viewport.scrollLeft = left;
-			this._handleScroll();
-			this.render();
-		} else if (right > scrollRight) {
-			this._viewport.scrollLeft = Math.min(left, right - this._viewport.clientWidth);
-			this._handleScroll();
-			this.render();
-		}
 	}
 	_setActiveCellInternal(newCell, opt_editMode) {
 		if (this._activeCellNode !== null) {
@@ -2384,7 +1647,7 @@ class Grid {
 			}
 		}
 
-		var activeCellChanged = (this._activeCellNode !== newCell);
+		let activeCellChanged = (this._activeCellNode !== newCell);
 		this._activeCellNode = newCell;
 
 		if (this._activeCellNode != null) {
@@ -2425,14 +1688,14 @@ class Grid {
 			} catch (e) {
 			}
 		} else if (window.getSelection) {
-			var sel = window.getSelection();
+			let sel = window.getSelection();
 			if (sel && sel.removeAllRanges) {
 				sel.removeAllRanges();
 			}
 		}
 	}
 	_isCellEditable(row, cell) {
-		var dataLength = this.getDataLength();
+		let dataLength = this.getDataLength();
 		// is the data for this row loaded?
 		if (row < dataLength && !this.getDataItem(row)) {
 			return false;
@@ -2455,11 +1718,11 @@ class Grid {
 		this._currentEditor = null;
 
 		if (this._activeCellNode) {
-			var d = this.getDataItem(this._activeRow);
+			let d = this.getDataItem(this._activeRow);
 			this._activeCellNode.classList.remove('editable', 'invalid');
 			if (d) {
-				var column = this._columns[this._activeCell];
-				var formatter = this._getFormatter(this._activeRow, column);
+				let column = this._columns[this._activeCell],
+					formatter = this._getFormatter(this._activeRow, column);
 				this._activeCellNode.innerHTML = formatter(this._activeRow, this._activeCell, this._getDataItemValueForColumn(d, column),
 					column, d);
 				this._invalidatePostProcessingResults(this._activeRow);
@@ -2473,61 +1736,6 @@ class Grid {
 		}
 
 		this.getEditorLock().deactivate(this._editController);
-	}
-	editActiveCell(Editor) {
-		if (!this._activeCellNode) {
-			return;
-		}
-		if (!this._options.editable) {
-			throw new Error('Grid : makeActiveCellEditable : should never get called when options.editable is false');
-		}
-
-		// cancel pending async call if there is one
-		clearTimeout(this._h_editorLoader);
-
-		if (!this._isCellEditable(this._activeRow, this._activeCell)) {
-			return;
-		}
-
-		var columnDef = this._columns[this._activeCell];
-		var item = this.getDataItem(this._activeRow);
-
-		if (!this._trigger('onBeforeEditCell',
-				{row: this._activeRow, cell: this._activeCell, item: item, column: columnDef})) {
-			this.setFocus();
-			return;
-		}
-
-		this.getEditorLock().activate(this._editController);
-		this._activeCellNode.classList.add('editable');
-
-		// don't clear the cell if a custom editor is passed through
-		if (!Editor) {
-			this._activeCellNode.innerHTML = '';
-		}
-
-		let EditorClass = Editor || this._getEditor(this._activeRow, this._activeCell);
-
-		this._currentEditor = new EditorClass({
-			grid: this,
-			gridPosition: this._absBox(this._container),
-			position: this._absBox(this._activeCellNode),
-			container: this._activeCellNode,
-			column: columnDef,
-			item: item || {},
-			commitChanges: this._commitEditAndSetFocus.bind(this),
-			cancelChanges: this._cancelEditAndSetFocus.bind(this)
-		});
-
-		if (item) {
-			this._currentEditor.loadValue(item);
-		}
-
-		this._serializedEditorValue = this._currentEditor.serializeValue();
-
-		if (this._currentEditor.position) {
-			this._handleActiveCellPositionChange();
-		}
 	}
 	_commitEditAndSetFocus() {
 		// if the commit fails, it would do so due to a validation error
@@ -2545,7 +1753,7 @@ class Grid {
 		}
 	}
 	_absBox(elem) {
-		var box = {
+		let box = {
 			top: elem.offsetTop,
 			left: elem.offsetLeft,
 			bottom: 0,
@@ -2558,7 +1766,7 @@ class Grid {
 		box.right = box.left + box.width;
 
 		// walk up the tree
-		var offsetParent = elem.offsetParent;
+		let offsetParent = elem.offsetParent;
 		while ((elem = elem.parentNode) !== document.body) {
 			if (box.visible && elem.scrollHeight !== elem.offsetHeight && elem.style.overflowY !== 'visible') {
 				box.visible = box.bottom > elem.scrollTop && box.top < elem.scrollTop + elem.clientHeight;
@@ -2583,12 +1791,6 @@ class Grid {
 
 		return box;
 	}
-	getActiveCellPosition() {
-		return this._absBox(this._activeCellNode);
-	}
-	getGridPosition() {
-		return this._absBox(this._container);
-	}
 	_handleActiveCellPositionChange() {
 		if (!this._activeCellNode) {
 			return;
@@ -2597,7 +1799,7 @@ class Grid {
 		this._trigger('onActiveCellPositionChanged', {});
 
 		if (this._currentEditor) {
-			var cellBox = this.getActiveCellPosition();
+			let cellBox = this.getActiveCellPosition();
 			if (this._currentEditor.show && this._currentEditor.hide) {
 				if (!cellBox.visible) {
 					this._currentEditor.hide();
@@ -2611,46 +1813,14 @@ class Grid {
 			}
 		}
 	}
-	getCellEditor() {
-		return this._currentEditor;
-	}
-	getActiveCell() {
-		if (!this._activeCellNode) {
-			return null;
-		} else {
-			return {row: this._activeRow, cell: this._activeCell};
-		}
-	}
-	getActiveCellNode() {
-		return this._activeCellNode;
-	}
-	scrollRowIntoView(row, doPaging) {
-		var rowAtTop = row * this._options.rowHeight;
-		var rowAtBottom = (row + 1) * this._options.rowHeight - this._viewportH + (this._viewportHasHScroll ? scrollbarDimensions.height : 0);
-
-		// need to page down?
-		if ((row + 1) * this._options.rowHeight > this._scrollTop + this._viewportH + this._offset) {
-			this._scrollTo(doPaging ? rowAtTop : rowAtBottom);
-			this.render();
-		}
-		// or page up?
-		else if (row * this._options.rowHeight < this._scrollTop + this._offset) {
-			this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
-			this.render();
-		}
-	}
-	scrollRowToTop(row) {
-		this._scrollTo(row * this._options.rowHeight);
-		this.render();
-	}
 	_scrollPage(dir) {
-		var deltaRows = dir * this._numVisibleRows;
+		let deltaRows = dir * this._numVisibleRows;
 		this._scrollTo((this._getRowFromPosition(this._scrollTop) + deltaRows) * this._options.rowHeight);
 		this.render();
 
 		if (this._options.enableCellNavigation && this._activeRow != null) {
-			var row = this._activeRow + deltaRows;
-			var dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
+			let row = this._activeRow + deltaRows,
+				dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
 			if (row >= dataLengthIncludingAddNew) {
 				row = dataLengthIncludingAddNew - 1;
 			}
@@ -2658,8 +1828,9 @@ class Grid {
 				row = 0;
 			}
 
-			var cell = 0, prevCell = null;
-			var prevActivePosX = this._activePosX;
+			let cell = 0,
+				prevCell = null,
+				prevActivePosX = this._activePosX;
 			while (cell <= this._activePosX) {
 				if (this.canCellBeActive(row, cell)) {
 					prevCell = cell;
@@ -2675,21 +1846,14 @@ class Grid {
 			}
 		}
 	}
-	navigatePageDown() {
-		this._scrollPage(1);
-	}
-	navigatePageUp() {
-		this._scrollPage(-1);
-	}
-
 	_getColspan(row, cell) {
-		var metadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
+		let metadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
 		if (!metadata || !metadata.columns) {
 			return 1;
 		}
 
-		var columnData = metadata.columns[this._columns[cell].id] || metadata.columns[cell];
-		var colspan = (columnData && columnData.colspan);
+		let columnData = metadata.columns[this._columns[cell].id] || metadata.columns[cell],
+			colspan = (columnData && columnData.colspan);
 		if (colspan === '*') {
 			colspan = this._columns.length - cell;
 		} else {
@@ -2698,17 +1862,8 @@ class Grid {
 
 		return colspan;
 	}
-
-	getHeader() {
-		return this._headers;
-	}
-
-	getUid() {
-		return this._uid;
-	}
-
 	_findFirstFocusableCell(row) {
-		var cell = 0;
+		let cell = 0;
 		while (cell < this._columns.length) {
 			if (this.canCellBeActive(row, cell)) {
 				return cell;
@@ -2719,8 +1874,8 @@ class Grid {
 	}
 
 	_findLastFocusableCell(row) {
-		var cell = 0;
-		var lastFocusableCell = null;
+		let cell = 0,
+			lastFocusableCell = null;
 		while (cell < this._columns.length) {
 			if (this.canCellBeActive(row, cell)) {
 				lastFocusableCell = cell;
@@ -2754,17 +1909,17 @@ class Grid {
 			return null;
 		}
 
-		var firstFocusableCell = this._findFirstFocusableCell(row);
+		let firstFocusableCell = this._findFirstFocusableCell(row);
 		if (firstFocusableCell === null || firstFocusableCell >= cell) {
 			return null;
 		}
 
-		var prev = {
-			row: row,
-			cell: firstFocusableCell,
-			posX: firstFocusableCell
-		};
-		var pos;
+		let prev = {
+				row: row,
+				cell: firstFocusableCell,
+				posX: firstFocusableCell
+			},
+			pos;
 		while (true) {
 			pos = this._gotoRight(prev.row, prev.cell, prev.posX);
 			if (!pos) {
@@ -2778,8 +1933,8 @@ class Grid {
 	}
 
 	_gotoDown(row, cell, posX) {
-		var prevCell;
-		var dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
+		let prevCell,
+			dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
 		while (true) {
 			if (++row >= dataLengthIncludingAddNew) {
 				return null;
@@ -2802,7 +1957,7 @@ class Grid {
 	}
 
 	_gotoUp(row, cell, posX) {
-		var prevCell;
+		let prevCell;
 		while (true) {
 			if (--row < 0) {
 				return null;
@@ -2836,13 +1991,13 @@ class Grid {
 			}
 		}
 
-		var pos = this._gotoRight(row, cell, posX);
+		let pos = this._gotoRight(row, cell, posX);
 		if (pos) {
 			return pos;
 		}
 
-		var firstFocusableCell = null;
-		var dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
+		let firstFocusableCell = null,
+			dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
 		while (++row < dataLengthIncludingAddNew) {
 			firstFocusableCell = this._findFirstFocusableCell(row);
 			if (firstFocusableCell !== null) {
@@ -2869,8 +2024,7 @@ class Grid {
 			}
 		}
 
-		var pos;
-		var lastSelectableCell;
+		let pos;
 		while (!pos) {
 			pos = this._gotoLeft(row, cell, posX);
 			if (pos) {
@@ -2881,7 +2035,7 @@ class Grid {
 			}
 
 			cell = 0;
-			lastSelectableCell = this._findLastFocusableCell(row);
+			let lastSelectableCell = this._findLastFocusableCell(row);
 			if (lastSelectableCell !== null) {
 				pos = {
 					row: row,
@@ -2892,35 +2046,6 @@ class Grid {
 		}
 		return pos;
 	}
-
-	navigateRight() {
-		return this._navigate('right');
-	}
-
-	navigateLeft() {
-		return this._navigate('left');
-	}
-
-	navigateDown() {
-		return this._navigate('down');
-	}
-
-	navigateUp() {
-		return this._navigate('up');
-	}
-
-	navigateNext() {
-		return this._navigate('next');
-	}
-
-	navigatePrev() {
-		return this._navigate('prev');
-	}
-
-	/**
-	 * @param {string} dir Navigation direction.
-	 * @return {boolean} Whether navigation resulted in a change of active cell.
-	 */
 	_navigate(dir) {
 		if (!this._options.enableCellNavigation) {
 			return false;
@@ -2936,7 +2061,7 @@ class Grid {
 
 		this.setFocus();
 
-		var tabbingDirections = {
+		let tabbingDirections = {
 			up: -1,
 			down: 1,
 			left: -1,
@@ -2946,18 +2071,18 @@ class Grid {
 		};
 		this._tabbingDirection = tabbingDirections[dir];
 
-		var stepFunctions = {
-			up: this._gotoUp.bind(this),
-			down: this._gotoDown.bind(this),
-			left: this._gotoLeft.bind(this),
-			right: this._gotoRight.bind(this),
-			prev: this._gotoPrev.bind(this),
-			next: this._gotoNext.bind(this)
-		};
-		var stepFn = stepFunctions[dir];
-		var pos = stepFn(this._activeRow, this._activeCell, this._activePosX);
+		let stepFunctions = {
+				up: this._gotoUp.bind(this),
+				down: this._gotoDown.bind(this),
+				left: this._gotoLeft.bind(this),
+				right: this._gotoRight.bind(this),
+				prev: this._gotoPrev.bind(this),
+				next: this._gotoNext.bind(this)
+			},
+			stepFn = stepFunctions[dir],
+			pos = stepFn(this._activeRow, this._activeCell, this._activePosX);
 		if (pos) {
-			var isAddNewRow = (pos.row === this.getDataLength());
+			let isAddNewRow = (pos.row === this.getDataLength());
 			this.scrollCellIntoView(pos.row, pos.cell, !isAddNewRow);
 			this._setActiveCellInternal(this.getCellNode(pos.row, pos.cell));
 			this._activePosX = pos.posX;
@@ -2967,109 +2092,17 @@ class Grid {
 			return false;
 		}
 	}
-
-	getCellNode(row, cell) {
-		if (this._rowsCache[row]) {
-			this._ensureCellNodesInRowsCache(row);
-			return this._rowsCache[row].cellNodesByColumnIdx[cell];
-		}
-		return null;
-	}
-
-	setActiveCell(row, cell) {
-		if (!this._initialized) {
-			return;
-		}
-		if (row > this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
-			return;
-		}
-
-		if (!this._options.enableCellNavigation) {
-			return;
-		}
-
-		this.scrollCellIntoView(row, cell, false);
-		this._setActiveCellInternal(this.getCellNode(row, cell), false);
-	}
-
-	canCellBeActive(row, cell) {
-		if (!this._options.enableCellNavigation || row >= this._getDataLengthIncludingAddNew() || row < 0 || cell >= this._columns.length || cell < 0) {
-			return false;
-		}
-
-		var rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
-		if (rowMetadata && typeof rowMetadata.focusable === 'boolean') {
-			return rowMetadata.focusable;
-		}
-
-		var columnMetadata = rowMetadata && rowMetadata.columns;
-		if (columnMetadata && columnMetadata[this._columns[cell].id] && typeof columnMetadata[this._columns[cell].id].focusable === 'boolean') {
-			return columnMetadata[this._columns[cell].id].focusable;
-		}
-		if (columnMetadata && columnMetadata[cell] && typeof columnMetadata[cell].focusable === 'boolean') {
-			return columnMetadata[cell].focusable;
-		}
-
-		return this._columns[cell].focusable;
-	}
-
-	canCellBeSelected(row, cell) {
-		if (row >= this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
-			return false;
-		}
-
-		var rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
-		if (rowMetadata && typeof rowMetadata.selectable === 'boolean') {
-			return rowMetadata.selectable;
-		}
-
-		var columnMetadata = rowMetadata && rowMetadata.columns && (rowMetadata.columns[this._columns[cell].id] || rowMetadata.columns[cell]);
-		if (columnMetadata && typeof columnMetadata.selectable === 'boolean') {
-			return columnMetadata.selectable;
-		}
-
-		return this._columns[cell].selectable;
-	}
-
-	gotoCell(row, cell, forceEdit) {
-		if (!this._initialized) {
-			return;
-		}
-		if (!this.canCellBeActive(row, cell)) {
-			return;
-		}
-
-		if (!this.getEditorLock()._commitCurrentEdit()) {
-			return;
-		}
-
-		this.scrollCellIntoView(row, cell, false);
-
-		var newCell = this.getCellNode(row, cell);
-
-		// if selecting the 'add new' row, start editing right away
-		this._setActiveCellInternal(newCell, forceEdit || (row === this.getDataLength()) || this._options.autoEdit);
-
-		// if no editor was created, set the focus back on the grid
-		if (!this._currentEditor) {
-			this.setFocus();
-		}
-	}
-
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	// IEditor implementation for the editor lock
-
 	_commitCurrentEdit() {
-		var item = this.getDataItem(this._activeRow);
-		var column = this._columns[this._activeCell];
+		let item = this.getDataItem(this._activeRow),
+			column = this._columns[this._activeCell];
 
 		if (this._currentEditor) {
 			if (this._currentEditor.isValueChanged()) {
-				var validationResults = this._currentEditor.validate();
+				let validationResults = this._currentEditor.validate();
 
 				if (validationResults.valid) {
 					if (this._activeRow < this.getDataLength()) {
-						var editCommand = {
+						let editCommand = {
 							row: this._activeRow,
 							cell: this._activeCell,
 							editor: this._currentEditor,
@@ -3104,7 +2137,7 @@ class Grid {
 						}
 
 					} else {
-						var newItem = {};
+						let newItem = {};
 						this._currentEditor.applyValue(newItem, this._currentEditor.serializeValue());
 						this._makeActiveCellNormal();
 						this._trigger('onAddNewRow', {item: newItem, column: column});
@@ -3145,13 +2178,1008 @@ class Grid {
 	}
 
 	_rowsToRanges(rows) {
-		var ranges = [];
-		var lastCell = this._columns.length - 1;
-		for (var i = 0; i < rows.length; i++) {
+		let ranges = [],
+			lastCell = this._columns.length - 1;
+		for (let i = 0; i < rows.length; i++) {
 			ranges.push(new Range(rows[i], 0, rows[i], lastCell));
 		}
 		return ranges;
 	}
+	init() {
+		let container = this._container,
+			canvas = this._canvas;
+
+		// Block users from annoying mistake
+		if (this._initialized) {
+			throw new Error('Grid is already initialized');
+		}
+		this._initialized = true;
+
+		let computedStyle = window.getComputedStyle(container);
+		this._viewportW = parseFloat(computedStyle.width);
+
+		// header columns and cells may have different padding/border skewing width calculations (box-sizing, hello?)
+		// calculate the diff so we can set consistent sizes
+		this._measureCellPaddingAndBorder();
+
+		if (!this._options.enableTextSelectionOnCells) {
+			// disable text selection in grid cells except in input and textarea elements
+			// (this is IE-specific, because selectstart event will only fire in IE)
+			this._viewport.addEventListener('selectstart.ui', function (event) {
+				return !!~('input,textarea').indexOf(event.target.tagName.toLowerCase());
+			});
+		}
+
+		this._updateColumnSizeInfo();
+		this._createColumnHeaders();
+		this._setupColumnSort();
+		this._createCssRules();
+		this.resizeCanvas();
+		this._bindAncestorScrollEvents();
+
+		container.addEventListener('resize.sparkgrid', this.resizeCanvas.bind(this));
+		this._viewport.addEventListener('scroll', this._handleScroll.bind(this));
+		this._viewport.addEventListener('click', this._handleClick.bind(this));
+		this._headerScroller.addEventListener('contextmenu', this._handleHeaderContextMenu.bind(this));
+		this._headerScroller.addEventListener('click', this._handleHeaderClick.bind(this));
+		delegate(this._headerScroller, 'mouseover', '.spark-header-column', this._handleHeaderMouseEnter.bind(this));
+		delegate(this._headerScroller, 'mouseout', '.spark-header-column', this._handleHeaderMouseLeave.bind(this));
+		this._headerRowScroller.addEventListener('scroll', this._handleHeaderRowScroll.bind(this));
+
+		this._focusSink.addEventListener('keydown', this._handleKeyDown.bind(this));
+		this._focusSink2.addEventListener('keydown', this._handleKeyDown.bind(this));
+
+		canvas.addEventListener('keydown', this._handleKeyDown.bind(this));
+		canvas.addEventListener('click', this._handleClick.bind(this));
+		canvas.addEventListener('dblclick', this._handleDblClick.bind(this));
+		canvas.addEventListener('contextmenu', this._handleContextMenu.bind(this));
+		canvas.addEventListener('draginit', this._handleDragInit.bind(this));
+		canvas.addEventListener('dragstart', this._handleDragStart.bind(this)); // {distance: 3}
+		canvas.addEventListener('drag', this._handleDrag.bind(this));
+		canvas.addEventListener('dragend', this._handleDragEnd.bind(this));
+
+		delegate(canvas, 'mouseover', '.spark-cell', this._handleMouseEnter.bind(this));
+		delegate(canvas, 'mouseout', '.spark-cell', this._handleMouseLeave.bind(this));
+
+		// Work around http://crbug.com/312427.
+		if (navigator.userAgent.toLowerCase().match(/webkit/) && navigator.userAgent.toLowerCase().match(/macintosh/)) {
+			canvas.addEventListener('mousewheel', this._handleMouseWheel.bind(this));
+		}
+	}
+	registerPlugin(plugin) {
+		this._plugins.unshift(plugin);
+		plugin.init(this);
+	}
+	unregisterPlugin(plugin) {
+		let index = this._plugins.indexOf(plugin);
+		if (~index) {
+			if (this._plugins[index].destroy) {
+				this._plugins[index].destroy();
+			}
+			this._plugins.splice(index, 1);
+		}
+	}
+	setSelectionModel(model) {
+		if (this._selectionModel) {
+			this._selectionModel.onSelectedRangesChanged.unsubscribe(this._handleSelectedRangesChanged.bind(this));
+			if (this._selectionModel.destroy) {
+				this._selectionModel.destroy();
+			}
+		}
+
+		this._selectionModel = model;
+		if (this._selectionModel) {
+			this._selectionModel.init(this);
+			this._selectionModel.onSelectedRangesChanged.subscribe(this._handleSelectedRangesChanged.bind(this));
+		}
+	}
+	getSelectionModel() {
+		return this._selectionModel;
+	}
+	getCanvasNode() {
+		return this._canvas;
+	}
+	updateColumnHeader(columnId, title, toolTip) {
+		if (!this._initialized) {
+			return;
+		}
+		let idx = this.getColumnIndex(columnId);
+		if (idx == null) {
+			return;
+		}
+
+		let columnDef = this._columns[idx],
+			header = this._headers.children[idx];
+		if (header) {
+			if (title !== undefined) {
+				this._columns[idx].name = title;
+			}
+			if (toolTip !== undefined) {
+				this._columns[idx].toolTip = toolTip;
+			}
+
+			this._trigger('onBeforeHeaderCellDestroy', {
+				node: header,
+				column: columnDef
+			});
+
+			header.setAttribute('title', toolTip || '');
+			header.children[0].innerHTML = title;
+
+			this._trigger('onHeaderCellRendered', {
+				node: header,
+				column: columnDef
+			});
+		}
+	}
+	getHeaderRow() {
+		return this._headerRow;
+	}
+	getHeaderRowColumn(columnId) {
+		let index = this.getColumnIndex(columnId);
+		return this._headerRow.children[index];
+	}
+
+	destroy() {
+		this.getEditorLock()._cancelCurrentEdit();
+
+		this._trigger('onBeforeDestroy', {});
+
+		let i = this._plugins.length;
+		while (i--) {
+			this.unregisterPlugin(this._plugins[i]);
+		}
+
+		if (this._options.enableColumnReorder) {
+			this._headers.filter(':ui-sortable').sortable('destroy');
+		}
+
+		this._unbindAncestorScrollEvents();
+		this._removeCssRules();
+
+		//canvas.unbind('draginit dragstart dragend drag');
+		this._container.empty().classList.remove(this._uid, 'sparkgrid');
+	}
+
+	getEditorLock() {
+		return this._options.editorLock;
+	}
+	getEditController() {
+		return this._editController;
+	}
+	getColumnIndex(id) {
+		return this._columnsById[id];
+	}
+	autosizeColumns() {
+		let i,
+			c,
+			widths = [],
+			shrinkLeeway = 0,
+			total = 0,
+			prevTotal,
+			availWidth = this._viewportHasVScroll ? this._viewportW - scrollbarDimensions.width : this._viewportW;
+
+		for (i = 0; i < this._columns.length; i++) {
+			c = this._columns[i];
+			widths.push(c.width);
+			total += c.width;
+			if (c.resizable) {
+				shrinkLeeway += c.width - Math.max(c.minWidth, this._absoluteColumnMinWidth);
+			}
+		}
+
+		// shrink
+		prevTotal = total;
+		while (total > availWidth && shrinkLeeway) {
+			let shrinkProportion = (total - availWidth) / shrinkLeeway;
+			for (i = 0; i < this._columns.length && total > availWidth; i++) {
+				c = this._columns[i];
+				let width = widths[i];
+				if (!c.resizable || width <= c.minWidth || width <= this._absoluteColumnMinWidth) {
+					continue;
+				}
+				let absMinWidth = Math.max(c.minWidth, this._absoluteColumnMinWidth),
+					shrinkSize = Math.floor(shrinkProportion * (width - absMinWidth)) || 1;
+				shrinkSize = Math.min(shrinkSize, width - absMinWidth);
+				total -= shrinkSize;
+				shrinkLeeway -= shrinkSize;
+				widths[i] -= shrinkSize;
+			}
+			if (prevTotal <= total) {  // avoid infinite loop
+				break;
+			}
+			prevTotal = total;
+		}
+
+		// grow
+		prevTotal = total;
+		while (total < availWidth) {
+			let growProportion = availWidth / total;
+			for (i = 0; i < this._columns.length && total < availWidth; i++) {
+				c = this._columns[i];
+				let currentWidth = widths[i],
+					growSize;
+
+				if (!c.resizable || c.maxWidth <= currentWidth) {
+					growSize = 0;
+				} else {
+					growSize = Math.min(Math.floor(growProportion * currentWidth) - currentWidth,
+						(c.maxWidth - currentWidth) || 1000000) || 1;
+				}
+				total += growSize;
+				widths[i] += growSize;
+			}
+			if (prevTotal >= total) {  // avoid infinite loop
+				break;
+			}
+			prevTotal = total;
+		}
+
+		let reRender = false;
+		for (i = 0; i < this._columns.length; i++) {
+			if (this._columns[i].rerenderOnResize && this._columns[i].width !== widths[i]) {
+				reRender = true;
+			}
+			this._columns[i].width = widths[i];
+		}
+
+		this._applyColumnHeaderWidths();
+		this._updateCanvasWidth(true);
+		if (reRender) {
+			this.invalidateAllRows();
+			this.render();
+		}
+	}
+	setSortColumn(columnId, ascending) {
+		this.setSortColumns([
+			{columnId: columnId, sortAsc: ascending}
+		]);
+	}
+	setSortColumns(cols) {
+		let i, len, j, el, sEl, sortEls, sortInds, indEl;
+		this._sortColumns = cols;
+
+		let headerColumnEls = slice(this._headers.children);
+
+		i = 0;
+		len = headerColumnEls.length;
+		for (; i < len; i++) {
+			el = headerColumnEls[i];
+			el.classList.remove('spark-header-column-sorted');
+			sortEls = slice(el.querySelectorAll('.spark-sort-indicator'));
+
+			j = 0;
+			len = sortEls.length;
+			for (; j < len; j++) {
+				sEl = sortEls[j];
+				sEl.classList.remove('spark-sort-indicator-asc', 'spark-sort-indicator-desc');
+			}
+		}
+
+		i = 0;
+		len = this._sortColumns.length;
+		for (; i < len; i++) {
+			let col = this._sortColumns[i];
+			if (col.sortAsc == null) {
+				col.sortAsc = true;
+			}
+			let columnIndex = this.getColumnIndex(col.columnId);
+			if (columnIndex != null) {
+				headerColumnEls[columnIndex].classList.add('spark-header-column-sorted');
+				sortInds = headerColumnEls[columnIndex].querySelectorAll('.spark-sort-indicator');
+
+				j = 0;
+				len = sortInds.length;
+				for (; j < len; j++) {
+					indEl = sortInds[j];
+					indEl.classList.add(col.sortAsc ? 'spark-sort-indicator-asc' : 'spark-sort-indicator-desc');
+				}
+			}
+		}
+	}
+	getSortColumns() {
+		return this._sortColumns;
+	}
+
+	getColumns() {
+		return this._columns;
+	}
+	setColumns(columns) {
+		this._updateColumnCache(columns);
+		this._updateColumnSizeInfo();
+
+		if (this._initialized) {
+			this.invalidateAllRows();
+			this._createColumnHeaders();
+			this._removeCssRules();
+			this._createCssRules();
+			this.resizeCanvas();
+			this._applyColumnWidths();
+			this._handleScroll();
+		}
+	}
+	getOptions() {
+		return this._options;
+	}
+	setOptions(options) {
+		if (!this.getEditorLock().commitCurrentEdit()) {
+			return;
+		}
+
+		this._makeActiveCellNormal();
+
+		if (this._options.enableAddRow !== this._options.enableAddRow) {
+			this.invalidateRow(this.getDataLength());
+		}
+
+		this._options = extend(this._options, options);
+
+		this._viewport.style.overflowY = this._options.autoHeight ? 'hidden' : 'auto';
+		this.render();
+	}
+	setData(newData, scrollToTop) {
+		this._data = newData;
+		this.invalidateAllRows();
+		this.updateRowCount();
+		if (scrollToTop) {
+			this._scrollTo(0);
+		}
+	}
+	getData() {
+		return this._data;
+	}
+	getDataLength() {
+		if (this._data.getLength) {
+			return this._data.getLength();
+		} else {
+			return this._data.length;
+		}
+	}
+
+	getDataItem(index) {
+		if (this._data.getItem) {
+			return this._data.getItem(index);
+		} else {
+			return this._data[index];
+		}
+	}
+	getTopPanel() {
+		return this._topPanel;
+	}
+	setTopPanelVisibility(visible) {
+		if (this._options.showTopPanel !== visible) {
+			this._options.showTopPanel = visible;
+			if (visible) {
+				this._topPanelScroller.style.display = '';
+				this.resizeCanvas();
+			} else {
+				this._topPanelScroller.style.display = 'none';
+				this.resizeCanvas();
+			}
+		}
+	}
+	setHeaderRowVisibility(visible) {
+		if (this._options.showHeaderRow !== visible) {
+			this._options.showHeaderRow = visible;
+			if (visible) {
+				this._topPanelScroller.style.display = '';
+				this.resizeCanvas();
+			} else {
+				this._topPanelScroller.style.display = 'none';
+				this.resizeCanvas();
+			}
+		}
+	}
+	getEl() {
+		return this._container;
+	}
+
+	invalidate() {
+		this.updateRowCount();
+		this.invalidateAllRows();
+		this.render();
+	}
+	invalidateAllRows() {
+		if (this._currentEditor) {
+			this._makeActiveCellNormal();
+		}
+		for (let row in this._rowsCache) {
+			this._removeRowFromCache(row);
+		}
+	}
+
+	invalidateRows(rows) {
+		let i, rl;
+		if (!rows || !rows.length) {
+			return;
+		}
+		this._vScrollDir = 0;
+		for (i = 0, rl = rows.length; i < rl; i++) {
+			if (this._currentEditor && this._activeRow === rows[i]) {
+				this._makeActiveCellNormal();
+			}
+			if (this._rowsCache[rows[i]]) {
+				this._removeRowFromCache(rows[i]);
+			}
+		}
+	}
+	invalidateRow(row) {
+		this.invalidateRows([row]);
+	}
+	updateCell(row, cell) {
+		let cellNode = this.getCellNode(row, cell);
+		if (!cellNode) {
+			return;
+		}
+
+		let m = this._columns[cell],
+			d = this.getDataItem(row);
+		if (this._currentEditor && this._activeRow === row && this._activeCell === cell) {
+			this._currentEditor.loadValue(d);
+		} else {
+			cellNode.innerHTML = d ? this._getFormatter(row, m)(row, cell, this._getDataItemValueForColumn(d, m), m, d) : '';
+			this._invalidatePostProcessingResults(row);
+		}
+	}
+	updateRow(row) {
+		let cacheEntry = this._rowsCache[row];
+		if (!cacheEntry) {
+			return;
+		}
+
+		this._ensureCellNodesInRowsCache(row);
+
+		let d = this.getDataItem(row);
+
+		for (let columnIdx in cacheEntry.cellNodesByColumnIdx) {
+			if (!cacheEntry.cellNodesByColumnIdx.hasOwnProperty(columnIdx)) {
+				continue;
+			}
+
+			columnIdx = columnIdx | 0;
+			let m = this._columns[columnIdx], node = cacheEntry.cellNodesByColumnIdx[columnIdx];
+
+			if (row === this._activeRow && columnIdx === this._activeCell && this._currentEditor) {
+				this._currentEditor.loadValue(d);
+			} else if (d) {
+				node.innerHTML = this._getFormatter(row, m)(row, columnIdx, this._getDataItemValueForColumn(d, m), m, d);
+			} else {
+				node.innerHTML = '';
+			}
+		}
+
+		this._invalidatePostProcessingResults(row);
+	}
+
+	resizeCanvas() {
+		if (!this._initialized) {
+			return;
+		}
+		if (this._options.autoHeight) {
+			this._viewportH = this._options.rowHeight * this._getDataLengthIncludingAddNew();
+		} else {
+			this._viewportH = this._getViewportHeight();
+		}
+
+		this._numVisibleRows = Math.ceil(this._viewportH / this._options.rowHeight);
+		this._viewportW = this._container.clientWidth;
+		if (!this._options.autoHeight) {
+			setPx(this._viewport, 'height', this._viewportH);
+		}
+
+		if (this._options.forceFitColumns) {
+			this.autosizeColumns();
+		}
+
+		this.updateRowCount();
+		this._handleScroll();
+		// Since the width has changed, force the render() to reevaluate virtually rendered cells.
+		this._lastRenderedScrollLeft = -1;
+		this.render();
+	}
+	updateRowCount() {
+		if (!this._initialized) {
+			return;
+		}
+
+		let dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew(),
+			numberOfRows = dataLengthIncludingAddNew + (this._options.leaveSpaceForNewRows ? this._numVisibleRows - 1 : 0),
+			oldViewportHasVScroll = this._viewportHasVScroll;
+		// with autoHeight, we do not need to accommodate the vertical scroll bar
+		this._viewportHasVScroll = !this._options.autoHeight && (numberOfRows * this._options.rowHeight > this._viewportH);
+
+		this._makeActiveCellNormal();
+
+		// remove the rows that are now outside of the data range
+		// this helps avoid redundant calls to .removeRow() when the size of the data decreased by thousands of rows
+		let l = dataLengthIncludingAddNew - 1;
+		for (let i in this._rowsCache) {
+			if (i >= l) {
+				this._removeRowFromCache(i);
+			}
+		}
+
+		if (this._activeCellNode && this._activeRow > l) {
+			this.resetActiveCell();
+		}
+
+		let oldH = this._h;
+		this._th = Math.max(this._options.rowHeight * numberOfRows, this._viewportH - scrollbarDimensions.height);
+		if (this._th < maxSupportedCssHeight) {
+			// just one page
+			this._h = this._ph = this._th;
+			this._n = 1;
+			this._cj = 0;
+		} else {
+			// break into pages
+			this._h = maxSupportedCssHeight;
+			this._ph = this._h / 100;
+			this._n = Math.floor(this._th / this._ph);
+			this._cj = (this._th - this._h) / (this._n - 1);
+		}
+
+		if (this._h !== oldH) {
+			setPx(this._canvas, 'height', this._h);
+			this._scrollTop = this._viewport.scrollTop;
+		}
+
+		let oldScrollTopInRange = (this._scrollTop + this._offset <= this._th - this._viewportH);
+
+		if (this._th === 0 || this._scrollTop === 0) {
+			this._page = this._offset = 0;
+		} else if (oldScrollTopInRange) {
+			// maintain virtual position
+			this._scrollTo(this._scrollTop + this._offset);
+		} else {
+			// scroll to bottom
+			this._scrollTo(this._th - this._viewportH);
+		}
+
+		if (this._h !== oldH && this._options.autoHeight) {
+			this.resizeCanvas();
+		}
+
+		if (this._options.forceFitColumns && oldViewportHasVScroll !== this._viewportHasVScroll) {
+			this.autosizeColumns();
+		}
+		this._updateCanvasWidth(false);
+	}
+	getVisibleRange(viewportTop, viewportLeft) {
+		if (viewportTop == null) {
+			viewportTop = this._scrollTop;
+		}
+		if (viewportLeft == null) {
+			viewportLeft = this._scrollLeft;
+		}
+
+		return {
+			top: this._getRowFromPosition(viewportTop),
+			bottom: this._getRowFromPosition(viewportTop + this._viewportH) + 1,
+			leftPx: viewportLeft,
+			rightPx: viewportLeft + this._viewportW
+		};
+	}
+	getRenderedRange(viewportTop, viewportLeft) {
+		let range = this.getVisibleRange(viewportTop, viewportLeft),
+			buffer = Math.round(this._viewportH / this._options.rowHeight),
+			minBuffer = 3;
+
+		if (this._vScrollDir === -1) {
+			range.top -= buffer;
+			range.bottom += minBuffer;
+		} else if (this._vScrollDir === 1) {
+			range.top -= minBuffer;
+			range.bottom += buffer;
+		} else {
+			range.top -= minBuffer;
+			range.bottom += minBuffer;
+		}
+
+		range.top = Math.max(0, range.top);
+		range.bottom = Math.min(this._getDataLengthIncludingAddNew() - 1, range.bottom);
+
+		range.leftPx -= this._viewportW;
+		range.rightPx += this._viewportW;
+
+		range.leftPx = Math.max(0, range.leftPx);
+		range.rightPx = Math.min(this._canvasWidth, range.rightPx);
+
+		return range;
+	}
+
+	render() {
+		if (!this._initialized) {
+			return;
+		}
+		let vRange = this.getVisibleRange(),
+			rRange = this.getRenderedRange();
+
+		// remove rows no longer in the viewport
+		this._cleanupRows(rRange);
+
+		// add new rows & missing cells in existing rows
+		if (this._lastRenderedScrollLeft !== this._scrollLeft) {
+			this._cleanUpAndRenderCells(rRange);
+		}
+
+		// render missing rows
+		this._renderRows(rRange);
+
+		this._postProcessFromRow = vRange.top;
+		this._postProcessToRow = Math.min(this._getDataLengthIncludingAddNew() - 1, vRange.bottom);
+		this._startPostProcessing();
+
+		this._lastRenderedScrollTop = this._scrollTop;
+		this._lastRenderedScrollLeft = this._scrollLeft;
+		this._h_render = null;
+	}
+
+	addCellCssStyles(key, hash) {
+		if (this._cellCssClasses[key]) {
+			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');
+		}
+
+		this._cellCssClasses[key] = hash;
+		this._updateCellCssStylesOnRenderedRows(hash, null);
+
+		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
+	}
+	removeCellCssStyles(key) {
+		if (!this._cellCssClasses[key]) {
+			return;
+		}
+
+		this._updateCellCssStylesOnRenderedRows(null, this._cellCssClasses[key]);
+		delete this._cellCssClasses[key];
+
+		this._trigger('onCellCssStylesChanged', {key: key, hash: null});
+	}
+	setCellCssStyles(key, hash) {
+		let prevHash = this._cellCssClasses[key];
+
+		this._cellCssClasses[key] = hash;
+		this._updateCellCssStylesOnRenderedRows(hash, prevHash);
+
+		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
+	}
+	getCellCssStyles(key) {
+		return this._cellCssClasses[key];
+	}
+	flashCell(row, cell, speed) {
+		speed = speed || 100;
+
+		if (this._rowsCache[row]) {
+			toggleCellClass(4, this.getCellNode(row, cell));
+		}
+		function toggleCellClass(times, cellLocal) {
+			if (!times) {
+				return;
+			}
+			setTimeout(function () {
+				toggleClass(cellLocal, this._options.cellFlashingCssClass);
+				toggleCellClass(times - 1, cellLocal);
+			}, speed);
+		}
+	}
+
+	getCellFromPoint(x, y) {
+		let row = this._getRowFromPosition(y),
+			cell = 0,
+			w = 0;
+		for (let i = 0; i < this._columns.length && w < x; i++) {
+			w += this._columns[i].width;
+			cell++;
+		}
+
+		if (cell < 0) {
+			cell = 0;
+		}
+
+		return {row: row, cell: cell - 1};
+	}
+
+	getCellFromEvent(e) {
+		let cell = closest(e.target, '.spark-cell');
+		if (!cell) {
+			return null;
+		}
+
+		let row = this._getRowFromNode(cell.parentNode);
+		cell = this._getCellFromNode(cell);
+
+		if (row == null || cell == null) {
+			return null;
+		} else {
+			return {
+				row: row,
+				cell: cell
+			};
+		}
+	}
+	getCellNodeBox(row, cell) {
+		if (!this._cellExists(row, cell)) {
+			return null;
+		}
+
+		let y1 = this._getRowTop(row),
+			y2 = y1 + this._options.rowHeight - 1,
+			x1 = 0;
+		for (let i = 0; i < cell; i++) {
+			x1 += this._columns[i].width;
+		}
+		let x2 = x1 + this._columns[cell].width;
+
+		return {
+			top: y1,
+			left: x1,
+			bottom: y2,
+			right: x2
+		};
+	}
+	resetActiveCell() {
+		this._setActiveCellInternal(null, false);
+	}
+	setFocus() {
+		if (this._tabbingDirection === -1) {
+			this._focusSink.focus();
+		} else {
+			this._focusSink2.focus();
+		}
+	}
+	scrollCellIntoView(row, cell, doPaging) {
+		this.scrollRowIntoView(row, doPaging);
+
+		let colspan = this._getColspan(row, cell),
+			left = this._columnPosLeft[cell], right = this._columnPosRight[cell + (colspan > 1 ? colspan - 1 : 0)], scrollRight = this._scrollLeft + this._viewportW;
+
+		if (left < this._scrollLeft) {
+			this._viewport.scrollLeft = left;
+			this._handleScroll();
+			this.render();
+		} else if (right > scrollRight) {
+			this._viewport.scrollLeft = Math.min(left, right - this._viewport.clientWidth);
+			this._handleScroll();
+			this.render();
+		}
+	}
+
+	editActiveCell(Editor) {
+		if (!this._activeCellNode) {
+			return;
+		}
+		if (!this._options.editable) {
+			throw new Error('Grid : makeActiveCellEditable : should never get called when options.editable is false');
+		}
+
+		// cancel pending async call if there is one
+		clearTimeout(this._h_editorLoader);
+
+		if (!this._isCellEditable(this._activeRow, this._activeCell)) {
+			return;
+		}
+
+		let columnDef = this._columns[this._activeCell],
+			item = this.getDataItem(this._activeRow);
+
+		if (!this._trigger('onBeforeEditCell',
+				{row: this._activeRow, cell: this._activeCell, item: item, column: columnDef})) {
+			this.setFocus();
+			return;
+		}
+
+		this.getEditorLock().activate(this._editController);
+		this._activeCellNode.classList.add('editable');
+
+		// don't clear the cell if a custom editor is passed through
+		if (!Editor) {
+			this._activeCellNode.innerHTML = '';
+		}
+
+		let EditorClass = Editor || this._getEditor(this._activeRow, this._activeCell);
+
+		this._currentEditor = new EditorClass({
+			grid: this,
+			gridPosition: this._absBox(this._container),
+			position: this._absBox(this._activeCellNode),
+			container: this._activeCellNode,
+			column: columnDef,
+			item: item || {},
+			commitChanges: this._commitEditAndSetFocus.bind(this),
+			cancelChanges: this._cancelEditAndSetFocus.bind(this)
+		});
+
+		if (item) {
+			this._currentEditor.loadValue(item);
+		}
+
+		this._serializedEditorValue = this._currentEditor.serializeValue();
+
+		if (this._currentEditor.position) {
+			this._handleActiveCellPositionChange();
+		}
+	}
+
+	getActiveCellPosition() {
+		return this._absBox(this._activeCellNode);
+	}
+	getGridPosition() {
+		return this._absBox(this._container);
+	}
+
+	getCellEditor() {
+		return this._currentEditor;
+	}
+	getActiveCell() {
+		if (!this._activeCellNode) {
+			return null;
+		} else {
+			return {row: this._activeRow, cell: this._activeCell};
+		}
+	}
+	getActiveCellNode() {
+		return this._activeCellNode;
+	}
+	scrollRowIntoView(row, doPaging) {
+		let rowAtTop = row * this._options.rowHeight,
+			rowAtBottom = (row + 1) * this._options.rowHeight - this._viewportH + (this._viewportHasHScroll ? scrollbarDimensions.height : 0);
+
+		// need to page down?
+		if ((row + 1) * this._options.rowHeight > this._scrollTop + this._viewportH + this._offset) {
+			this._scrollTo(doPaging ? rowAtTop : rowAtBottom);
+			this.render();
+		}
+		// or page up?
+		else if (row * this._options.rowHeight < this._scrollTop + this._offset) {
+			this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
+			this.render();
+		}
+	}
+	scrollRowToTop(row) {
+		this._scrollTo(row * this._options.rowHeight);
+		this.render();
+	}
+
+	navigatePageDown() {
+		this._scrollPage(1);
+	}
+	navigatePageUp() {
+		this._scrollPage(-1);
+	}
+
+
+
+	getHeader() {
+		return this._headers;
+	}
+
+	getUid() {
+		return this._uid;
+	}
+
+
+
+	navigateRight() {
+		return this._navigate('right');
+	}
+
+	navigateLeft() {
+		return this._navigate('left');
+	}
+
+	navigateDown() {
+		return this._navigate('down');
+	}
+
+	navigateUp() {
+		return this._navigate('up');
+	}
+
+	navigateNext() {
+		return this._navigate('next');
+	}
+
+	navigatePrev() {
+		return this._navigate('prev');
+	}
+
+	/**
+	 * @param {string} dir Navigation direction.
+	 * @return {boolean} Whether navigation resulted in a change of active cell.
+	 */
+
+
+	getCellNode(row, cell) {
+		if (this._rowsCache[row]) {
+			this._ensureCellNodesInRowsCache(row);
+			return this._rowsCache[row].cellNodesByColumnIdx[cell];
+		}
+		return null;
+	}
+
+	setActiveCell(row, cell) {
+		if (!this._initialized) {
+			return;
+		}
+		if (row > this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
+			return;
+		}
+
+		if (!this._options.enableCellNavigation) {
+			return;
+		}
+
+		this.scrollCellIntoView(row, cell, false);
+		this._setActiveCellInternal(this.getCellNode(row, cell), false);
+	}
+
+	canCellBeActive(row, cell) {
+		if (!this._options.enableCellNavigation || row >= this._getDataLengthIncludingAddNew() || row < 0 || cell >= this._columns.length || cell < 0) {
+			return false;
+		}
+
+		let rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
+		if (rowMetadata && typeof rowMetadata.focusable === 'boolean') {
+			return rowMetadata.focusable;
+		}
+
+		let columnMetadata = rowMetadata && rowMetadata.columns;
+		if (columnMetadata && columnMetadata[this._columns[cell].id] && typeof columnMetadata[this._columns[cell].id].focusable === 'boolean') {
+			return columnMetadata[this._columns[cell].id].focusable;
+		}
+		if (columnMetadata && columnMetadata[cell] && typeof columnMetadata[cell].focusable === 'boolean') {
+			return columnMetadata[cell].focusable;
+		}
+
+		return this._columns[cell].focusable;
+	}
+
+	canCellBeSelected(row, cell) {
+		if (row >= this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
+			return false;
+		}
+
+		let rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
+		if (rowMetadata && typeof rowMetadata.selectable === 'boolean') {
+			return rowMetadata.selectable;
+		}
+
+		let columnMetadata = rowMetadata && rowMetadata.columns && (rowMetadata.columns[this._columns[cell].id] || rowMetadata.columns[cell]);
+		if (columnMetadata && typeof columnMetadata.selectable === 'boolean') {
+			return columnMetadata.selectable;
+		}
+
+		return this._columns[cell].selectable;
+	}
+
+	gotoCell(row, cell, forceEdit) {
+		if (!this._initialized) {
+			return;
+		}
+		if (!this.canCellBeActive(row, cell)) {
+			return;
+		}
+
+		if (!this.getEditorLock()._commitCurrentEdit()) {
+			return;
+		}
+
+		this.scrollCellIntoView(row, cell, false);
+
+		let newCell = this.getCellNode(row, cell);
+
+		// if selecting the 'add new' row, start editing right away
+		this._setActiveCellInternal(newCell, forceEdit || (row === this.getDataLength()) || this._options.autoEdit);
+
+		// if no editor was created, set the focus back on the grid
+		if (!this._currentEditor) {
+			this.setFocus();
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////
+	// IEditor implementation for the editor lock
+
+
 
 	getSelectedRows() {
 		if (!this._selectionModel) {
