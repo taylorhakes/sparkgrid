@@ -6,8 +6,52 @@ import EditorLock from './editing/EditorLock';
 
 
 // shared across all grids on the page
-let scrollbarDimensions,
-	maxSupportedCssHeight, // browser's breaking point
+let scrollbarDimensions = (() -> {
+		let c = createEl({
+			tag: 'div',
+			style: {
+				position: 'absolute',
+				top: '-10000px',
+				left: '-10000px',
+				width: '100px',
+				height: '100px',
+				overflow: 'scroll'
+			}
+		});
+		document.body.appendChild(c);
+		let dim = {
+			width: getPx(c, 'height') - c.clientWidth,
+			height: getPx(c, 'height') - c.clientHeight
+		};
+		c.parentNode.removeChild(c);
+		return dim;
+	})(),
+	maxSupportedCssHeight = (() -> {
+		let supportedHeight = 1000000,
+			// FF reports the height back but still renders blank after ~6M px
+			testUpTo = navigator.userAgent.toLowerCase().match(/firefox/) ? 6000000 : 1000000000,
+			div = createEl({
+				tag: 'div',
+				style: {
+					display: 'none'
+				}
+			});
+
+		document.body.appendChild(div);
+
+		while (true) {
+			let test = supportedHeight * 2;
+			setPx(div, 'height', test);
+			if (test > testUpTo || div.offsetHeight !== test) {
+				break;
+			} else {
+				supportedHeight = test;
+			}
+		}
+
+		div.parentNode.removeChild(div);
+		return supportedHeight;
+	}), // browser's breaking point
 	uidIndex = 1,
 	GlobalEditorLock = new EditorLock();
 
@@ -118,9 +162,6 @@ class Grid {
 		this._canvasWidth = null;
 		this._viewportHasHScroll = null;
 		this._viewportHasVScroll = null;
-		this._headerColumnWidthDiff = 0;
-		this._cellHeightDiff = 0;
-		this._absoluteColumnMinWidth = null;
 		this._tabbingDirection = 1;
 		this._activePosX = null;
 		this._activeRow = null;
@@ -225,10 +266,6 @@ class Grid {
 			container.style.position = 'relative';
 		}
 
-		// Calculate these only once and share between grid instances
-		maxSupportedCssHeight = maxSupportedCssHeight || this._getMaxSupportedCssHeight();
-		scrollbarDimensions = scrollbarDimensions || this._measureScrollbar();
-
 		container.innerHTML = this._createGridHtml({
 			spacerWidth: this._getCanvasWidth() + scrollbarDimensions.width
 		});
@@ -315,26 +352,6 @@ class Grid {
 			x +=  this._columns[i].width;
 		}
 	}
-	_measureScrollbar() {
-		let c = createEl({
-			tag: 'div',
-			style: {
-				position: 'absolute',
-				top: '-10000px',
-				left: '-10000px',
-				width: '100px',
-				height: '100px',
-				overflow: 'scroll'
-			}
-		});
-		document.body.appendChild(c);
-		let dim = {
-			width: getPx(c, 'height') - c.clientWidth,
-			height: getPx(c, 'height') - c.clientHeight
-		};
-		c.parentNode.removeChild(c);
-		return dim;
-	}
 	_getHeadersWidth() {
 		let headersWidth = 0;
 		for (let i = 0, ii = this._columns.length; i < ii; i++) {
@@ -369,32 +386,6 @@ class Grid {
 		if (this._canvasWidth !== oldCanvasWidth || forceColumnWidthsUpdate) {
 			this._applyColumnWidths();
 		}
-	}
-	_getMaxSupportedCssHeight() {
-		let supportedHeight = 1000000,
-		// FF reports the height back but still renders blank after ~6M px
-			testUpTo = navigator.userAgent.toLowerCase().match(/firefox/) ? 6000000 : 1000000000,
-			div = createEl({
-				tag: 'div',
-				style: {
-					display: 'none'
-				}
-			});
-
-		document.body.appendChild(div);
-
-		while (true) {
-			let test = supportedHeight * 2;
-			setPx(div, 'height', test);
-			if (test > testUpTo || div.offsetHeight !== test) {
-				break;
-			} else {
-				supportedHeight = test;
-			}
-		}
-
-		div.parentNode.removeChild(div);
-		return supportedHeight;
 	}
 	_bindAncestorScrollEvents() {
 		let elem = this._canvas,
@@ -456,7 +447,7 @@ class Grid {
 					className: 'spark-header-column'
 				});
 			header.innerHTML = '<span class="spark-column-name">' + m.name + '</span>';
-			setPx(header, 'width', m.width - this._headerColumnWidthDiff);
+			setPx(header, 'width', m.width);
 			header.dataset.columnIndex = i;
 			if (m.headerCssClass) {
 				header.classList.add(m.headerCssClass);
@@ -512,7 +503,7 @@ class Grid {
 
 			let column = this._columns[+col.dataset.columnIndex];
 			if (column.sortable) {
-				if (!this.getEditorLock()._commitCurrentEdit()) {
+				if (!this.getEditorLock().commitCurrentEdit()) {
 					return;
 				}
 
@@ -602,7 +593,7 @@ class Grid {
 					for (j = i; j >= 0; j--) {
 						c = this._columns[j];
 						if (c.resizable) {
-							actualMinWidth = Math.max(c.minWidth || 0, this._absoluteColumnMinWidth);
+							actualMinWidth = c.minWidth;
 							if (x && c.previousWidth + x < actualMinWidth) {
 								x += c.previousWidth - actualMinWidth;
 								c.width = actualMinWidth;
@@ -648,7 +639,7 @@ class Grid {
 						for (j = i + 1; j < columnElements.length; j++) {
 							c = this._columns[j];
 							if (c.resizable) {
-								actualMinWidth = Math.max(c.minWidth || 0, this._absoluteColumnMinWidth);
+								actualMinWidth = c.minWidth;
 								if (x && c.previousWidth + x < actualMinWidth) {
 									x += c.previousWidth - actualMinWidth;
 									c.width = actualMinWidth;
@@ -688,7 +679,7 @@ class Grid {
 				let shrinkLeewayOnRight = null,
 					stretchLeewayOnRight = null;
 
-				if (!this.getEditorLock()._commitCurrentEdit()) {
+				if (!this.getEditorLock().commitCurrentEdit()) {
 					return false;
 				}
 				pageX = e.pageX;
@@ -713,8 +704,7 @@ class Grid {
 									stretchLeewayOnRight = null;
 								}
 							}
-							shrinkLeewayOnRight += c.previousWidth - Math.max(c.minWidth || 0,
-								this._absoluteColumnMinWidth);
+							shrinkLeewayOnRight += c.previousWidth - c.minWidth;
 						}
 					}
 				}
@@ -731,7 +721,7 @@ class Grid {
 								stretchLeewayOnLeft = null;
 							}
 						}
-						shrinkLeewayOnLeft += c.previousWidth - Math.max(c.minWidth || 0, this._absoluteColumnMinWidth);
+						shrinkLeewayOnLeft += c.previousWidth - c.minWidth;
 					}
 				}
 				if (shrinkLeewayOnRight === null) {
@@ -757,79 +747,14 @@ class Grid {
 			el.appendChild(handle);
 		});
 	}
-	_getVBoxDelta(el) {
-		let p = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'],
-			delta = 0,
-			i, len;
 
-		i = 0;
-		len = p.length;
-		for (; i < len; i++) {
-			let val = p[i];
-			delta += parseFloat(el.style[val]) || 0;
-		}
-		return delta;
-	}
-	_measureCellPaddingAndBorder() {
-		let el,
-			h = ['borderLeftWidth', 'borderRightWidth', 'paddingLeft', 'paddingRight'],
-			v = ['borderTopWidth', 'borderBottomWidth', 'paddingTop', 'paddingBottom'],
-			i, len, val, compStyle;
-
-		el = createEl({
-			tag: 'div',
-			className: 'spark-header-column',
-			style: {
-				visibility: 'hidden'
-			}
-		});
-		this._headers.appendChild(el);
-		this._headerColumnWidthDiff = 0;
-		el.parentNode.removeChild(el);
-
-		let r = createEl({
-			tag: 'div',
-			className: 'spark-row'
-		});
-		this._canvas.appendChild(r);
-
-		el = createEl({
-			tag: 'div',
-			className: 'spark-cell',
-			style: {
-				visibility: 'hidden'
-			}
-		});
-		r.appendChild(el);
-
-		let cellWidthDiff = 0;
-		this._cellHeightDiff = 0;
-		if (el.style.boxSizing !== 'border-box' && el.style.MozBoxSizing !== 'border-box' && el.style.webkitBoxSizing !== 'border-box') {
-			i = 0;
-			len = h.length;
-			compStyle = window.getComputedStyle(el);
-			for (; i < len; i++) {
-				val = h[i];
-				cellWidthDiff += parseFloat(compStyle[val]) || 0;
-			}
-			i = 0;
-			len = v.length;
-			for (; i < len; i++) {
-				val = v[i];
-				this._cellHeightDiff += parseFloat(compStyle[val]) || 0;
-			}
-		}
-		r.parentNode.removeChild(r);
-
-		this._absoluteColumnMinWidth = Math.max(this._headerColumnWidthDiff, cellWidthDiff);
-	}
 	_createCssRules() {
 		this._style = createEl({
 			tag: 'style',
 			rel: 'stylesheet'
 		});
 		document.body.appendChild(this._style);
-		let rowHeight = (this._options.rowHeight - this._cellHeightDiff),
+		let rowHeight = this._options.rowHeight,
 			rules = [
 				'.' + this._uid + ' .spark-header-column { left: 1000px; }',
 				'.' + this._uid + ' .spark-top-panel { height:' + this._options.topPanelHeight + 'px; }',
@@ -899,8 +824,8 @@ class Grid {
 		}
 		for (let i = 0, hds = this._headers.children, ii = hds.length; i < ii; i++) {
 			let h = hds[i];
-			if (h.offsetWidth !== this._columns[i].width - this._headerColumnWidthDiff) {
-				h.style.width = (this._columns[i].width - this._headerColumnWidthDiff) + 'px';
+			if (h.offsetWidth !== this._columns[i].width) {
+				h.style.width = (this._columns[i].width) + 'px';
 			}
 		}
 
@@ -1106,11 +1031,9 @@ class Grid {
 	_getViewportHeight() {
 		let container = this._container;
 
-		return container.clientHeight - parseFloat(container.style.paddingTop || 0) -
-			parseFloat(container.style.paddingBottom || 0) - this._headerScroller.offsetHeight -
-			this._getVBoxDelta(this._headerScroller) -
-			(this._options.showTopPanel ? this._options.topPanelHeight + this._getVBoxDelta(this._topPanelScroller) : 0) -
-			(this._options.showHeaderRow ? this._options.headerRowHeight + this._getVBoxDelta(this._headerRowScroller) : 0);
+		return container.clientHeight - this._headerScroller.offsetHeight -
+			(this._options.showTopPanel ? this._options.topPanelHeight  : 0) -
+			(this._options.showHeaderRow ? this._options.headerRowHeight  : 0);
 	}
 	_ensureCellNodesInRowsCache(row) {
 		let cacheEntry = this._rowsCache[row];
@@ -1359,7 +1282,7 @@ class Grid {
 					Math.abs(this._lastRenderedScrollTop - this._scrollTop) < this._viewportH && Math.abs(this._lastRenderedScrollLeft - this._scrollLeft) < this._viewportW)) {
 					this.render();
 				} else {
-					this._h_render = setTimeout(this._render.bind(this), 10);
+					this._h_render = setTimeout(this.render.bind(this), 10);
 				}
 
 				this._trigger('onViewportChanged', {});
@@ -1514,7 +1437,7 @@ class Grid {
 								this._commitEditAndSetFocus();
 							}
 						} else {
-							if (this.getEditorLock()._commitCurrentEdit()) {
+							if (this.getEditorLock().commitCurrentEdit()) {
 								this.editActiveCell();
 							}
 						}
@@ -1559,7 +1482,7 @@ class Grid {
 		}
 
 		if ((this._activeCell !== cell.cell || this._activeRow !== cell.row) && this.canCellBeActive(cell.row, cell.cell)) {
-			if (!this.getEditorLock().isActive() || this.getEditorLock()._commitCurrentEdit()) {
+			if (!this.getEditorLock().isActive() || this.getEditorLock().commitCurrentEdit()) {
 				this.scrollRowIntoView(cell.row, false);
 				this._setActiveCellInternal(this.getCellNode(cell.row, cell.cell));
 			}
@@ -1592,12 +1515,12 @@ class Grid {
 	}
 	_handleHeaderMouseEnter(e) {
 		this._trigger('onHeaderMouseEnter', {
-			column: this.dataset.column
+			column: e.target.dataset.column
 		}, e);
 	}
 	_handleHeaderMouseLeave(e) {
 		this._trigger('onHeaderMouseLeave', {
-			column: this.dataset.column
+			column: e.target.dataset.column
 		}, e);
 	}
 	_handleHeaderContextMenu(e) {
@@ -1740,7 +1663,7 @@ class Grid {
 	_commitEditAndSetFocus() {
 		// if the commit fails, it would do so due to a validation error
 		// if so, do not steal the focus from the editor
-		if (this.getEditorLock()._commitCurrentEdit()) {
+		if (this.getEditorLock().commitCurrentEdit()) {
 			this.setFocus();
 			if (this._options.autoEdit) {
 				this.navigateDown();
@@ -1748,7 +1671,7 @@ class Grid {
 		}
 	}
 	_cancelEditAndSetFocus() {
-		if (this.getEditorLock()._cancelCurrentEdit()) {
+		if (this.getEditorLock().cancelCurrentEdit()) {
 			this.setFocus();
 		}
 	}
@@ -2055,7 +1978,7 @@ class Grid {
 			return false;
 		}
 
-		if (!this.getEditorLock()._commitCurrentEdit()) {
+		if (!this.getEditorLock().commitCurrentEdit()) {
 			return true;
 		}
 
@@ -2364,7 +2287,7 @@ class Grid {
 			widths.push(c.width);
 			total += c.width;
 			if (c.resizable) {
-				shrinkLeeway += c.width - Math.max(c.minWidth, this._absoluteColumnMinWidth);
+				shrinkLeeway += c.width - c.minWidth;
 			}
 		}
 
@@ -2375,10 +2298,10 @@ class Grid {
 			for (i = 0; i < this._columns.length && total > availWidth; i++) {
 				c = this._columns[i];
 				let width = widths[i];
-				if (!c.resizable || width <= c.minWidth || width <= this._absoluteColumnMinWidth) {
+				if (!c.resizable || width <= c.minWidth) {
 					continue;
 				}
-				let absMinWidth = Math.max(c.minWidth, this._absoluteColumnMinWidth),
+				let absMinWidth = c.minWidth,
 					shrinkSize = Math.floor(shrinkProportion * (width - absMinWidth)) || 1;
 				shrinkSize = Math.min(shrinkSize, width - absMinWidth);
 				total -= shrinkSize;
@@ -3159,7 +3082,7 @@ class Grid {
 			return;
 		}
 
-		if (!this.getEditorLock()._commitCurrentEdit()) {
+		if (!this.getEditorLock().commitCurrentEdit()) {
 			return;
 		}
 

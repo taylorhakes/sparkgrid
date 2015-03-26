@@ -6,7 +6,7 @@ const LEFT = 37,
 	ENTER = 13,
 	TAB = 9;
 
-class TextEditor {
+class Text {
 	constructor(options) {
 		this._defaultValue = null;
 		this._options = options;
@@ -76,7 +76,7 @@ class TextEditor {
 	}
 }
 
-class NumberEditor extends TextEditor {
+class Number extends Text {
 	constructor(options) {
 		super(extend({ type: 'number' }, options));
 	}
@@ -99,7 +99,7 @@ class NumberEditor extends TextEditor {
 	}
 }
 
-class YesNoSelectEditor {
+class YesNoSelect {
 	constructor(options) {
 		this._defaultValue = null;
 		this._options = options;
@@ -147,54 +147,51 @@ class YesNoSelectEditor {
 	}
 }
 
-function CheckboxEditor(args) {
-	let select,
-		defaultValue;
-
-	this.init = function () {
-		select = createEl({
+class Checkbox {
+	constructor(options) {
+		this._defaultValue = null;
+		this._select = createEl({
 			tag: 'input',
 			type: 'checkbox',
 			checked: true,
 			className: 'editor-checkbox',
 			hideFocus: true
 		});
-		args.container.appendChild(select);
-		select.focus();
-	};
+		this._options = options;
+		this._select.focus();
+		options.container.appendChild(this._select);
+	}
 
-	this.destroy = function () {
-		select.remove();
-	};
+	destroy() {
+		removeEl(this._select);
+	}
 
-	this.focus = function () {
-		select.focus();
-	};
+	focus() {
+		this._select.focus();
+	}
 
-	this.loadValue = function (item) {
-		select.checked = !!item[args.column.field];
-	};
+	loadValue(item) {
+		this._select.checked = !!item[this._options.column.field];
+	}
 
-	this.serializeValue = function () {
-		return select.checked;
-	};
+	serializeValue() {
+		return this._select.checked;
+	}
 
-	this.applyValue = function (item, state) {
-		item[args.column.field] = state;
-	};
+	applyValue(item, state) {
+		item[this._options.column.field] = state;
+	}
 
-	this.isValueChanged = function () {
-		return (this.serializeValue() !== defaultValue);
-	};
+	isValueChanged() {
+		return this.serializeValue() !== this._defaultValue;
+	}
 
-	this.validate = function () {
+	validate() {
 		return {
 			valid: true,
 			msg: null
 		};
-	};
-
-	this.init();
+	}
 }
 
 /*
@@ -202,13 +199,11 @@ function CheckboxEditor(args) {
  * The UI is added onto document BODY and .position(), .show() and .hide() are implemented.
  * KeyDown events are also handled to provide handling for Tab, Shift-Tab, Esc and Ctrl-Enter.
  */
-function LongTextEditor(args) {
-	let input, wrapper, defaultValue, scope = this;
-
-	this.init = function () {
-		let container = document.body, buttonWrapper;
-
-		wrapper = createEl({
+class LongText {
+	constructor(options) {
+		this._defaaultValue = null;
+		this._container = options.container || document.body;
+		this._wrapper = createEl({
 			tag: 'div',
 			style: {
 				zIndex: 10000,
@@ -219,9 +214,9 @@ function LongTextEditor(args) {
 				borderRadius: '10px'
 			}
 		});
-		container.appendChild(wrapper);
+		this._container.appendChild(this._wrapper);
 
-		input = createEl({
+		this._input = createEl({
 			tag: 'textarea',
 			rows: 5,
 			style: {
@@ -233,98 +228,96 @@ function LongTextEditor(args) {
 			}
 		});
 
-		wrapper.innerHTML = '<DIV style="text-align:right"><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></DIV>';
-		wrapper.appendChild(input);
+		this._wrapper.innerHTML = '<DIV style="text-align:right"><BUTTON>Save</BUTTON><BUTTON>Cancel</BUTTON></DIV>';
+		this._wrapper.appendChild(this._input);
 
-		let buttons = wrapper.querySelectorAll('button');
-		buttons[0].addEventListener('click', this.save);
-		buttons[buttons.length - 1].addEventListener('click', this.cancel);
-		input.addEventListener('keydown', this.handleKeyDown);
+		let buttons = this._wrapper.querySelectorAll('button');
+		buttons[0].addEventListener('click', this.save.bind(this));
+		buttons[1].addEventListener('click', this.cancel.bind(this));
+		this._input.addEventListener('keydown', this.handleKeyDown.bind(this));
 
-		scope.position(args.position);
-		input.focus();
-		input.select();
-	};
+		this.position(options.position);
+		this._input.focus();
+		this._input.select();
+	}
 
-	this.handleKeyDown = function (e) {
+	handleKeyDown(e) {
 		if (e.which === ENTER && e.ctrlKey) {
-			scope.save();
+			this.save();
 		} else if (e.which === ESCAPE) {
 			e.preventDefault();
-			scope.cancel();
+			this.cancel();
 		} else if (e.which === TAB && e.shiftKey) {
 			e.preventDefault();
-			args.grid.navigatePrev();
+			this._options.grid.navigatePrev();
 		} else if (e.which === TAB) {
 			e.preventDefault();
-			args.grid.navigateNext();
+			this._options.grid.navigateNext();
 		}
-	};
+	}
 
-	this.save = function () {
-		args.commitChanges();
-	};
+	save() {
+		this._options.commitChanges();
+	}
 
-	this.cancel = function () {
-		input.value = defaultValue;
-		args.cancelChanges();
-	};
+	cancel() {
+		this._input.value = this._defaultValue;
+		this._options.cancelChanges();
+	}
 
-	this.hide = function () {
-		wrapper.style.display = 'none';
-	};
+	hide() {
+		this._wrapper.style.display = 'none';
+	}
 
-	this.show = function () {
-		wrapper.style.display = '';
-	};
+	show() {
+		this._wrapper.style.display = '';
+	}
 
-	this.position = function (position) {
-		setStyle(wrapper, {
+	position(position) {
+		setStyle(this._wrapper, {
 			top: position.top - 5 + 'px',
 			left: position.left - 5 + 'px'
 		});
-	};
+	}
 
-	this.destroy = function () {
-		removeEl(wrapper);
-	};
+	destroy() {
+		removeEl(this._wrapper);
+	}
 
-	this.focus = function () {
-		input.focus();
-	};
+	focus() {
+		this._input.focus();
+	}
 
-	this.loadValue = function (item) {
-		input.value = defaultValue = item[args.column.field];
-		input.select();
-	};
+	loadValue(item) {
+		this._input.value = this._defaultValue = item[this._options.column.field];
+		this._input.select();
+	}
 
-	this.serializeValue = function () {
-		return input.value;
-	};
+	serializeValue() {
+		return this._input.value;
+	}
 
-	this.applyValue = function (item, state) {
-		item[args.column.field] = state;
-	};
+	applyValue(item, state) {
+		item[this._options.column.field] = state;
+	}
 
-	this.isValueChanged = function () {
-		return (!(input.value === '' && defaultValue == null)) && (input.value !== defaultValue);
-	};
+	isValueChanged() {
+		return (!(this._input.value === '' && this._defaultValue == null)) && (this._input.value !== this._defaultValue);
+	}
 
-	this.validate = function () {
+	validate() {
 		return {
 			valid: true,
 			msg: null
 		};
-	};
-
-	this.init();
+	}
 }
 
 export {
-	TextEditor as Text,
-	NumberEditor as Number,
-	YesNoSelectEditor as YesNoSelect,
-	CheckboxEditor as Checkbox,
-	LongTextEditor as LongText
+	Text,
+	Number,
+	YesNoSelect,
+	Checkbox,
+	LongText
 };
 
