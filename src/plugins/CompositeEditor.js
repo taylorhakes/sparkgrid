@@ -1,171 +1,145 @@
 import { extend } from '../util/misc';
 
 let defaultOptions = {
-	validationFailedMsg: "Some of the fields have failed validation",
-	show: null,
-	hide: null,
-	position: null,
-	destroy: null
-};
-let noop = () => {};
+		validationFailedMsg: "Some of the fields have failed validation",
+		show: null,
+		hide: null,
+		position: null,
+		destroy: null
+	},
+	noop = () => {
+	};
 
-class CompositeEditor {
-	constructor(options) {
-		this._options = extend({}, defaultOptions, options);
+function getCompositeEditor(options) {
+	let firstInvalidEditor,
+		containers = options.containers;
 
-		this._columns = this._options.columns;
-		this._containers = this._options.containers;
-		this._firstInvalidEditor  = null;
+	options = extend({}, defaultOptions, options);
+
+	function getContainerBox(i) {
+		let c = containers[ i ],
+			top = c.offsetTop,
+			left = c.offsetLeft,
+			width = c.offsetWidth,
+			height = c.offsetHeight;
+
+		return {
+			top: top,
+			left: left,
+			bottom: top + height,
+			right: left + width,
+			width: width,
+			height: height,
+			visible: true
+		};
 	}
 
-	getContainerBox(i) {
-	  var c = this._containers[i];
-	  var w = c.clientHeight;
-	  var h = c.clientWidth;
+	class CompositeEditor {
+		constructor(options) {
+			let idx = columns.length;
 
-	  return {
-		top: c.offsetTop,
-		left: c.offsetLeft,
-		bottom: c.offsetTop + h,
-		right: c.offsetLeft + w,
-		width: w,
-		height: h,
-		visible: true
-	  };
+			this._editors = [];
+			while (idx--) {
+				if (columns[ idx ].editor) {
+					let newOptions = extend({}, options);
+					newOptions.container = containers[ idx ];
+					newOptions.column = columns[ idx ];
+					newOptions.position = getContainerBox(idx);
+					newOptions.commitChanges = noop;
+					newOptions.cancelChanges = noop;
+
+					this._editors[ idx ] = new (columns[ idx ].editor)(newOptions);
+				}
+			}
+		}
+
+		destroy = function () {
+			this._editors.forEach((editor) => {
+				editor.destroy();
+			});
+
+			options.destroy && options.destroy();
+		};
+
+		focus() {
+			// if validation has failed, set the focus to the first invalid editor
+			(firstInvalidEditor || this._editors[ 0 ]).focus();
+		}
+
+		isValueChanged() {
+			return this._editors.some((editor) => {
+				return editor.isValueChanged();
+			});
+		}
+
+		serializeValue() {
+			return this._editors.reduce((prev, editor, index) => {
+				prev[index] = editor.serializeValue();
+				return prev;
+			}, {});
+		}
+
+		applyValue(item, state) {
+			this._editors.forEach((editor, index) => {
+				editor.applyValue(item, state[ index ]);
+			});
+		}
+
+		loadValue(item) {
+			this._editors.forEach((editor, index) => {
+				editor.loadValue(item);
+			});
+		}
+
+		validate() {
+			let errors = [];
+			firstInvalidEditor = null;
+
+			this._editors.forEach((editor, index) => {
+				let validationResults = editor.validate();
+				if (!validationResults.valid) {
+					firstInvalidEditor = editor;
+					errors.push({
+						index: index,
+						editor: editor,
+						container: containers[ index ],
+						msg: validationResults.msg
+					});
+				}
+			});
+
+			if (errors.length) {
+				return {
+					valid: false,
+					msg: options.validationFailedMsg,
+					errors: errors
+				};
+			} else {
+				return {
+					valid: true,
+					msg: ""
+				};
+			}
+		}
+
+		hide() {
+			this._editors.forEach((editor) => {
+				editor.hide && editor.hide();
+			});
+			options.hide && options.hide();
+		}
+
+		show() {
+			this._editors.forEach((editor) => {
+				editor.show && editor.show();
+			});
+			options.show && options.show();
+		}
+
+		position(box) {
+			options.position && options.position(box);
+		}
 	}
 
-
-function editor(args) {
-  var editors = [];
-
-
-  function init() {
-	var newArgs = {};
-	var idx = columns.length;
-	while (idx--) {
-	  if (columns[idx].editor) {
-		newArgs = $.extend({}, args);
-		newArgs.container = containers[idx];
-		newArgs.column = columns[idx];
-		newArgs.position = getContainerBox(idx);
-		newArgs.commitChanges = noop;
-		newArgs.cancelChanges = noop;
-
-		editors[idx] = new (columns[idx].editor)(newArgs);
-	  }
-	}
-  }
-
-
-  this.destroy = function () {
-	var idx = editors.length;
-	while (idx--) {
-	  editors[idx].destroy();
-	}
-
-	options.destroy && options.destroy();
-  };
-
-
-  this.focus = function () {
-	// if validation has failed, set the focus to the first invalid editor
-	(firstInvalidEditor || editors[0]).focus();
-  };
-
-
-  this.isValueChanged = function () {
-	var idx = editors.length;
-	while (idx--) {
-	  if (editors[idx].isValueChanged()) {
-		return true;
-	  }
-	}
-	return false;
-  };
-
-
-  this.serializeValue = function () {
-	var serializedValue = [];
-	var idx = editors.length;
-	while (idx--) {
-	  serializedValue[idx] = editors[idx].serializeValue();
-	}
-	return serializedValue;
-  };
-
-
-  this.applyValue = function (item, state) {
-	var idx = editors.length;
-	while (idx--) {
-	  editors[idx].applyValue(item, state[idx]);
-	}
-  };
-
-
-  this.loadValue = function (item) {
-	var idx = editors.length;
-	while (idx--) {
-	  editors[idx].loadValue(item);
-	}
-  };
-
-
-  this.validate = function () {
-	var validationResults;
-	var errors = [];
-
-	firstInvalidEditor = null;
-
-	var idx = editors.length;
-	while (idx--) {
-	  validationResults = editors[idx].validate();
-	  if (!validationResults.valid) {
-		firstInvalidEditor = editors[idx];
-		errors.push({
-		  index: idx,
-		  editor: editors[idx],
-		  container: containers[idx],
-		  msg: validationResults.msg
-		});
-	  }
-	}
-
-	if (errors.length) {
-	  return {
-		valid: false,
-		msg: options.validationFailedMsg,
-		errors: errors
-	  };
-	} else {
-	  return {
-		valid: true,
-		msg: ""
-	  };
-	}
-  };
-
-
-  this.hide = function () {
-	var idx = editors.length;
-	while (idx--) {
-	  editors[idx].hide && editors[idx].hide();
-	}
-	options.hide && options.hide();
-  };
-
-
-  this.show = function () {
-	var idx = editors.length;
-	while (idx--) {
-	  editors[idx].show && editors[idx].show();
-	}
-	options.show && options.show();
-  };
-
-
-  this.position = function (box) {
-	options.position && options.position(box);
-  };
+	return CompositeEditor;
 }
-
-export default CompositeEditor;

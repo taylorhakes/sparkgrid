@@ -2962,7 +2962,7 @@ class Grid {
 		this._lastRenderedScrollLeft = this._scrollLeft;
 		this._h_render = null;
 	}
-	
+
 	addCellCssStyles(key, hash) {
 		if (this._cellCssClasses[key]) {
 			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');

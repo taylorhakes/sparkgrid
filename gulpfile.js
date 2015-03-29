@@ -37,7 +37,8 @@ gulp.task('lint', function() {
 		'./src/selection/*.js',
 		'./src/grouping/*.js',
 		'./src/editing/*.js',
-		'./src/plugins/RowSelectionModel.js'
+		'./src/plugins/RowSelectionModel.js',
+		'./src/plugins/GroupItemMetadataProvider.js'
 	])
 		.pipe(jshint())
 		.pipe(jshint.reporter('default'));

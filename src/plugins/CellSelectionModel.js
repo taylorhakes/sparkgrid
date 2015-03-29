@@ -41,8 +41,8 @@ class CellSelectionModel {
 	removeInvalidRanges(ranges) {
 		let result = [];
 
-		for (var i = 0; i < ranges.length; i++) {
-			var r = ranges[i];
+		for (let i = 0; i < ranges.length; i++) {
+			let r = ranges[i];
 			if (this._grid.canCellBeSelected(r.fromRow, r.fromCell) && this._grid.canCellBeSelected(r.toRow, r.toCell)) {
 				result.push(r);
 			}
@@ -88,7 +88,7 @@ class CellSelectionModel {
 		 * 39 right
 		 * 40 down
 		 */
-		var active = this._grid.getActiveCell();
+		let active = this._grid.getActiveCell();
 
 		if (active && e.shiftKey && !e.ctrlKey && !e.altKey &&
 			(e.which == 37 || e.which == 39 || e.which == 38 || e.which == 40)) {
@@ -104,7 +104,7 @@ class CellSelectionModel {
 			if (!last.contains(active.row, active.cell))
 				last = new Range(active.row, active.cell);
 
-			var dRow = last.toRow - last.fromRow,
+			let dRow = last.toRow - last.fromRow,
 				dCell = last.toCell - last.fromCell,
 			// walking direction
 				dirRow = active.row == last.fromRow ? 1 : -1,
@@ -121,11 +121,11 @@ class CellSelectionModel {
 			}
 
 			// define new selection range
-			var new_last = new Slick.Range(active.row, active.cell, active.row + dirRow * dRow, active.cell + dirCell * dCell);
+			let new_last = new Slick.Range(active.row, active.cell, active.row + dirRow * dRow, active.cell + dirCell * dCell);
 			if (this.removeInvalidRanges([new_last]).length) {
 				ranges.push(new_last);
-				var viewRow = dirRow > 0 ? new_last.toRow : new_last.fromRow;
-				var viewCell = dirCell > 0 ? new_last.toCell : new_last.fromCell;
+				let viewRow = dirRow > 0 ? new_last.toRow : new_last.fromRow,
+					viewCell = dirCell > 0 ? new_last.toCell : new_last.fromCell;
 				this._grid.scrollRowIntoView(viewRow);
 				this._grid.scrollCellIntoView(viewRow, viewCell);
 			}

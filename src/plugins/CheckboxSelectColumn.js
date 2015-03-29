@@ -30,8 +30,8 @@ class CheckboxSelectColumn {
 	}
 
 	_handleSelectedRowsChanged() {
-		let selectedRows = this._grid.getSelectedRows();
-		var lookup = {};
+		let selectedRows = this._grid.getSelectedRows(),
+			lookup = {};
 		for (let i = 0; i < selectedRows.length; i++) {
 			let row = selectedRows[i];
 			lookup[row] = true;
@@ -51,7 +51,7 @@ class CheckboxSelectColumn {
 	}
 
 	_handleKeyDown(info) {
-		var e = info.event,
+		let e = info.event,
 			data = info.data;
 
 		if (e.which == 32) {
@@ -67,7 +67,7 @@ class CheckboxSelectColumn {
 	}
 
 	_handleClick(info) {
-		var e = info.event,
+		let e = info.event,
 			data = info.data;
 
 		// clicking on a row select checkbox
@@ -93,7 +93,7 @@ class CheckboxSelectColumn {
 	}
 
 	_handleHeaderClick(info) {
-		var e = info.event,
+		let e = info.event,
 			data = info.data;
 
 		if (data.column.id == this._options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
@@ -105,8 +105,8 @@ class CheckboxSelectColumn {
 			}
 
 			if ((e.target.type || '').toLowerCase() === 'checked') {
-				var rows = [];
-				for (var i = 0; i < this._grid.getDataLength(); i++) {
+				let rows = [];
+				for (let i = 0; i < this._grid.getDataLength(); i++) {
 					rows.push(i);
 				}
 				this._grid.setSelectedRows(rows);

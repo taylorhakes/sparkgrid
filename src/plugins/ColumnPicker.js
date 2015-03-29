@@ -46,7 +46,7 @@ class ColumnPicker {
 	}
 
 	_handleHeaderContextMenu(info) {
-		var e = info.event;
+		let e = info.event;
 
 		e.preventDefault();
 
@@ -135,9 +135,9 @@ class ColumnPicker {
 		// We create a new `columns` structure by leaving currently-hidden
 		// columns in their original ordinal position and interleaving the results
 		// of the current column sort.
-		var current = grid.getColumns().slice(0);
-		var ordered = new Array(columns.length);
-		for (var i = 0; i < ordered.length; i++) {
+		let current = grid.getColumns().slice(0),
+			ordered = new Array(columns.length);
+		for (let i = 0; i < ordered.length; i++) {
 			if (grid.getColumnIndex(columns[i].id) === undefined) {
 				// If the column doesn't return a value from getColumnIndex,
 				// it is hidden. Leave it in this position.
@@ -171,7 +171,7 @@ class ColumnPicker {
 		}
 
 		if (e.target.type === 'checkbox') {
-			var visibleColumns = [];
+			let visibleColumns = [];
 			this._columnCheckboxes.forEach(function (c, i) {
 				if (c.checked) {
 					visibleColumns.push(columns[i]);

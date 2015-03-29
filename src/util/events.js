@@ -131,8 +131,18 @@ class EventHandler {
 	}
 }
 
+const KEYCODES = Object.freeze({
+	ESCAPE: 27,
+	SPACE: 32,
+	LEFT: 37,
+	RIGHT: 39,
+	ENTER: 13,
+	TAB: 9
+});
+
 export {
 	Event,
 	EventHandler,
-	EventControl
+	EventControl,
+	KEYCODES
 };

@@ -1,10 +1,6 @@
 import { extend, createEl, removeEl, setStyle } from '../util/misc';
+import { KEYCODES } from '../util/events';
 
-const LEFT = 37,
-	RIGHT = 39,
-	ESCAPE = 27,
-	ENTER = 13,
-	TAB = 9;
 
 class Text {
 	constructor(options) {
@@ -16,7 +12,7 @@ class Text {
 			className: 'editor-text'
 		});
 		this._inputEl.addEventListener('keydown', function (e) {
-			if (e.keyCode === LEFT || e.keyCode === RIGHT) {
+			if (e.keyCode === KEYCODES.LEFT || e.keyCode === KEYCODES.RIGHT) {
 				e.stopPropagation();
 			}
 		});
@@ -242,15 +238,15 @@ class LongText {
 	}
 
 	handleKeyDown(e) {
-		if (e.which === ENTER && e.ctrlKey) {
+		if (e.which === KEYCODES.ENTER && e.ctrlKey) {
 			this.save();
-		} else if (e.which === ESCAPE) {
+		} else if (e.which === KEYCODES.ESCAPE) {
 			e.preventDefault();
 			this.cancel();
-		} else if (e.which === TAB && e.shiftKey) {
+		} else if (e.which === KEYCODES.TAB && e.shiftKey) {
 			e.preventDefault();
 			this._options.grid.navigatePrev();
-		} else if (e.which === TAB) {
+		} else if (e.which === KEYCODES.TAB) {
 			e.preventDefault();
 			this._options.grid.navigateNext();
 		}
