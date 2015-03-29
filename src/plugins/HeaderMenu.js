@@ -1,3 +1,13 @@
+import { extend, removeEl, closest, createEl, setPx } from '../util/misc';
+import { Event, EventHandler } from '../util/misc';
+
+var defaults = {
+	buttonCssClass: null,
+	buttonImage: null,
+	headerActiveClass: 'spark-header-column-active'
+};
+
+
 /***
  * A plugin to add drop-down menus to column headers.
  *
@@ -66,199 +76,203 @@
  * @class Slick.Plugins.HeaderButtons
  * @constructor
  */
-import { extend, Event, EventHandler } from '../core';
+class HeaderMenu {
+	constructor(options) {
+		this._grid = null;
+		this._handler = new EventHandler();
+		this._menu = null;
+		this._activeHeaderColumn = null;
 
-export default function HeaderMenu(options) {
-	var _grid;
-	var _self = this;
-	var _handler = new EventHandler();
-	var _defaults = {
-		buttonCssClass: null,
-		buttonImage: null
-	};
-	var $menu;
-	var $activeHeaderColumn;
+		this._options = extend({}, defaults, options);
 
+		this._boundShowMenu = this._showMenu.bind(this);
+		this._boundHandleBodyMouseDown = this._handleBodyMouseDown.bind(this);
+		this._boundHandleHeaderCellRendered = this._handleHeaderCellRendered.bind(this);
+		this._boundHandleMenuItemClick = this._handleMenuItemClick.bind(this);
+	}
 
-	function init(grid) {
-		options = $.extend(true, {}, _defaults, options);
-		_grid = grid;
-		_handler
-			.subscribe(_grid.onHeaderCellRendered, handleHeaderCellRendered)
-			.subscribe(_grid.onBeforeHeaderCellDestroy, handleBeforeHeaderCellDestroy);
+	init(grid) {
+		this._grid = grid;
+		this._handler
+			.subscribe(this._grid.onHeaderCellRendered, this._boundHandleHeaderCellRendered)
+			.subscribe(this._grid.onBeforeHeaderCellDestroy, this._handleBeforeHeaderCellDestroy);
 
 		// Force the grid to re-render the header now that the events are hooked up.
-		_grid.setColumns(_grid.getColumns());
+		this._grid.setColumns(this._grid.getColumns());
 
 		// Hide the menu on outside click.
-		$(document.body).bind("mousedown", handleBodyMouseDown);
+		document.body.addEventListener('mousedown', this._boundHandleBodyMouseDown);
 	}
 
 
-	function destroy() {
-		_handler.unsubscribeAll();
-		$(document.body).unbind("mousedown", handleBodyMouseDown);
+	destroy() {
+		this._handler.unsubscribeAll();
+		document.body.removeEventListener('mousedown', this._boundHandleBodyMouseDown);
 	}
 
 
-	function handleBodyMouseDown(e) {
-		if ($menu && $menu[0] != e.target && !$.contains($menu[0], e.target)) {
-			hideMenu();
+	_handleBodyMouseDown(e) {
+		if (this._menu !== e.target && !closest(e.target, this._menu)) {
+			this.hideMenu();
 		}
 	}
 
 
-	function hideMenu() {
-		if ($menu) {
-			$menu.remove();
-			$menu = null;
-			$activeHeaderColumn
-				.removeClass("spark-header-column-active");
+	hideMenu() {
+		if (this._menu) {
+			removeEl(this._menu);
+			this._menu = null;
+			this._activeHeaderColumn.classList.remove(this._options.headerActiveClass);
 		}
 	}
 
-	function handleHeaderCellRendered(e, args) {
-		var column = args.column;
+	_handleHeaderCellRendered(info) {
+		let column = info.data.column;
 		var menu = column.header && column.header.menu;
 
 		if (menu) {
-			var $el = $("<div></div>")
-				.addClass("spark-header-menubutton")
-				.data("column", column)
-				.data("menu", menu);
+			let el = createEl({
+				tag: 'div',
+				className: 'spark-header-menubutton'
+			});
+			el.dataset.column = column;
+			el.dataset.menu = menu;
 
-			if (options.buttonCssClass) {
-				$el.addClass(options.buttonCssClass);
+			if (this._options.buttonCssClass) {
+				el.classList.add(this._options.buttonCssClass);
 			}
 
-			if (options.buttonImage) {
-				$el.css("background-image", "url(" + options.buttonImage + ")");
+			if (this._options.buttonImage) {
+				el.style.backgroundImage = 'url(" + options.buttonImage + ")';
 			}
 
 			if (menu.tooltip) {
-				$el.attr("title", menu.tooltip);
+				el.setAttribute('title', menu.tooltip);
 			}
 
-			$el
-				.bind("click", showMenu)
-				.appendTo(args.node);
+			el.addEventListener('click', this._boundShowMenu);
+			info.data.node.appendChild(el);
 		}
 	}
 
 
-	function handleBeforeHeaderCellDestroy(e, args) {
-		var column = args.column;
+	_handleBeforeHeaderCellDestroy(info) {
+		let column = info.data.column;
 
 		if (column.header && column.header.menu) {
-			$(args.node).find(".spark-header-menubutton").remove();
+			removeEl(info.data.node.querySelector('.spark-header-menubutton'));
 		}
 	}
 
 
-	function showMenu(e) {
-		var $menuButton = $(this);
-		var menu = $menuButton.data("menu");
-		var columnDef = $menuButton.data("column");
+	_showMenu(e) {
+		let menuButton = e.currentTarget,
+			menu = menuButton.dataset.menu,
+			columnDef = menuButton.dataset.column;
 
 		// Let the user modify the menu or cancel altogether,
 		// or provide alternative menu implementation.
-		if (_self.onBeforeMenuShow.notify({
-				"grid": _grid,
-				"column": columnDef,
-				"menu": menu
-			}, e, _self) == false) {
+		if (this.onBeforeMenuShow.notify({
+				grid: this._grid,
+				column: columnDef,
+				menu: menu
+			}, e, this) === false) {
 			return;
 		}
 
 
-		if (!$menu) {
-			$menu = $("<div class='spark-header-menu'></div>")
-				.appendTo(_grid.getContainerNode());
+		if (!menu) {
+			menu = createEl({
+				tag: 'div',
+				className: 'spark-header-menu'
+			});
+			this._grid.getEl().appendChild(menu);
 		}
-		$menu.empty();
+		menu.innerHTML = '';
 
 
 		// Construct the menu items.
-		for (var i = 0; i < menu.items.length; i++) {
-			var item = menu.items[i];
-
-			var $li = $("<div class='spark-header-menuitem'></div>")
-				.data("command", item.command || '')
-				.data("column", columnDef)
-				.data("item", item)
-				.bind("click", handleMenuItemClick)
-				.appendTo($menu);
+		for (let i = 0; i < menu.items.length; i++) {
+			let item = menu.items[i],
+				li = createEl({
+					tag: 'div',
+					className: 'spark-header-menuitem'
+				});
+			li.dataset.command = item.command || '';
+			li.dataset.column = columnDef;
+			li.dataset.item = item;
+			li.addEventListener('click', this._boundHandleMenuItemClick);
+			menu.appendChild(li);
 
 			if (item.disabled) {
-				$li.addClass("spark-header-menuitem-disabled");
+				li.classList.add('spark-header-menuitem-disabled');
 			}
 
 			if (item.tooltip) {
-				$li.attr("title", item.tooltip);
+				li.setAttribute('title', item.tooltip);
 			}
 
-			var $icon = $("<div class='spark-header-menuicon'></div>")
-				.appendTo($li);
-
+			var icon = createEl({
+				tag: 'div',
+				className:'spark-header-menuicon'
+			});
+			li.appendChild(icon);
 			if (item.iconCssClass) {
-				$icon.addClass(item.iconCssClass);
+				icon.classList.add(item.iconCssClass);
 			}
 
 			if (item.iconImage) {
-				$icon.css("background-image", "url(" + item.iconImage + ")");
+				icon.style.backgroundImage= 'url(" + item.iconImage + ")';
 			}
 
-			$("<span class='spark-header-menucontent'></span>")
-				.text(item.title)
-				.appendTo($li);
+			let span = createEl({
+				tag: 'span',
+				className: 'spark-header-menucontent',
+				textContent: item.title
+			});
+			li.appendChild(li);
 		}
 
 
 		// Position the menu.
-		$menu
-			.offset({top: $(this).offset().top + $(this).height(), left: $(this).offset().left});
+		setPx(menu, 'top', menuButton.offsetTop + menuButton.offsetHeight);
+		setPx(menu, 'left', menuButton.offsetLeft);
 
 
 		// Mark the header as active to keep the highlighting.
-		$activeHeaderColumn = $menuButton.closest(".spark-header-column");
-		$activeHeaderColumn
-			.addClass("spark-header-column-active");
+		this._activeHeaderColumn = closest(menuButton, '.spark-header-column');
+		this._activeHeaderColumn.classList.add(this._options.headerActiveClass);
 
 		// Stop propagation so that it doesn't register as a header click event.
 		e.preventDefault();
 		e.stopPropagation();
 	}
 
-	function handleMenuItemClick(e) {
-		var command = $(this).data("command");
-		var columnDef = $(this).data("column");
-		var item = $(this).data("item");
+	_handleMenuItemClick(e) {
+		let menuItem = e.currentTarget,
+			command = menuItem.dataset.command,
+			columnDef = menuItem.dataset.column,
+			item = menuItem.dataset.item;
 
 		if (item.disabled) {
 			return;
 		}
 
-		hideMenu();
+		this.hideMenu();
 
-		if (command != null && command != '') {
-			_self.onCommand.notify({
-				"grid": _grid,
-				"column": columnDef,
-				"command": command,
-				"item": item
-			}, e, _self);
+		if (command != null && command !== '') {
+			this.onCommand.notify({
+				grid: this._grid,
+				column: columnDef,
+				command: command,
+				item: item
+			}, e, this);
 		}
 
 		// Stop propagation so that it doesn't register as a header click event.
 		e.preventDefault();
 		e.stopPropagation();
 	}
-
-	extend(this, {
-		"init": init,
-		"destroy": destroy,
-
-		"onBeforeMenuShow": new Event(),
-		"onCommand": new Event()
-	});
 }
+
+export default HeaderMenu;

@@ -42,7 +42,7 @@ function query(selector, el) {
 function closest(el, selector, lastEl) {
 	// Go through parents and check matches
 	while (true) {
-		if (el && el[matchesSelector] && el[matchesSelector](selector)) {
+		if (el && (el === selector || (typeof selector === 'string' && el[matchesSelector] && el[matchesSelector](selector)))) {
 			return el;
 		}
 		if (!el || el === lastEl || (typeof lastEl === 'string' && el[matchesSelector](lastEl))) {
@@ -104,12 +104,20 @@ function setStyle(el, styles) {
 }
 
 /**
- * Remove an HTML element from the DOM
- * @param {HTMLElement} el
+ * Remove a/multiple HTML element from the DOM
+ * @param {HTMLElement|Array<HTMLElement>} el
  */
-function removeEl(el) {
-	if (el.parentNode) {
-		el.parentNode.removeChild(el);
+function removeEl(els) {
+	if (!Array.isArray(els)) {
+		els = [els];
+	}
+
+	let index = els.length;
+	while(index--) {
+		let el = els[index];
+		if (el && el.parentNode) {
+			el.parentNode.removeChild(el);
+		}
 	}
 }
 
