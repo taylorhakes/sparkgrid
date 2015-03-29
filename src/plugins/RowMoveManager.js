@@ -1,4 +1,4 @@
-import { extend, Event, EventHandler } from '../core';
+import { extend, Event, EventHandler } from '../util/misc';
 
 export default function RowMoveManager(options) {
 	var _grid;
@@ -11,7 +11,7 @@ export default function RowMoveManager(options) {
 	};
 
 	function init(grid) {
-		options = $.extend(true, {}, _defaults, options);
+		options = extend({}, _defaults, options);
 		_grid = grid;
 		_canvas = _grid.getCanvasNode();
 		_handler

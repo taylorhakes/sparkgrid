@@ -51,57 +51,62 @@
  * @class Slick.Plugins.HeaderButtons
  * @constructor
  */
-import {  createEl, slice } from '../util/misc';
+import {  createEl, slice, extend, removeEl } from '../util/misc';
 import { EventHandler, Event } from '../util/events';
 
-export default function HeaderButtons(options) {
-	var _grid;
-	var _self = this;
-	var _handler = new EventHandler();
-	var _defaults = {
-		buttonCssClass: "spark-header-button"
-	};
+let defaults = {
+	buttonCssClass: 'spark-header-button'
+};
 
+class HeaderButtons {
+	constructor(options) {
+		this._grid = null;
+		this._handler = new EventHandler();
+		this._options = extend({}, defaults, options);
+		this.onCommand = new Event();
+	}
 
-	function init(grid) {
-		options = $.extend(true, {}, _defaults, options);
-		_grid = grid;
-		_handler
-			.subscribe(_grid.onHeaderCellRendered, handleHeaderCellRendered)
-			.subscribe(_grid.onBeforeHeaderCellDestroy, handleBeforeHeaderCellDestroy);
+	init(grid) {
+		this._grid = grid;
+		this._boundHandleHeaderCellRendered = this._handleHeaderCellRendered.bind(this);
+		this._boundHandleBeforeHeaderCellDestroy = this._handleBeforeHeaderCellDestroy.bind(this);
+		this._boundHandleButtonClick = this._handleButtonClick.bind(this);
+		this._handler
+			.subscribe(grid.onHeaderCellRendered, this._boundHandleHeaderCellRendered)
+			.subscribe(grid.onBeforeHeaderCellDestroy, this._boundHandleBeforeHeaderCellDestroy);
 
 		// Force the grid to re-render the header now that the events are hooked up.
-		_grid.setColumns(_grid.getColumns());
+		grid.setColumns(grid.getColumns());
 	}
 
 
-	function destroy() {
-		_handler.unsubscribeAll();
+	destroy() {
+		this._handler.unsubscribeAll();
 	}
 
 
-	function handleHeaderCellRendered(e, args) {
-		var column = args.column;
+	_handleHeaderCellRendered(info) {
+		let column = info.data.column;
 
 		if (column.header && column.header.buttons) {
 			// Append buttons in reverse order since they are floated to the right.
-			var i = column.header.buttons.length;
+			let i = column.header.buttons.length;
 			while (i--) {
-				var button = column.header.buttons[i];
-				var btn = createEl({
-					tag: 'div',
-					className: options.buttonCssClass
-				});
+				let button = column.header.buttons[i],
+					btn = createEl({
+						tag: 'div',
+						className: this._options.buttonCssClass
+					});
 
 				btn.dataset.column = column;
 				btn.dataset.button = button;
 
 				if (button.showOnHover) {
-					btn.classList.add("spark-header-button-hidden");
+					btn.classList.add('spark-header-button-hidden');
 				}
 
 				if (button.image) {
-					btn.style.backgroundImage = "url(" + button.image + ")";
+					btn.style.backgroundImage = 'url(' + button.image + ')';
 				}
 
 				if (button.cssClass) {
@@ -117,57 +122,53 @@ export default function HeaderButtons(options) {
 				}
 
 				if (button.handler) {
-					btn.addEventListener("click", button.handler);
+					btn.addEventListener('click', button.handler);
 				}
 
-				btn.addEventListener("click", handleButtonClick)
-				args.node.appendChild(btn);
+				btn.addEventListener('click', this._boundHandleButtonClick);
+				info.data.node.appendChild(btn);
 			}
 		}
 	}
 
 
-	function handleBeforeHeaderCellDestroy(e, args) {
-		var column = args.column;
+	_handleBeforeHeaderCellDestroy(info) {
+		var column = info.data.column;
 
 		if (column.header && column.header.buttons) {
 			// Removing buttons via jQuery will also clean up any event handlers and data.
 			// NOTE: If you attach event handlers directly or using a different framework,
 			//       you must also clean them up here to avoid memory leaks.
-			slice(args.node.querySelectorAll("." + options.buttonCssClass)).forEach(function (btn) {
-				btn.parentNode.removeChild(btn);
+			slice(info.data.node.querySelectorAll('.' + this._options.buttonCssClass)).forEach(function (btn) {
+				removeEl(btn);
 			});
 		}
 	}
 
 
-	function handleButtonClick(e) {
-		var el = e.target;
-		var command = el.dataset.command;
-		var columnDef = el.dataset.column;
-		var button = el.dataset.button;
+	_handleButtonClick(info) {
+		let e = info.event,
+			el = e.target,
+			command = el.dataset.command,
+			columnDef = el.dataset.column,
+			button = el.dataset.button;
 
 		if (command != null) {
-			_self.onCommand.notify({
-				"grid": _grid,
-				"column": columnDef,
-				"command": command,
-				"button": button
-			}, e, _self);
+			this.onCommand.notify({
+				grid: this._grid,
+				column: columnDef,
+				command: command,
+				button: button
+			}, e, this);
 
 			// Update the header in case the user updated the button definition in the handler.
-			_grid.updateColumnHeader(columnDef.id);
+			this._grid.updateColumnHeader(columnDef.id);
 		}
 
 		// Stop propagation so that it doesn't register as a header click event.
 		e.preventDefault();
 		e.stopPropagation();
 	}
-
-	return {
-		"init": init,
-		"destroy": destroy,
-
-		"onCommand": new Event()
-	};
 }
+
+export default HeaderButtons;
