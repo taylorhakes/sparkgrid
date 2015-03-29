@@ -23,8 +23,8 @@ SparkGrid is based on [SlickGrid](https://github.com/mleibman/SlickGrid)
     </tr>
     <tr>
       <td><b>Remote API</b></td>
-      <td>Robust</td>
-      <td>Copy & Paste</td>
+      <td>Robust (In Progress)</td>
+      <td>Copy Example</td>
     </tr>
     <tr>
       <td><b>Testing</b></td>
@@ -33,7 +33,7 @@ SparkGrid is based on [SlickGrid](https://github.com/mleibman/SlickGrid)
     </tr>
     <tr>
       <td><b>Documentation</b></td>
-      <td>All methods & Examples</td>
+      <td>All methods & Examples (In Progress)</td>
       <td>Some comments & Examples</td>
     </tr>
   </tbody>
