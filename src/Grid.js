@@ -2114,6 +2114,11 @@ class Grid {
 		}
 		return ranges;
 	}
+
+	/**
+	 * Add the grid to DOM and initialize all data
+	 * @method init
+	 */
 	init() {
 		let container = this._container,
 			canvas = this._canvas;
@@ -2170,10 +2175,22 @@ class Grid {
 			canvas.addEventListener('mousewheel', this._handleMouseWheel.bind(this));
 		}
 	}
+
+	/**
+	 * Register a plugin to add additional functionality to the grid
+	 * @method registerPlugin
+	 * @param {Object} plugin
+	 */
 	registerPlugin(plugin) {
 		this._plugins.unshift(plugin);
 		plugin.init(this);
 	}
+
+	/**
+	 * Remove plugin functionality from the grid
+	 * @method unregisterPlugin
+	 * @param {Object} plugin
+	 */
 	unregisterPlugin(plugin) {
 		let index = this._plugins.indexOf(plugin);
 		if (~index) {
@@ -2183,6 +2200,12 @@ class Grid {
 			this._plugins.splice(index, 1);
 		}
 	}
+
+	/**
+	 * Set selection model plugin for row & cell selection
+	 * @method setSelectionModel
+	 * @param {Object} model
+	 */
 	setSelectionModel(model) {
 		if (this._selectionModel) {
 			this._selectionModel.onSelectedRangesChanged.unsubscribe(this._handleSelectedRangesChanged.bind(this));
@@ -2197,12 +2220,32 @@ class Grid {
 			this._selectionModel.onSelectedRangesChanged.subscribe(this._handleSelectedRangesChanged.bind(this));
 		}
 	}
+
+	/**
+	 * Get selection model plugin
+	 * @method getSelectionModel
+	 * @returns {Object}
+	 */
 	getSelectionModel() {
 		return this._selectionModel;
 	}
+
+	/**
+	 * Get the grid canvas
+	 * @method getCanvasNode
+	 * @returns {HTMLElement}
+	 */
 	getCanvasNode() {
 		return this._canvas;
 	}
+
+	/**
+	 * Update the column header with different text and tooltip
+	 * @method updateColumnHeader
+	 * @param {string} columnId
+	 * @param {string} title
+	 * @param {string} toolTip
+	 */
 	updateColumnHeader(columnId, title, toolTip) {
 		if (!this._initialized) {
 			return;
@@ -2236,14 +2279,31 @@ class Grid {
 			});
 		}
 	}
+
+	/**
+	 * Get the header row DOM element
+	 * @method getHeaderRow
+	 * @returns {HTMLElement}
+	 */
 	getHeaderRow() {
 		return this._headerRow;
 	}
+
+	/**
+	 * Get the header row by column ID
+	 * @method getHeaderRowColumn
+	 * @param {string} columnId
+	 * @returns {HTMLElement}
+	 */
 	getHeaderRowColumn(columnId) {
 		let index = this.getColumnIndex(columnId);
 		return this._headerRow.children[index];
 	}
 
+	/**
+	 * Destroy the grid. Remove the HTML element and remove events
+	 * @method destroy
+	 */
 	destroy() {
 		this.getEditorLock()._cancelCurrentEdit();
 
@@ -2265,15 +2325,37 @@ class Grid {
 		this._container.empty().classList.remove(this._uid, 'sparkgrid');
 	}
 
+	/**
+	 * Get the editor lock, semaphore for all grid editors
+	 * @method getEditorLock
+	 * @returns {Object}
+	 */
 	getEditorLock() {
 		return this._options.editorLock;
 	}
+
+	/**
+	 * Get the edit controller. Manages canceling and committing grid editing
+	 * @method getEditController
+	 * @returns {Object}
+	 */
 	getEditController() {
 		return this._editController;
 	}
+
+	/**
+	 * Get the index of a column ID
+	 * @param {string} id
+	 * @returns {number}
+	 */
 	getColumnIndex(id) {
 		return this._columnsById[id];
 	}
+
+	/**
+	 * Autosize columns to fill the available width
+	 * @method autosizeColumns
+	 */
 	autosizeColumns() {
 		let i,
 			c,
@@ -2354,11 +2436,24 @@ class Grid {
 			this.render();
 		}
 	}
+
+	/**
+	 * Set the sort by column and sort direction
+	 * @method setSortColumn
+	 * @param {string} columnId
+	 * @param {boolean} ascending
+	 */
 	setSortColumn(columnId, ascending) {
 		this.setSortColumns([
 			{columnId: columnId, sortAsc: ascending}
 		]);
 	}
+
+	/**
+	 * Set multiple sort columns
+	 * @method setSortColumns
+	 * @param {Array} cols
+	 */
 	setSortColumns(cols) {
 		let i, len, j, el, sEl, sortEls, sortInds, indEl;
 		this._sortColumns = cols;
@@ -2401,13 +2496,30 @@ class Grid {
 			}
 		}
 	}
+
+	/**
+	 * Get the sort columns
+	 * @method getSortColumns
+	 * @returns {Array}
+	 */
 	getSortColumns() {
 		return this._sortColumns;
 	}
 
+	/**
+	 * Get columns visible on grid
+	 * @method getColumns
+	 * @returns {Array}
+	 */
 	getColumns() {
 		return this._columns;
 	}
+
+	/**
+	 * Override existing columns with new columns
+	 * @method setColumns
+	 * @param {Array} columns
+	 */
 	setColumns(columns) {
 		this._updateColumnCache(columns);
 		this._updateColumnSizeInfo();
@@ -2422,9 +2534,21 @@ class Grid {
 			this._handleScroll();
 		}
 	}
+
+	/**
+	 * Get all options
+	 * @method getOptions
+	 * @returns {Object}
+	 */
 	getOptions() {
 		return this._options;
 	}
+
+	/**
+	 * Update grid options
+	 * @method setOptions
+	 * @param {Object} options
+	 */
 	setOptions(options) {
 		if (!this.getEditorLock().commitCurrentEdit()) {
 			return;
@@ -2441,6 +2565,13 @@ class Grid {
 		this._viewport.style.overflowY = this._options.autoHeight ? 'hidden' : 'auto';
 		this.render();
 	}
+
+	/**
+	 * Overwrite data
+	 * @method setData
+	 * @param {Object} newData
+	 * @param {boolean} scrollToTop
+	 */
 	setData(newData, scrollToTop) {
 		this._data = newData;
 		this.invalidateAllRows();
@@ -2449,9 +2580,21 @@ class Grid {
 			this._scrollTo(0);
 		}
 	}
+
+	/**
+	 * Get the data
+	 * @method getData
+	 * @returns {Object}
+	 */
 	getData() {
 		return this._data;
 	}
+
+	/**
+	 * Get the length of the data
+	 * @method getDataLength
+	 * @returns {number}
+	 */
 	getDataLength() {
 		if (this._data.getLength) {
 			return this._data.getLength();
@@ -2460,6 +2603,12 @@ class Grid {
 		}
 	}
 
+	/**
+	 * Get data item by index
+	 * @method getDataItem
+	 * @param {number} index
+	 * @returns {Object}
+	 */
 	getDataItem(index) {
 		if (this._data.getItem) {
 			return this._data.getItem(index);
@@ -2467,9 +2616,21 @@ class Grid {
 			return this._data[index];
 		}
 	}
+
+	/**
+	 * Get the top panel DOM element
+	 * @method getTopPanel
+	 * @returns {HTMLElement}
+	 */
 	getTopPanel() {
 		return this._topPanel;
 	}
+
+	/**
+	 * Show or hide the top panel
+	 * @method setTopPanelVisibility
+	 * @param {boolean} visible
+	 */
 	setTopPanelVisibility(visible) {
 		if (this._options.showTopPanel !== visible) {
 			this._options.showTopPanel = visible;
@@ -2482,6 +2643,12 @@ class Grid {
 			}
 		}
 	}
+
+	/**
+	 * Show or hide the header row
+	 * @method setHeaderRowVisibility
+	 * @param {boolean} visible
+	 */
 	setHeaderRowVisibility(visible) {
 		if (this._options.showHeaderRow !== visible) {
 			this._options.showHeaderRow = visible;
@@ -2494,15 +2661,30 @@ class Grid {
 			}
 		}
 	}
+
+	/**
+	 * Get the main grid element
+	 * @method getEl
+	 * @returns {HTMLElement}
+	 */
 	getEl() {
 		return this._container;
 	}
 
+	/**
+	 * Invalidate all rows and rerender the grid
+	 * @method invalidate
+	 */
 	invalidate() {
 		this.updateRowCount();
 		this.invalidateAllRows();
 		this.render();
 	}
+
+	/**
+	 * Invalidate all rows in the grid
+	 * @method invalidateAllRows
+	 */
 	invalidateAllRows() {
 		if (this._currentEditor) {
 			this._makeActiveCellNormal();
@@ -2512,6 +2694,11 @@ class Grid {
 		}
 	}
 
+	/**
+	 * Invalidate specific rows
+	 * @method invalidateAllRows
+	 * @param {Array} rows
+	 */
 	invalidateRows(rows) {
 		if (!Array.isArray(rows)) {
 			rows = [rows];
@@ -2526,6 +2713,13 @@ class Grid {
 			}
 		}
 	}
+
+	/**
+	 * Update a specific cell by row and column
+	 * @method updateCell
+	 * @param {number} row
+	 * @param {number} cell
+	 */
 	updateCell(row, cell) {
 		let cellNode = this.getCellNode(row, cell);
 		if (!cellNode) {
@@ -2541,6 +2735,12 @@ class Grid {
 			this._invalidatePostProcessingResults(row);
 		}
 	}
+
+	/**
+	 * Update a row by row number
+	 * @method updateRow
+	 * @param {number} row
+	 */
 	updateRow(row) {
 		let cacheEntry = this._rowsCache[row];
 		if (!cacheEntry) {
@@ -2571,6 +2771,10 @@ class Grid {
 		this._invalidatePostProcessingResults(row);
 	}
 
+	/**
+	 * Resize canvas. Normally done when data changes
+	 * @method resizeCanvas
+	 */
 	resizeCanvas() {
 		if (!this._initialized) {
 			return;
@@ -2597,6 +2801,11 @@ class Grid {
 		this._lastRenderedScrollLeft = -1;
 		this.render();
 	}
+
+	/**
+	 * Update the row count when the data length changes
+	 * @method updateRowCount
+	 */
 	updateRowCount() {
 		if (!this._initialized) {
 			return;
@@ -2664,6 +2873,14 @@ class Grid {
 		}
 		this._updateCanvasWidth(false);
 	}
+
+	/**
+	 * Get the visible cell information based on viewport
+	 * @method getVisibleRange
+	 * @param {number} viewportTop
+	 * @param {number} viewportLeft
+	 * @returns {{top: number, bottom: number, leftPx: number, rightPx: number}}
+	 */
 	getVisibleRange(viewportTop, viewportLeft) {
 		if (viewportTop == null) {
 			viewportTop = this._scrollTop;
@@ -2679,6 +2896,14 @@ class Grid {
 			rightPx: viewportLeft + this._viewportW
 		};
 	}
+
+	/**
+	 * Get the rendered range. Visible range plus any buffer
+	 * @method getRenderedRange
+	 * @param {number} viewportTop
+	 * @param {number} viewportLeft
+	 * @returns {{top: number, bottom: number, leftPx: number, rightPx: number}}
+	 */
 	getRenderedRange(viewportTop, viewportLeft) {
 		let range = this.getVisibleRange(viewportTop, viewportLeft),
 			buffer = Math.round(this._viewportH / this._options.rowHeight),
@@ -2707,6 +2932,10 @@ class Grid {
 		return range;
 	}
 
+	/**
+	 * Render the grid. Normally called after some invalidation.
+	 * @method render
+	 */
 	render() {
 		if (!this._initialized) {
 			return;
@@ -2733,6 +2962,7 @@ class Grid {
 		this._lastRenderedScrollLeft = this._scrollLeft;
 		this._h_render = null;
 	}
+	
 	addCellCssStyles(key, hash) {
 		if (this._cellCssClasses[key]) {
 			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');
