@@ -1,4 +1,4 @@
-import { extend, createEl } from '../core';
+import { extend, createEl } from '../util/misc';
 
 /***
  * Displays an overlay on top of a given cell range.
@@ -11,53 +11,54 @@ import { extend, createEl } from '../core';
  * @param {Grid} grid
  * @param {Object} options
  */
-export default function CellRangeDecorator(grid, options) {
-	var _elem;
-	var _defaults = {
-		selectionCssClass: 'slick-range-decorator',
-		selectionCss: {
-			"zIndex": "9999",
-			"border": "2px dashed red"
-		}
-	};
+class CellRangeDecorator {
+	constructor(options) {
+		let _defaults = {
+			selectionCssClass: 'slick-range-decorator',
+			selectionCss: {
+				"zIndex": "9999",
+				"border": "2px dashed red"
+			}
+		};
 
-	options = extend({}, _defaults, options);
+		this._el = null;
+		this._options = extend({}, _defaults, options);
+	}
+	init(grid) {
+		this._grid = grid;
+	}
 
-
-	function show(range) {
-		if (!_elem) {
-			_elem = createEl({
+	show(range) {
+		if (!this._elem) {
+			this._elem = createEl({
 				style: extend({}, options.selectionCss, {
 					position: 'absolute'
 				}),
 				className: options.selectionCssClass
 			});
 
-			grid.getCanvaseNode().appendChild(_elem);
+			this._grid.getCanvaseNode().appendChild(this._elem);
 		}
 
-		var from = grid.getCellNodeBox(range.fromRow, range.fromCell);
-		var to = grid.getCellNodeBox(range.toRow, range.toCell);
+		let from = this._grid.getCellNodeBox(range.fromRow, range.fromCell),
+			to = this._grid.getCellNodeBox(range.toRow, range.toCell);
 
-		_elem.css({
+		this._elem.css({
 			top: from.top - 1,
 			left: from.left - 1,
 			height: to.bottom - from.top - 2,
 			width: to.right - from.left - 2
 		});
 
-		return _elem;
+		return this._elem;
 	}
 
-	function hide() {
-		if (_elem) {
-			_elem.remove();
-			_elem = null;
+	hide() {
+		if (this._elem) {
+			this._elem.remove();
+			this._elem = null;
 		}
 	}
-
-	return {
-		"show": show,
-		"hide": hide
-	};
 }
+
+export default CellRangeDecorator;

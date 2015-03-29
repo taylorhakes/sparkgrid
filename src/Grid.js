@@ -6,52 +6,8 @@ import EditorLock from './editing/EditorLock';
 
 
 // shared across all grids on the page
-let scrollbarDimensions = (() -> {
-		let c = createEl({
-			tag: 'div',
-			style: {
-				position: 'absolute',
-				top: '-10000px',
-				left: '-10000px',
-				width: '100px',
-				height: '100px',
-				overflow: 'scroll'
-			}
-		});
-		document.body.appendChild(c);
-		let dim = {
-			width: getPx(c, 'height') - c.clientWidth,
-			height: getPx(c, 'height') - c.clientHeight
-		};
-		c.parentNode.removeChild(c);
-		return dim;
-	})(),
-	maxSupportedCssHeight = (() -> {
-		let supportedHeight = 1000000,
-			// FF reports the height back but still renders blank after ~6M px
-			testUpTo = navigator.userAgent.toLowerCase().match(/firefox/) ? 6000000 : 1000000000,
-			div = createEl({
-				tag: 'div',
-				style: {
-					display: 'none'
-				}
-			});
-
-		document.body.appendChild(div);
-
-		while (true) {
-			let test = supportedHeight * 2;
-			setPx(div, 'height', test);
-			if (test > testUpTo || div.offsetHeight !== test) {
-				break;
-			} else {
-				supportedHeight = test;
-			}
-		}
-
-		div.parentNode.removeChild(div);
-		return supportedHeight;
-	}), // browser's breaking point
+let scrollbarDimensions,
+	maxSupportedCssHeight, // browser's breaking point
 	uidIndex = 1,
 	GlobalEditorLock = new EditorLock();
 
@@ -266,6 +222,10 @@ class Grid {
 			container.style.position = 'relative';
 		}
 
+		// Calculate these only once and share between grid instances
+		maxSupportedCssHeight = maxSupportedCssHeight || this._getMaxSupportedCssHeight();
+		scrollbarDimensions = scrollbarDimensions || this._measureScrollbar();
+
 		container.innerHTML = this._createGridHtml({
 			spacerWidth: this._getCanvasWidth() + scrollbarDimensions.width
 		});
@@ -352,6 +312,26 @@ class Grid {
 			x +=  this._columns[i].width;
 		}
 	}
+	_measureScrollbar() {
+		let c = createEl({
+			tag: 'div',
+			style: {
+				position: 'absolute',
+				top: '-10000px',
+				left: '-10000px',
+				width: '100px',
+				height: '100px',
+				overflow: 'scroll'
+			}
+		});
+		document.body.appendChild(c);
+		let dim = {
+			width: getPx(c, 'height') - c.clientWidth,
+			height: getPx(c, 'height') - c.clientHeight
+		};
+		c.parentNode.removeChild(c);
+		return dim;
+	}
 	_getHeadersWidth() {
 		let headersWidth = 0;
 		for (let i = 0, ii = this._columns.length; i < ii; i++) {
@@ -386,6 +366,32 @@ class Grid {
 		if (this._canvasWidth !== oldCanvasWidth || forceColumnWidthsUpdate) {
 			this._applyColumnWidths();
 		}
+	}
+	_getMaxSupportedCssHeight() {
+		let supportedHeight = 1000000,
+		// FF reports the height back but still renders blank after ~6M px
+			testUpTo = navigator.userAgent.toLowerCase().match(/firefox/) ? 6000000 : 1000000000,
+			div = createEl({
+				tag: 'div',
+				style: {
+					display: 'none'
+				}
+			});
+
+		document.body.appendChild(div);
+
+		while (true) {
+			let test = supportedHeight * 2;
+			setPx(div, 'height', test);
+			if (test > testUpTo || div.offsetHeight !== test) {
+				break;
+			} else {
+				supportedHeight = test;
+			}
+		}
+
+		div.parentNode.removeChild(div);
+		return supportedHeight;
 	}
 	_bindAncestorScrollEvents() {
 		let elem = this._canvas,
@@ -2121,10 +2127,6 @@ class Grid {
 		let computedStyle = window.getComputedStyle(container);
 		this._viewportW = parseFloat(computedStyle.width);
 
-		// header columns and cells may have different padding/border skewing width calculations (box-sizing, hello?)
-		// calculate the diff so we can set consistent sizes
-		this._measureCellPaddingAndBorder();
-
 		if (!this._options.enableTextSelectionOnCells) {
 			// disable text selection in grid cells except in input and textarea elements
 			// (this is IE-specific, because selectstart event will only fire in IE)
@@ -2153,7 +2155,6 @@ class Grid {
 		this._focusSink2.addEventListener('keydown', this._handleKeyDown.bind(this));
 
 		canvas.addEventListener('keydown', this._handleKeyDown.bind(this));
-		canvas.addEventListener('click', this._handleClick.bind(this));
 		canvas.addEventListener('dblclick', this._handleDblClick.bind(this));
 		canvas.addEventListener('contextmenu', this._handleContextMenu.bind(this));
 		canvas.addEventListener('draginit', this._handleDragInit.bind(this));
@@ -2512,12 +2513,11 @@ class Grid {
 	}
 
 	invalidateRows(rows) {
-		let i, rl;
-		if (!rows || !rows.length) {
-			return;
+		if (!Array.isArray(rows)) {
+			rows = [rows];
 		}
 		this._vScrollDir = 0;
-		for (i = 0, rl = rows.length; i < rl; i++) {
+		for (let i = 0, rl = rows.length; i < rl; i++) {
 			if (this._currentEditor && this._activeRow === rows[i]) {
 				this._makeActiveCellNormal();
 			}
@@ -2525,9 +2525,6 @@ class Grid {
 				this._removeRowFromCache(rows[i]);
 			}
 		}
-	}
-	invalidateRow(row) {
-		this.invalidateRows([row]);
 	}
 	updateCell(row, cell) {
 		let cellNode = this.getCellNode(row, cell);
@@ -2736,7 +2733,6 @@ class Grid {
 		this._lastRenderedScrollLeft = this._scrollLeft;
 		this._h_render = null;
 	}
-
 	addCellCssStyles(key, hash) {
 		if (this._cellCssClasses[key]) {
 			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');
@@ -2768,23 +2764,6 @@ class Grid {
 	getCellCssStyles(key) {
 		return this._cellCssClasses[key];
 	}
-	flashCell(row, cell, speed) {
-		speed = speed || 100;
-
-		if (this._rowsCache[row]) {
-			toggleCellClass(4, this.getCellNode(row, cell));
-		}
-		function toggleCellClass(times, cellLocal) {
-			if (!times) {
-				return;
-			}
-			setTimeout(function () {
-				toggleClass(cellLocal, this._options.cellFlashingCssClass);
-				toggleCellClass(times - 1, cellLocal);
-			}, speed);
-		}
-	}
-
 	getCellFromPoint(x, y) {
 		let row = this._getRowFromPosition(y),
 			cell = 0,

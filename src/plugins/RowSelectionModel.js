@@ -1,4 +1,6 @@
-import { extend, EventHandler, Range, Event } from '../util/misc';
+import { extend } from '../util/misc';
+import { EventHandler, Event } from '../util/events';
+import Range from '../selection/Range';
 
 const defaults = {
 	selectActiveRow: true

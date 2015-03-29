@@ -1,47 +1,49 @@
-import { extend, Range, Event } from '../core';
+import { extend } from '../util/misc';
+import { Event } from '../util/events';
+import Range from '../selection/Range';
 import CellRangeSelector from './CellRangeSelector';
 
-export default function CellSelectionModel(options) {
-	var _grid;
-	var _canvas;
-	var _ranges = [];
-	var _self = this;
-	var _selector = new CellRangeSelector({
-		"selectionCss": {
-			"border": "2px solid black"
-		}
-	});
-	var _options;
-	var _defaults = {
-		selectActiveCell: true
-	};
+class CellSelectionModel {
+	constructor(options) {
+		let defaults = {
+			selectActiveCell: true
+		};
 
-
-	function init(grid) {
-		_options = extend({}, _defaults, options);
-		_grid = grid;
-		_canvas = _grid.getCanvasNode();
-		_grid.onActiveCellChanged.subscribe(handleActiveCellChange);
-		_grid.onKeyDown.subscribe(handleKeyDown);
-		grid.registerPlugin(_selector);
-		_selector.onCellRangeSelected.subscribe(handleCellRangeSelected);
-		_selector.onBeforeCellRangeSelected.subscribe(handleBeforeCellRangeSelected);
+		this._grid = null;
+		this._canvas = null;
+		this._ranges = [];
+		this._selector = new CellRangeSelector({
+			"selectionCss": {
+				"border": "2px solid black"
+			}
+		});
+		this._options = extend({}, defaults, options);;
 	}
 
-	function destroy() {
-		_grid.onActiveCellChanged.unsubscribe(handleActiveCellChange);
-		_grid.onKeyDown.unsubscribe(handleKeyDown);
-		_selector.onCellRangeSelected.unsubscribe(handleCellRangeSelected);
-		_selector.onBeforeCellRangeSelected.unsubscribe(handleBeforeCellRangeSelected);
-		_grid.unregisterPlugin(_selector);
+	init(grid) {
+		this._grid = grid;
+		this._canvas = _grid.getCanvasNode();
+		this._grid.onActiveCellChanged.subscribe(handleActiveCellChange);
+		this._grid.onKeyDown.subscribe(handleKeyDown);
+		this._grid.registerPlugin(_selector);
+		this._selector.onCellRangeSelected.subscribe(handleCellRangeSelected);
+		this._selector.onBeforeCellRangeSelected.subscribe(handleBeforeCellRangeSelected);
 	}
 
-	function removeInvalidRanges(ranges) {
-		var result = [];
+	destroy() {
+		this._grid.onActiveCellChanged.unsubscribe(handleActiveCellChange);
+		this._grid.onKeyDown.unsubscribe(handleKeyDown);
+		this._selector.onCellRangeSelected.unsubscribe(handleCellRangeSelected);
+		this._selector.onBeforeCellRangeSelected.unsubscribe(handleBeforeCellRangeSelected);
+		this._grid.unregisterPlugin(this._selector);
+	}
+
+	removeInvalidRanges(ranges) {
+		let result = [];
 
 		for (var i = 0; i < ranges.length; i++) {
 			var r = ranges[i];
-			if (_grid.canCellBeSelected(r.fromRow, r.fromCell) && _grid.canCellBeSelected(r.toRow, r.toCell)) {
+			if (this._grid.canCellBeSelected(r.fromRow, r.fromCell) && this._grid.canCellBeSelected(r.toRow, r.toCell)) {
 				result.push(r);
 			}
 		}
@@ -49,33 +51,36 @@ export default function CellSelectionModel(options) {
 		return result;
 	}
 
-	function setSelectedRanges(ranges) {
-		_ranges = removeInvalidRanges(ranges);
-		_self.onSelectedRangesChanged.notify(_ranges);
+	setSelectedRanges(ranges) {
+		this._ranges = removeInvalidRanges(ranges);
+		this.onSelectedRangesChanged.notify(ranges);
 	}
 
-	function getSelectedRanges() {
-		return _ranges;
+	getSelectedRanges() {
+		return this._ranges;
 	}
 
-	function handleBeforeCellRangeSelected(e, args) {
-		if (_grid.getEditorLock().isActive()) {
+	handleBeforeCellRangeSelected(info) {
+		let e = info.event;
+		if (this._grid.getEditorLock().isActive()) {
 			e.stopPropagation();
-			return false;
 		}
 	}
 
-	function handleCellRangeSelected(e, args) {
-		setSelectedRanges([args.range]);
+	handleCellRangeSelected(info) {
+		let data = info.data;
+		this.setSelectedRanges([data.range]);
 	}
 
-	function handleActiveCellChange(e) {
-		if (_options.selectActiveCell && e.data.row != null && e.data.cell != null) {
-			setSelectedRanges([new Range(e.data.row, e.data.cell)]);
+	handleActiveCellChange(info) {
+		let e = info.event;
+		if (this._options.selectActiveCell && e.data.row != null && e.data.cell != null) {
+			this.setSelectedRanges([new Range(e.data.row, e.data.cell)]);
 		}
 	}
 
-	function handleKeyDown(e) {
+	handleKeyDown(info) {
+		let e = info.event;
 		/***
 		 * Кey codes
 		 * 37 left
@@ -83,22 +88,21 @@ export default function CellSelectionModel(options) {
 		 * 39 right
 		 * 40 down
 		 */
-		var ranges, last;
-		var active = _grid.getActiveCell();
+		var active = this._grid.getActiveCell();
 
 		if (active && e.shiftKey && !e.ctrlKey && !e.altKey &&
 			(e.which == 37 || e.which == 39 || e.which == 38 || e.which == 40)) {
 
-			ranges = getSelectedRanges();
+			let ranges = this.getSelectedRanges();
 			if (!ranges.length)
-				ranges.push(new Slick.Range(active.row, active.cell));
+				ranges.push(new Range(active.row, active.cell));
 
 			// keyboard can work with last range only
-			last = ranges.pop();
+			let last = ranges.pop();
 
 			// can't handle selection out of active cell
 			if (!last.contains(active.row, active.cell))
-				last = new Slick.Range(active.row, active.cell);
+				last = new Range(active.row, active.cell);
 
 			var dRow = last.toRow - last.fromRow,
 				dCell = last.toCell - last.fromCell,
@@ -118,30 +122,24 @@ export default function CellSelectionModel(options) {
 
 			// define new selection range
 			var new_last = new Slick.Range(active.row, active.cell, active.row + dirRow * dRow, active.cell + dirCell * dCell);
-			if (removeInvalidRanges([new_last]).length) {
+			if (this.removeInvalidRanges([new_last]).length) {
 				ranges.push(new_last);
 				var viewRow = dirRow > 0 ? new_last.toRow : new_last.fromRow;
 				var viewCell = dirCell > 0 ? new_last.toCell : new_last.fromCell;
-				_grid.scrollRowIntoView(viewRow);
-				_grid.scrollCellIntoView(viewRow, viewCell);
+				this._grid.scrollRowIntoView(viewRow);
+				this._grid.scrollCellIntoView(viewRow, viewCell);
 			}
-			else
+			else {
 				ranges.push(last);
+			}
 
-			setSelectedRanges(ranges);
+
+			this.setSelectedRanges(ranges);
 
 			e.preventDefault();
 			e.stopPropagation();
 		}
 	}
-
-	return extend(this, {
-		"getSelectedRanges": getSelectedRanges,
-		"setSelectedRanges": setSelectedRanges,
-
-		"init": init,
-		"destroy": destroy,
-
-		"onSelectedRangesChanged": new Event()
-	});
 }
+
+export default CellRangeSelector;

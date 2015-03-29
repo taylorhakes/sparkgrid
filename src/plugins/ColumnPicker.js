@@ -1,19 +1,26 @@
-import { extend, createEl, setPx } from  '../core';
+import { extend, createEl, setPx, removeEl, show } from  '../util/misc';
 
-export default function ColumnPicker(columns, grid, options) {
-	var menu;
-	var columnCheckboxes;
+class ColumnPicker {
+	constructor(options) {
+		let defaults = {
+			fadeSpeed: 250
+		};
+		this._options = extend({}, defaults, options);
+		this._menu = null;
+		this._columnCheckboxes = null;
+		this._grid = null;
+		this._columns = this._options.columns;
+	}
 
-	var defaults = {
-		fadeSpeed: 250
-	};
+	init(grid) {
+		this._boundUpdateColumnOrder = this._updateColumn.bind(this);
+		grid.onHeaderContextMenu.subscribe(this._handleHeaderContextMenu);
+		grid.onColumnsReordered.subscribe(this._boundUpdateColumnOrder);
 
-	function init() {
-		grid.onHeaderContextMenu.subscribe(handleHeaderContextMenu);
-		grid.onColumnsReordered.subscribe(updateColumnOrder);
-		options = extend({}, defaults, options);
+		// Default to current grid columns
+		this._columns = this._columns || grid.getColumns();
 
-		menu = createEl({
+		this._menu = createEl({
 			tag: 'ul',
 			className: 'spark-columnpicker',
 			style: {
@@ -22,48 +29,48 @@ export default function ColumnPicker(columns, grid, options) {
 				zIndex: 20
 			}
 		});
-		document.body.appendChild(menu);
+		document.body.appendChild(this._menu);
 
-		menu.addEventListener("mouseleave", function (e) {
-			menu.style.display = 'none';
+		this._menu.addEventListener("mouseleave", () => {
+			hide(this._menu);
 		});
-		menu.addEventListener("click", updateColumn);
 
+		this._menu.addEventListener("click", this._boundUpdateColumnOrder);
+		this._grid = grid;
 	}
 
-	function destroy() {
-		grid.onHeaderContextMenu.unsubscribe(handleHeaderContextMenu);
-		grid.onColumnsReordered.unsubscribe(updateColumnOrder);
-		menu.parentNode.removeChild(menu);
+	destroy() {
+		this._grid.onHeaderContextMenu.unsubscribe(this._handleHeaderContextMenu);
+		this._grid.onColumnsReordered.unsubscribe(this._boundUpdateColumnOrder);
+		removeEl(this._menu);
 	}
 
-	function handleHeaderContextMenu(info) {
+	_handleHeaderContextMenu(info) {
 		var e = info.event;
 
 		e.preventDefault();
 
-		menu.innerHTML = '';
-		updateColumnOrder();
-		columnCheckboxes = [];
+		this._menu.innerHTML = '';
+		this.updateColumnOrder();
+		this._columnCheckboxes = [];
 
-		var li, input, label, hr;
-		for (var i = 0; i < columns.length; i++) {
-			li = createEl({
+		for (let i = 0; i < this._columns.length; i++) {
+			let li = createEl({
 				tag: 'li'
 			});
-			menu.appendChild(li);
-			input = createEl({
+			this._menu.appendChild(li);
+			let input = createEl({
 				tag: 'input',
 				type: 'checkbox'
 			});
 			input.dataset.column_id = columns[i].id;
-			columnCheckboxes.push(input);
+			this._columnCheckboxes.push(input);
 
 			if (grid.getColumnIndex(columns[i].id) != null) {
 				input.checked = true;
 			}
 
-			label = createEl({
+			let label = createEl({
 				tag: 'label',
 				textContent: columns[i].name
 			});
@@ -72,20 +79,21 @@ export default function ColumnPicker(columns, grid, options) {
 			li.appendChild(label);
 		}
 
-		hr = createEl({
+		let hr = createEl({
 			tag: 'hr'
 		});
-		menu.appendChild(hr);
-		li = createEl({
+		this._menu.appendChild(hr);
+		let li = createEl({
 			tag: 'li'
 		});
-		menu.appendChild(li)
-		input = createEl({
+		this._menu.appendChild(li)
+
+		let input = createEl({
 			tag: 'input',
 			type: 'checkbox'
 		});
 		input.dataset.option = 'autoresize';
-		label = createEl({
+		let label = createEl({
 			tag: 'label',
 			textContent: "Force fit columns"
 		});
@@ -100,7 +108,7 @@ export default function ColumnPicker(columns, grid, options) {
 			tag: 'li'
 		});
 
-		menu.appendChild(li);
+		this._menu.appendChild(li);
 		input = createEl({
 			tag: 'input',
 			type: 'checkbox'
@@ -117,10 +125,10 @@ export default function ColumnPicker(columns, grid, options) {
 
 		setPx(menu, 'top', e.pageY - 10);
 		setPx(menu, 'left', e.pageX - 10);
-		menu.style.display = '';
+		show(this._menu);
 	}
 
-	function updateColumnOrder() {
+	_updateColumnOrder() {
 		// Because columns can be reordered, we have to update the `columns`
 		// to reflect the new order, however we can't just take `grid.getColumns()`,
 		// as it does not include columns currently hidden by the picker.
@@ -139,10 +147,10 @@ export default function ColumnPicker(columns, grid, options) {
 				ordered[i] = current.shift();
 			}
 		}
-		columns = ordered;
+		this._columns = ordered;
 	}
 
-	function updateColumn(e) {
+	_updateColumn(e) {
 		if (e.target.dataset.option == "autoresize") {
 			if (e.target.checked) {
 				grid.setOptions({forceFitColumns: true});
@@ -164,7 +172,7 @@ export default function ColumnPicker(columns, grid, options) {
 
 		if (e.target.type === 'checkbox') {
 			var visibleColumns = [];
-			columnCheckboxes.forEach(function (c, i) {
+			this._columnCheckboxes.forEach(function (c, i) {
 				if (c.checked) {
 					visibleColumns.push(columns[i]);
 				}
@@ -178,15 +186,9 @@ export default function ColumnPicker(columns, grid, options) {
 			grid.setColumns(visibleColumns);
 		}
 	}
-
-	function getAllColumns() {
-		return columns;
+	getAllColumns() {
+		return this._columns;
 	}
-
-	init();
-
-	return {
-		"getAllColumns": getAllColumns,
-		"destroy": destroy
-	};
 }
+
+export default ColumnPicker;

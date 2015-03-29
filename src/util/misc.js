@@ -147,10 +147,26 @@ function getPx(el, prop) {
  */
 function toggle(el) {
 	if (el.style.display === 'none') {
-		el.style.display = '';
+		show(el);
 	} else {
-		el.style.display = 'none';
+		hide(el);
 	}
+}
+
+/**
+ * Display hide and element
+ * @param el
+ */
+function hide(el) {
+	el.style.display = 'none';
+}
+
+/**
+ * Remove display property from element
+ * @param el
+ */
+function show(el) {
+	el.style.display = '';
 }
 
 /**
@@ -174,6 +190,8 @@ export {
 	setPx,
 	getPx,
 	toggle,
+	show,
+	hide,
 	toggleClass,
 	removeEl,
 	delegate,

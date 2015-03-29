@@ -51,7 +51,8 @@
  * @class Slick.Plugins.HeaderButtons
  * @constructor
  */
-import { EventHandler, createEl, slice, Event } from '../core';
+import {  createEl, slice } from '../util/misc';
+import { EventHandler, Event } from '../util/events';
 
 export default function HeaderButtons(options) {
 	var _grid;

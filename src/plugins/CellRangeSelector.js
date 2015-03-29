@@ -1,93 +1,101 @@
-import { extend, Event, EventHandler } from '../core';
+import { extend, hide } from '../util/misc';
+import { Event, EventHandler } from '../util/events';
+import Range from '../selection/Range';
 import CellRangeDecorator from './CellRangeDecorator';
 
-export default function CellRangeSelector(options) {
-	var _grid;
-	var _canvas;
-	var _dragging;
-	var _decorator;
-	var _self = this;
-	var _handler = new EventHandler();
-	var _defaults = {
-		selectionCss: {
-			"border": "2px dashed blue"
-		}
-	};
+class CellRangeSelector {
+	constructor(options) {
+		let defaults = {
+			selectionCss: {
+				"border": "2px dashed blue"
+			}
+		};
 
-
-	function init(grid) {
-		options = extend({}, _defaults, options);
-		_decorator = new CellRangeDecorator(grid, options);
-		_grid = grid;
-		_canvas = _grid.getCanvasNode();
-		_handler
-			.subscribe(_grid.onDragInit, handleDragInit)
-			.subscribe(_grid.onDragStart, handleDragStart)
-			.subscribe(_grid.onDrag, handleDrag)
-			.subscribe(_grid.onDragEnd, handleDragEnd);
+		this._grid = null;
+		this._canvas = null;
+		this._dragging = null;
+		this._decorator = null;
+		this._handler = new EventHandler();
+		this._options = extend({}, _defaults, options);
+		this.onBeforeCellRangeSelected = new Event();
+		this.onCellRangeSelected = new Event();
 	}
 
-	function destroy() {
-		_handler.unsubscribeAll();
+	init(grid) {
+		this._decorator = new CellRangeDecorator(options);
+		this._decorator.init(grid);
+		this._grid = grid;
+		this._canvas = this._grid.getCanvasNode();
+		this._handler
+			.subscribe(this._grid.onDragInit, this._handleDragInit.bind(this))
+			.subscribe(this._grid.onDragStart, this._handleDragStart.bind(this))
+			.subscribe(this._grid.onDrag, this._handleDrag.bind(this))
+			.subscribe(this._grid.onDragEnd, this._handleDragEnd.bind(this));
 	}
 
-	function handleDragInit(e, dd) {
+	destroy() {
+		this._handler.unsubscribeAll();
+	}
+
+	_handleDragInit(e, dd) {
 		// prevent the grid from cancelling drag'n'drop by default
 		e.stopImmediatePropagation();
 	}
 
-	function handleDragStart(e, dd) {
-		var cell = _grid.getCellFromEvent(e);
-		if (_self.onBeforeCellRangeSelected.notify(cell) !== false) {
-			if (_grid.canCellBeSelected(cell.row, cell.cell)) {
-				_dragging = true;
+	_handleDragStart(e, dd) {
+		let cell = _grid.getCellFromEvent(e);
+		if (this.onBeforeCellRangeSelected.notify(cell) !== false) {
+			if (this._grid.canCellBeSelected(cell.row, cell.cell)) {
+				this._dragging = true;
 				e.stopImmediatePropagation();
 			}
 		}
-		if (!_dragging) {
+		if (!this._dragging) {
 			return;
 		}
 
-		_grid.focus();
+		this._grid.focus();
 
-		var start = _grid.getCellFromPoint(
-			dd.startX - $(_canvas).offset().left,
-			dd.startY - $(_canvas).offset().top);
+		let start = this._grid.getCellFromPoint(
+			dd.startX - this._canvas.offsetLeft,
+			dd.startY - this._canvas.offsetTop
+		);
 
 		dd.range = {start: start, end: {}};
 
-		return _decorator.show(new Slick.Range(start.row, start.cell));
+		return this._decorator.show(new Slick.Range(start.row, start.cell));
 	}
 
-	function handleDrag(e, dd) {
-		if (!_dragging) {
+	_handleDrag(e, dd) {
+		if (!this._dragging) {
 			return;
 		}
 		e.stopImmediatePropagation();
 
-		var end = _grid.getCellFromPoint(
-			e.pageX - $(_canvas).offset().left,
-			e.pageY - $(_canvas).offset().top);
+		let end = this._grid.getCellFromPoint(
+			e.pageX - this._canvas.offsetleft,
+			e.pageY - this._canvas.offsetTop
+		);
 
-		if (!_grid.canCellBeSelected(end.row, end.cell)) {
+		if (!this._grid.canCellBeSelected(end.row, end.cell)) {
 			return;
 		}
 
 		dd.range.end = end;
-		_decorator.show(new Slick.Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
+		this._decorator.show(new Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
 	}
 
-	function handleDragEnd(e, dd) {
-		if (!_dragging) {
+	_handleDragEnd(e, dd) {
+		if (!this._dragging) {
 			return;
 		}
 
-		_dragging = false;
+		this._dragging = false;
 		e.stopImmediatePropagation();
 
-		_decorator.hide();
-		_self.onCellRangeSelected.notify({
-			range: new Slick.Range(
+		hide(this._decorator);
+		this.onCellRangeSelected.notify({
+			range: new Range(
 				dd.range.start.row,
 				dd.range.start.cell,
 				dd.range.end.row,
@@ -95,12 +103,6 @@ export default function CellRangeSelector(options) {
 			)
 		});
 	}
-
-	return {
-		"init": init,
-		"destroy": destroy,
-
-		"onBeforeCellRangeSelected": new Event(),
-		"onCellRangeSelected": new Event()
-	};
 }
+
+export default CellRangeDecorator;

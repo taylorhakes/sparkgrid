@@ -46,7 +46,7 @@
   };
   var columns = [];
 
-  require(['./Grid', './editors', 'plugins/CheckboxSelectColumn', 'plugins/RowSelectionModel', 'plugins/ColumnPicker'], function (SparkGrid, editors, CheckboxSelectColumn, RowSelectionModel, ColumnPicker) {
+  require(['./Grid', './editing/editors', 'plugins/CheckboxSelectColumn', 'plugins/RowSelectionModel', 'plugins/ColumnPicker'], function (SparkGrid, editors, CheckboxSelectColumn, RowSelectionModel, ColumnPicker) {
     for (var i = 0; i < 100; i++) {
       var d = (data[i] = {});
       d[0] = "Row " + i;

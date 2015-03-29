@@ -1,63 +1,63 @@
-import { extend, EventHandler } from '../core';
+import { EventHandler } from '../util/events';
+import { extend } from '../util/misc';
 
-export default function CheckboxSelectColumn(options) {
-	var _grid;
-	var _handler = new EventHandler();
-	var _selectedRowsLookup = {};
-	var _defaults = {
-		columnId: "_checkbox_selector",
-		cssClass: null,
-		toolTip: "Select/Deselect All",
-		width: 30
-	};
+class CheckboxSelectColumn {
+	constructor(options) {
+		let defaults = {
+			columnId: "_checkbox_selector",
+			cssClass: null,
+			toolTip: "Select/Deselect All",
+			width: 30
+		};
 
-	var _options = extend({}, _defaults, options);
-
-	function init(grid) {
-		_grid = grid;
-		_handler
-			.subscribe(_grid.onSelectedRowsChanged, handleSelectedRowsChanged)
-			.subscribe(_grid.onClick, handleClick)
-			.subscribe(_grid.onHeaderClick, handleHeaderClick)
-			.subscribe(_grid.onKeyDown, handleKeyDown);
+		this._options = extend({}, defaults, options);
+		this._grid = null;
+		this._handler = new EventHandler();
+		this._selectedRowsLookup = {};
 	}
 
-	function destroy() {
-		_handler.unsubscribeAll();
+	init(grid) {
+		this._grid = grid;
+		this._handler
+			.subscribe(this._grid.onSelectedRowsChanged, this._handleSelectedRowsChanged.bind(this))
+			.subscribe(this._grid.onClick, this._handleClick.bind(this))
+			.subscribe(this._grid.onHeaderClick, this._handleHeaderClick.bind(this))
+			.subscribe(this._grid.onKeyDown, this._handleKeyDown.bind(this));
 	}
 
-	function handleSelectedRowsChanged() {
-		var selectedRows = _grid.getSelectedRows();
-		var lookup = {}, row, i;
-		for (i = 0; i < selectedRows.length; i++) {
-			row = selectedRows[i];
+	destroy() {
+		this._handler.unsubscribeAll();
+	}
+
+	_handleSelectedRowsChanged() {
+		let selectedRows = this._grid.getSelectedRows();
+		var lookup = {};
+		for (let i = 0; i < selectedRows.length; i++) {
+			let row = selectedRows[i];
 			lookup[row] = true;
-			if (lookup[row] !== _selectedRowsLookup[row]) {
-				_grid.invalidateRow(row);
-				delete _selectedRowsLookup[row];
-			}
+			this._grid.invalidateRows(row);
 		}
-		for (i in _selectedRowsLookup) {
-			_grid.invalidateRow(i);
+		for (let i in this._selectedRowsLookup) {
+			this._grid.invalidateRows(i);
 		}
-		_selectedRowsLookup = lookup;
-		_grid.render();
+		this._selectedRowsLookup = lookup;
+		this._grid.render();
 
-		if (selectedRows.length && selectedRows.length == _grid.getDataLength()) {
-			_grid.updateColumnHeader(_options.columnId, "<input type='checkbox' checked='checked'>", _options.toolTip);
+		if (selectedRows.length && selectedRows.length == this._grid.getDataLength()) {
+			this._grid.updateColumnHeader(this._options.columnId, "<input type='checkbox' checked='checked'>", this._options.toolTip);
 		} else {
-			_grid.updateColumnHeader(_options.columnId, "<input type='checkbox'>", _options.toolTip);
+			this._grid.updateColumnHeader(this._options.columnId, "<input type='checkbox'>", this._options.toolTip);
 		}
 	}
 
-	function handleKeyDown(info) {
+	_handleKeyDown(info) {
 		var e = info.event,
 			data = info.data;
 
 		if (e.which == 32) {
-			if (_grid.getColumns()[data.cell].id === _options.columnId) {
+			if (this._grid.getColumns()[data.cell].id === this._options.columnId) {
 				// if editing, try to commit
-				if (!_grid.getEditorLock().isActive() || _grid.getEditorLock().commitCurrentEdit()) {
+				if (!this._grid.getEditorLock().isActive() || this._grid.getEditorLock().commitCurrentEdit()) {
 					toggleRowSelection(data.row);
 				}
 				e.preventDefault();
@@ -66,42 +66,39 @@ export default function CheckboxSelectColumn(options) {
 		}
 	}
 
-	function handleClick(info) {
+	_handleClick(info) {
 		var e = info.event,
-			data = info.data
+			data = info.data;
 
 		// clicking on a row select checkbox
-		if (_grid.getColumns()[data.cell].id === _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
+		if (this._grid.getColumns()[data.cell].id === this._options.columnId && (e.target.type || '').toLowerCase() === 'checkbox' && !(e.ctrlKey || e.metaKey || e.shiftKey)) {
 			// if editing, try to commit
-			if (_grid.getEditorLock().isActive() && !_grid.getEditorLock().commitCurrentEdit()) {
+			if (this._grid.getEditorLock().isActive() && !this._grid.getEditorLock().commitCurrentEdit()) {
 				e.preventDefault();
 				e.stopImmediatePropagation();
 				return;
 			}
-
-			toggleRowSelection(data.row);
-			e.stopPropagation();
-			e.stopImmediatePropagation();
+			this.toggleRowSelection(data.row);
 		}
 	}
 
-	function toggleRowSelection(row) {
-		if (_selectedRowsLookup[row]) {
-			_grid.setSelectedRows(_grid.getSelectedRows().filter(function (n) {
+	toggleRowSelection(row) {
+		if (this._selectedRowsLookup[row]) {
+			this._grid.setSelectedRows(this._grid.getSelectedRows().filter(function (n) {
 				return n != row;
 			}));
 		} else {
-			_grid.setSelectedRows(_grid.getSelectedRows().concat(row));
+			this._grid.setSelectedRows(this._grid.getSelectedRows().concat(row));
 		}
 	}
 
-	function handleHeaderClick(info) {
+	_handleHeaderClick(info) {
 		var e = info.event,
 			data = info.data;
 
-		if (data.column.id == _options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
+		if (data.column.id == this._options.columnId && (e.target.type || '').toLowerCase() === 'checkbox') {
 			// if editing, try to commit
-			if (_grid.getEditorLock().isActive() && !_grid.getEditorLock().commitCurrentEdit()) {
+			if (this._grid.getEditorLock().isActive() && !this._grid.getEditorLock().commitCurrentEdit()) {
 				e.preventDefault();
 				e.stopImmediatePropagation();
 				return;
@@ -109,45 +106,40 @@ export default function CheckboxSelectColumn(options) {
 
 			if ((e.target.type || '').toLowerCase() === 'checked') {
 				var rows = [];
-				for (var i = 0; i < _grid.getDataLength(); i++) {
+				for (var i = 0; i < this._grid.getDataLength(); i++) {
 					rows.push(i);
 				}
-				_grid.setSelectedRows(rows);
+				this._grid.setSelectedRows(rows);
 			} else {
-				_grid.setSelectedRows([]);
+				this._grid.setSelectedRows([]);
 			}
 			e.stopPropagation();
 			e.stopImmediatePropagation();
 		}
 	}
 
-	function getColumnDefinition() {
+	getColumnDefinition() {
 		return {
-			id: _options.columnId,
+			id: this._options.columnId,
 			name: "<input type='checkbox'>",
-			toolTip: _options.toolTip,
+			toolTip: this._options.toolTip,
 			field: "sel",
-			width: _options.width,
+			width: this._options.width,
 			resizable: false,
 			sortable: false,
-			cssClass: _options.cssClass,
-			formatter: checkboxSelectionFormatter
+			cssClass: this._options.cssClass,
+			formatter: this.checkboxSelectionFormatter.bind(this)
 		};
 	}
 
-	function checkboxSelectionFormatter(row, cell, value, columnDef, dataContext) {
+	checkboxSelectionFormatter(row, cell, value, columnDef, dataContext) {
 		if (dataContext) {
-			return _selectedRowsLookup[row]
+			return this._selectedRowsLookup[row]
 				? "<input type='checkbox' checked='checked'>"
 				: "<input type='checkbox'>";
 		}
 		return null;
 	}
-
-	extend(this, {
-		"init": init,
-		"destroy": destroy,
-
-		"getColumnDefinition": getColumnDefinition
-	});
 }
+
+export default CheckboxSelectColumn;

@@ -708,8 +708,8 @@ class DataView {
 	 * @param {string} level
 	 * @param {boolean} collapse
 	 */
-	expandCollapseAllGroups(level, collapse) {
-		if (level === null) {
+	toggleAllGroups(level, collapse) {
+		if (level == null) {
 			for (let i = 0; i < this._groupingInfos.length; i++) {
 				this._toggledGroupsByLevel[i] = {};
 				this._groupingInfos[i].collapsed = collapse;
@@ -726,7 +726,7 @@ class DataView {
 	 * @param {string} level
 	 */
 	collapseAllGroups(level) {
-		this.expandCollapseAllGroups(level, true);
+		this.toggleAllGroups(level, true);
 	}
 
 	/**
@@ -734,7 +734,7 @@ class DataView {
 	 * @param {string} level
 	 */
 	expandAllGroups(level) {
-		this.expandCollapseAllGroups(level, false);
+		this.toggleAllGroups(level, false);
 	}
 
 	/**
@@ -743,7 +743,7 @@ class DataView {
 	 * @param {string} groupingKey
 	 * @param {boolean} collapse
 	 */
-	expandCollapseGroup(level, groupingKey, collapse) {
+	toggleGroup(level, groupingKey, collapse) {
 		this._toggledGroupsByLevel[level][groupingKey] = this._groupingInfos[level].collapsed ^ collapse;
 		this.refresh();
 	}
@@ -754,7 +754,7 @@ class DataView {
 	 * @param {string} groupingKey
 	 */
 	collapseGroup(level, groupingKey) {
-		this.expandCollapseGroup(level, groupingKey, true);
+		this.toggleGroup(level, groupingKey, true);
 	}
 
 	/**
@@ -763,7 +763,7 @@ class DataView {
 	 * @param {string} groupingKey
 	 */
 	expandGroup(level, groupingKey) {
-		this.expandCollapseGroup(level, groupingKey, false);
+		this.toggleGroup(level, groupingKey, false);
 	}
 
 	/**

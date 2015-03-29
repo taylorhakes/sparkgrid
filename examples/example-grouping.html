@@ -224,7 +224,7 @@
         dataView.setItems(data);
     }
 
-    require(['./Grid', './DataView', './formatters', './editors', './core', './aggregators', './GroupItemMetadataProvider', 'plugins/ColumnPicker', 'plugins/CellSelectionModel', 'plugins/Pager'],
+    require(['./Grid', './data/DataView', './util/formatters', './editing/editors', './util/misc', './grouping/aggregators', './plugins/GroupItemMetadataProvider', 'plugins/ColumnPicker', 'plugins/CellSelectionModel', 'plugins/Pager'],
             function (SparkGrid, DataView, formatters, editors, core, allAggregators, GroupItemMetadataProvider, ColumnPicker, CellSelectionModel, Pager) {
         aggregators = allAggregators;
 

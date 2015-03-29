@@ -3,7 +3,7 @@
  */
 
 import Sortable from 'sortablejs';
-import { Event } from '../core';
+import { Event } from '../util/events';
 
 export default function ReorderColumns(options) {
 	var header, sortable,

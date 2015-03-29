@@ -1,7 +1,8 @@
-import { extend, Group } from '../util/misc';
+import { extend } from '../util/misc';
+import Group from '../grouping/Group';
 
 /***
- * Provides item metadata for group (Slick.Group) and totals (Slick.Totals) rows produced by the DataView.
+ * Provides item metadata for group (spark.Group) and totals (spark.Totals) rows produced by the DataView.
  * This metadata overrides the default behavior and formatting of those rows so that they appear and function
  * correctly when processed by the grid.
  *
@@ -15,12 +16,12 @@ import { extend, Group } from '../util/misc';
 function GroupItemMetadataProvider(options) {
 	var _grid;
 	var _defaults = {
-		groupCssClass: "slick-group",
-		groupTitleCssClass: "slick-group-title",
-		totalsCssClass: "slick-group-totals",
+		groupCssClass: "spark-group",
+		groupTitleCssClass: "spark-group-title",
+		totalsCssClass: "spark-group-totals",
 		groupFocusable: true,
 		totalsFocusable: false,
-		toggleCssClass: "slick-group-toggle",
+		toggleCssClass: "spark-group-toggle",
 		toggleExpandedCssClass: "spark-icon-remove-circle",
 		toggleCollapsedCssClass: "spark-icon-add-circle",
 		enableExpandCollapse: true,
@@ -79,9 +80,9 @@ function GroupItemMetadataProvider(options) {
 			});
 
 			if (item.collapsed) {
-				this.getData().expandGroup(item.groupingKey);
+				this.getData().expandGroup(0, item.groupingKey);
 			} else {
-				this.getData().collapseGroup(item.groupingKey);
+				this.getData().collapseGroup(0, item.groupingKey);
 			}
 
 			e.stopImmediatePropagation();
@@ -96,7 +97,7 @@ function GroupItemMetadataProvider(options) {
 			var activeCell = this.getActiveCell();
 			if (activeCell) {
 				var item = this.getDataItem(activeCell.row);
-				if (item && item instanceof Slick.Group) {
+				if (item && item instanceof Group) {
 					var range = _grid.getRenderedRange();
 					this.getData().setRefreshHints({
 						ignoreDiffsBefore: range.top,
@@ -104,9 +105,9 @@ function GroupItemMetadataProvider(options) {
 					});
 
 					if (item.collapsed) {
-						this.getData().expandGroup(item.groupingKey);
+						this.getData().expandGroup(0, item.groupingKey);
 					} else {
-						this.getData().collapseGroup(item.groupingKey);
+						this.getData().collapseGroup(0, item.groupingKey);
 					}
 
 					e.stopImmediatePropagation();

@@ -1,6 +1,10 @@
-import { GlobalEditorLock, createEl, toggle, slice, query } from  '../core';
+import { createEl, toggle, slice, query } from  '../util/misc';
+import Grid from '../Grid';
 
-export default function Pager(dataView, grid, container) {
+let GlobalEditorLock = Grid.GlobalEditorLock;
+
+
+function Pager(dataView, grid, container) {
 	var status;
 
 	function init() {
@@ -174,3 +178,5 @@ export default function Pager(dataView, grid, container) {
 
 	init();
 }
+
+export default Pager;
