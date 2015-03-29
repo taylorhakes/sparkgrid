@@ -2,6 +2,43 @@
 
 SparkGrid is based on [SlickGrid](https://github.com/mleibman/SlickGrid)
 
+
+### Differences from SlickGrid
+<table class="table table-striped table-bordered">
+  <tbody>
+    <tr>
+      <th></th>
+      <th>SparkGrid</th>
+      <th>SlickGrid</th>
+    </tr>
+    <tr>
+      <td><b>Dependencies</b></td>
+      <td>None</td>
+      <td>jQuery, jQuery UI, jQuery Drag & Drop</td>
+    </tr>
+    <tr>
+      <td><b>JS Version</b></td>
+      <td>ES6 -> ES5</td>
+      <td>ES3</td>
+    </tr>
+    <tr>
+      <td><b>Remote API</b></td>
+      <td>Robust</td>
+      <td>Copy & Paste</td>
+    </tr>
+    <tr>
+      <td><b>Testing</b></td>
+      <td>Full Test Coverage (In Progress)</td>
+      <td>Minimal</td>
+    </tr>
+    <tr>
+      <td><b>Documentation</b></td>
+      <td>All methods & Examples</td>
+      <td>Some comments & Examples</td>
+    </tr>
+  </tbody>
+</table>
+
 Find documentation and examples in [the wiki](https://github.com/mleibman/SlickGrid/wiki).
 
 
