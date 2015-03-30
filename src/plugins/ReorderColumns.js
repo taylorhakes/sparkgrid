@@ -5,58 +5,58 @@
 import Sortable from 'sortablejs';
 import { Event } from '../util/events';
 
-export default function ReorderColumns(options) {
-	var header, sortable,
-		onColumnsReordered = new Event();
-
-
-	function init(grid) {
-		grid.onHeadersRendered.subscribe(movableInit);
-		movableInit();
+class ReorderColumns {
+	constructor(options) {
+		this._grid = null;
+		this._header = null;
+		this._sortable = null;
+		this.onColumnsReordered = new Event();
+		this._boundMovableInit = this.movableInit.bind(this);
+		this._boundHandDragEnd = this.handleDragEnd.bind(this);
 	}
 
-	function movableInit() {
-		header = grid.getHeader();
+	init(grid) {
+		this._grid = grid;
+		grid.onHeadersRendered.subscribe(this._boundMovableInit);
+		this.movableInit();
+	}
 
-		if (sortable) {
-			sortable.destroy();
+	movableInit() {
+		this._header = this._grid.getHeader();
+
+		if (this._sortable) {
+			this._sortable.destroy();
 		}
 
-		sortable = new Sortable(header, {
-			onUpdate: handleDragEnd,
+		this._sortable = new Sortable(this._header, {
+			onUpdate: this.boundHandleDragEnd,
 			animation: 300
 		});
 	}
 
-	function handleDragEnd(evt) {
-		var parent = evt.item.parentNode,
+	handleDragEnd(evt) {
+		let parent = evt.item.parentNode,
 			ids = [],
 			reorderedColumns = [],
-			uid = grid.getUid(),
-			columns = grid.getColumns(),
-			i, len;
+			uid = this._grid.getUid(),
+			columns = this._grid.getColumns();
 
-		len = parent.children.length
-		for (i = 0; i < len; i++) {
+		let len = parent.children.length;
+		for (let i = 0; i < len; i++) {
 			ids.push(parent.children[i].id);
 		}
-		for (i = 0; i < ids.length; i++) {
-			reorderedColumns.push(columns[grid.getColumnIndex(ids[i].replace(uid, ""))]);
+		for (let i = 0; i < ids.length; i++) {
+			reorderedColumns.push(columns[this._grid.getColumnIndex(ids[i].replace(uid, ''))]);
 		}
-		grid.setColumns(reorderedColumns);
-		onColumnsReordered.notify();
+		this._grid.setColumns(reorderedColumns);
+		this.onColumnsReordered.notify();
 	}
 
 
-	function destroy() {
-		grid.onHeadersRendered.unsubscribe(movableInit);
-		sortable.destroy();
-	}
-
-
-	return {
-		'init': init,
-		'destroy': destroy,
-		'onColumnsReordered': onColumnsReordered
+	destroy() {
+		this._grid.onHeadersRendered.unsubscribe(this._boundMovableInit);
+		this._sortable.destroy();
 	}
 }
+
+export default ReorderColumns;

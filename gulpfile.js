@@ -40,7 +40,8 @@ gulp.task('lint', function() {
 		'./src/plugins/RowSelectionModel.js',
 		'./src/plugins/GroupItemMetadataProvider.js',
 		'./src/plugins/HeaderButtons.js',
-		'./src/plugins/HeaderMenu.js'
+		'./src/plugins/HeaderMenu.js',
+		'./src/plugins/ReorderColumns.js'
 	])
 		.pipe(jshint())
 		.pipe(jshint.reporter('default'));

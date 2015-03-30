@@ -163,8 +163,8 @@ function Pager(dataView, grid, container) {
 		}
 
 		if (pagingInfo.pageSize == 0) {
-			var totalRowsCount = dataView.getItems().length;
-			var visibleRowsCount = pagingInfo.totalRows;
+			let totalRowsCount = dataView.getItems().length,
+				visibleRowsCount = pagingInfo.totalRows;
 			if (visibleRowsCount < totalRowsCount) {
 				status.textContent = "Showing " + visibleRowsCount + " of " + totalRowsCount + " rows";
 			} else {
