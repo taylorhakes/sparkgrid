@@ -41,7 +41,8 @@ gulp.task('lint', function() {
 		'./src/plugins/GroupItemMetadataProvider.js',
 		'./src/plugins/HeaderButtons.js',
 		'./src/plugins/HeaderMenu.js',
-		'./src/plugins/ReorderColumns.js'
+		'./src/plugins/ReorderColumns.js',
+		'./src/plugins/Pager.js'
 	])
 		.pipe(jshint())
 		.pipe(jshint.reporter('default'));

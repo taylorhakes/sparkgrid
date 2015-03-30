@@ -3,106 +3,117 @@ import Grid from '../Grid';
 
 let GlobalEditorLock = Grid.GlobalEditorLock;
 
+class Pager {
+	constructor(options) {
+		this._status = null;
+		this._dataView = options.dataView;
+		this._grid = null;
+		this._container = options.container;
 
-function Pager(dataView, grid, container) {
-	var status;
-
-	function init() {
-		dataView.onPagingInfoChanged.subscribe(function (info) {
-			updatePager(info.data);
-		});
-
-		constructPagerUI();
-		updatePager(dataView.getPagingInfo());
+		this._boundGotoFirst = this.gotoFirst.bind(this);
+		this._boundGotoLast = this.gotoLast.bind(this);
+		this._boundGotoNext = this.gotoNext.bind(this);
+		this._boundGotoPrev = this.gotoPrev.bind(this);
 	}
 
-	function getNavState() {
-		var cannotLeaveEditMode = !GlobalEditorLock.commitCurrentEdit();
-		var pagingInfo = dataView.getPagingInfo();
-		var lastPage = pagingInfo.totalPages - 1;
+	init(grid) {
+		this._grid = grid;
+
+		this._dataView.onPagingInfoChanged.subscribe((info) => {
+			this.updatePager(info.data);
+		});
+
+		this.constructPagerUI();
+		this.updatePager(this._dataView.getPagingInfo());
+	}
+
+	getNavState() {
+		let cannotLeaveEditMode = !GlobalEditorLock.commitCurrentEdit(),
+			pagingInfo = this._dataView.getPagingInfo(),
+			lastPage = pagingInfo.totalPages - 1;
 
 		return {
-			canGotoFirst: !cannotLeaveEditMode && pagingInfo.pageSize != 0 && pagingInfo.pageNum > 0,
-			canGotoLast: !cannotLeaveEditMode && pagingInfo.pageSize != 0 && pagingInfo.pageNum != lastPage,
-			canGotoPrev: !cannotLeaveEditMode && pagingInfo.pageSize != 0 && pagingInfo.pageNum > 0,
-			canGotoNext: !cannotLeaveEditMode && pagingInfo.pageSize != 0 && pagingInfo.pageNum < lastPage,
+			canGotoFirst: !cannotLeaveEditMode && pagingInfo.pageSize !== 0 && pagingInfo.pageNum > 0,
+			canGotoLast: !cannotLeaveEditMode && pagingInfo.pageSize !== 0 && pagingInfo.pageNum !== lastPage,
+			canGotoPrev: !cannotLeaveEditMode && pagingInfo.pageSize !== 0 && pagingInfo.pageNum > 0,
+			canGotoNext: !cannotLeaveEditMode && pagingInfo.pageSize !== 0 && pagingInfo.pageNum < lastPage,
 			pagingInfo: pagingInfo
-		}
+		};
 	}
 
-	function setPageSize(n) {
-		dataView.setRefreshHints({
+	setPageSize(n) {
+		this._dataView.setRefreshHints({
 			isFilterUnchanged: true
 		});
-		dataView.setPagingOptions({pageSize: n});
+		this._dataView.setPagingOptions({pageSize: n});
 	}
 
-	function gotoFirst() {
-		if (getNavState().canGotoFirst) {
-			dataView.setPagingOptions({pageNum: 0});
+	gotoFirst() {
+		if (this.getNavState().canGotoFirst) {
+			this._dataView.setPagingOptions({pageNum: 0});
 		}
 	}
 
-	function gotoLast() {
-		var state = getNavState();
+	gotoLast() {
+		let state = this.getNavState();
 		if (state.canGotoLast) {
-			dataView.setPagingOptions({pageNum: state.pagingInfo.totalPages - 1});
+			this._dataView.setPagingOptions({pageNum: state.pagingInfo.totalPages - 1});
 		}
 	}
 
-	function gotoPrev() {
-		var state = getNavState();
+	gotoPrev() {
+		let state = this.getNavState();
 		if (state.canGotoPrev) {
-			dataView.setPagingOptions({pageNum: state.pagingInfo.pageNum - 1});
+			this._dataView.setPagingOptions({pageNum: state.pagingInfo.pageNum - 1});
 		}
 	}
 
-	function gotoNext() {
-		var state = getNavState();
+	gotoNext() {
+		let state = this.getNavState();
 		if (state.canGotoNext) {
-			dataView.setPagingOptions({pageNum: state.pagingInfo.pageNum + 1});
+			this._dataView.setPagingOptions({pageNum: state.pagingInfo.pageNum + 1});
 		}
 	}
 
-	function constructPagerUI() {
-		container.innerHTML = '';
+	constructPagerUI() {
+		this._container.innerHTML = '';
 
-		var nav = createEl({
+		let nav = createEl({
 			tag: 'span',
 			className: 'spark-pager-nav'
 		});
 
-		container.appendChild(nav);
-		var settings = createEl({
+		this._container.appendChild(nav);
+		let settings = createEl({
 			tag: 'span',
 			className: 'spark-pager-settings'
 		});
-		container.appendChild(settings);
-		status = createEl({
+		this._container.appendChild(settings);
+		this._status = createEl({
 			tag: 'span',
 			className: 'spark-pager-status'
 		});
-		container.appendChild(status);
+		this._container.appendChild(status);
 
-		settings.innerHTML = "<span class='spark-pager-settings-expanded' style='display:none'>Show: <a data=0>All</a><a data='-1'>Auto</a><a data=25>25</a><a data=50>50</a><a data=100>100</a></span>";
+		settings.innerHTML = '<span class="spark-pager-settings-expanded" style="display:none">Show: <a data=0>All</a><a data="-1">Auto</a><a data=25>25</a><a data=50>50</a><a data=100>100</a></span>';
 
-		settings.addEventListener('click', function (e) {
+		settings.addEventListener('click', (e) => {
 			if (e.target.tagName.toLowerCase() !== 'a' || e.target.getAttribute('data') == null) {
 				return;
 			}
 
-			var pagesize = e.target.getAttribute("data");
-			if (pagesize != undefined) {
-				if (pagesize == -1) {
-					var vp = grid.getViewport();
-					setPageSize(vp.bottom - vp.top);
+			let pagesize = e.target.getAttribute('data');
+			if (pagesize != null) {
+				if (pagesize === -1) {
+					let vp = this._grid.getViewport();
+					this.setPageSize(vp.bottom - vp.top);
 				} else {
-					setPageSize(parseInt(pagesize));
+					this.setPageSize(parseInt(pagesize));
 				}
 			}
 		});
 
-		var node = createEl({
+		let node = createEl({
 			tag: 'span',
 			className: 'spark-icon-settings'
 		});
@@ -112,10 +123,10 @@ function Pager(dataView, grid, container) {
 		settings.appendChild(node);
 
 		[
-			['spark-icon-first-page', gotoFirst],
-			['spark-icon-prev-page', gotoPrev],
-			['spark-icon-next-page', gotoNext],
-			['spark-icon-last-page', gotoLast]
+			['spark-icon-first-page', this._boundGotoFirst],
+			['spark-icon-prev-page', this._boundGotoPrev],
+			['spark-icon-next-page', this.boundGotoNext],
+			['spark-icon-last-page', this._boundGotoLast]
 		].forEach(function (item) {
 				node = createEl({
 					tag: 'span',
@@ -125,58 +136,56 @@ function Pager(dataView, grid, container) {
 				nav.appendChild(node);
 			});
 
-		var wrapper = createEl({
+		let wrapper = createEl({
 			tag: 'div',
 			className: 'spark-pager'
 		});
-		slice(container.children).forEach(function (c) {
+		slice(this._container.children).forEach(function (c) {
 			wrapper.appendChild(c);
 		});
-		container.appendChild(wrapper);
+		this._container.appendChild(wrapper);
 	}
 
-	function updatePager(pagingInfo) {
-		var state = getNavState();
+	updatePager(pagingInfo) {
+		let state = this.getNavState();
 
-		query(".spark-pager-nav span", container).forEach(function (span) {
-			span.classList.remove("spark-disabled");
+		query('.spark-pager-nav span', this._container).forEach(function (span) {
+			span.classList.remove('spark-disabled');
 		});
 		if (!state.canGotoFirst) {
-			query(".spark-icon-first-page", container).forEach(function (icon) {
-				icon.classList.add("spark-disabled");
+			query('.spark-icon-first-page', this._container).forEach(function (icon) {
+				icon.classList.add('spark-disabled');
 			});
 		}
 		if (!state.canGotoLast) {
-			query(".spark-icon-last-page", container).forEach(function (icon) {
-				icon.classList.add("spark-disabled");
+			query('.spark-icon-last-page', this._container).forEach(function (icon) {
+				icon.classList.add('spark-disabled');
 			});
 		}
 		if (!state.canGotoNext) {
-			query(".spark-icon-next-page", container).forEach(function (icon) {
-				icon.classList.add("spark-disabled");
+			query('.spark-icon-next-page', this._container).forEach(function (icon) {
+				icon.classList.add('spark-disabled');
 			});
 		}
 		if (!state.canGotoPrev) {
-			query(".spark-icon-prev-page", container).forEach(function (icon) {
-				icon.classList.add("spark-disabled");
+			query('.spark-icon-prev-page', this._container).forEach(function (icon) {
+				icon.classList.add('spark-disabled');
 			});
 		}
 
-		if (pagingInfo.pageSize == 0) {
-			let totalRowsCount = dataView.getItems().length,
+		if (pagingInfo.pageSize === 0) {
+			let totalRowsCount = this._dataView.getItems().length,
 				visibleRowsCount = pagingInfo.totalRows;
 			if (visibleRowsCount < totalRowsCount) {
-				status.textContent = "Showing " + visibleRowsCount + " of " + totalRowsCount + " rows";
+				this._status.textContent = 'Showing ' + visibleRowsCount + ' of ' + totalRowsCount + ' rows';
 			} else {
-				status.textContent = "Showing all " + totalRowsCount + " rows";
+				this._status.textContent = 'Showing all ' + totalRowsCount + ' rows';
 			}
-			status.textContent = "Showing all " + pagingInfo.totalRows + " rows";
+			this._status.textContent = 'Showing all ' + pagingInfo.totalRows + ' rows';
 		} else {
-			status.textContent = "Showing page " + (pagingInfo.pageNum + 1) + " of " + pagingInfo.totalPages;
+			this._status.textContent = 'Showing page ' + (pagingInfo.pageNum + 1) + ' of ' + pagingInfo.totalPages;
 		}
 	}
-
-	init();
 }
 
 export default Pager;
