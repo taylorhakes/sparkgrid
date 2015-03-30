@@ -42,7 +42,8 @@ gulp.task('lint', function() {
 		'./src/plugins/HeaderButtons.js',
 		'./src/plugins/HeaderMenu.js',
 		'./src/plugins/ReorderColumns.js',
-		'./src/plugins/Pager.js'
+		'./src/plugins/Pager.js',
+		'./src/plugins/RowMoveManager.js'
 	])
 		.pipe(jshint())
 		.pipe(jshint.reporter('default'));

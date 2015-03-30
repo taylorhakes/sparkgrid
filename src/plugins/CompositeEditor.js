@@ -7,8 +7,7 @@ let defaultOptions = {
 		position: null,
 		destroy: null
 	},
-	noop = () => {
-	};
+	noop = () => {};
 
 function getCompositeEditor(options) {
 	let firstInvalidEditor,
