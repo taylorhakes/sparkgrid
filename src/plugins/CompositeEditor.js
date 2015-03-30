@@ -52,7 +52,7 @@ function getCompositeEditor(options) {
 			}
 		}
 
-		destroy = function () {
+		destroy() {
 			this._editors.forEach((editor) => {
 				editor.destroy();
 			});

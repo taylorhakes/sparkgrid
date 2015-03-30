@@ -690,7 +690,7 @@ class Grid {
 				}
 				pageX = e.pageX;
 				e.preventDefault();
-				this.parentNode.classList.add('spark-header-column-active');
+				e.currentTarget.parentNode.classList.add('spark-header-column-active');
 
 				// lock each column's width option to current width
 				columnElements.forEach((e, i) => {
@@ -745,8 +745,8 @@ class Grid {
 				maxPageX = pageX + Math.min(shrinkLeewayOnRight, stretchLeewayOnLeft);
 				minPageX = pageX - Math.min(shrinkLeewayOnLeft, stretchLeewayOnRight);
 
-				document.body.addEventListener('mousemove', handleDrag.bind(this));
-				document.body.addEventListener('mouseup', handleMouseUp.bind(this));
+				document.body.addEventListener('mousemove', handleDrag);
+				document.body.addEventListener('mouseup', handleMouseUp);
 			};
 
 			handle.addEventListener('mousedown', handleMousedown);
