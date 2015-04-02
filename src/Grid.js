@@ -908,9 +908,7 @@ class Grid {
 			this._trigger('onViewportChanged', {});
 		}
 	}
-	_getFormatter(row, column) {
-		let rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
-
+	_getFormatter(row, column, rowMetadata) {
 		// look up by id, then index
 		let columnOverrides = rowMetadata && rowMetadata.columns && (rowMetadata.columns[column.id] || rowMetadata.columns[this.getColumnIndex(column.id)]);
 
@@ -971,7 +969,7 @@ class Grid {
 					break;
 				}
 
-				this._appendCellHtml(stringArray, row, i, colspan, d);
+				this._appendCellHtml(stringArray, row, i, colspan, d, metadata);
 			}
 
 			if (colspan > 1) {
@@ -981,7 +979,7 @@ class Grid {
 
 		stringArray.push('</div>');
 	}
-	_appendCellHtml(stringArray, row, cell, colspan, item) {
+	_appendCellHtml(stringArray, row, cell, colspan, item, metadata) {
 		let m = this._columns[cell],
 			cellCss = 'spark-cell l' + cell + ' r' + Math.min(this._columns.length - 1,
 				cell + colspan - 1) + (m.cssClass ? ' ' + m.cssClass : '');
@@ -1001,7 +999,7 @@ class Grid {
 		// if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
 		if (item) {
 			let value = this._getDataItemValueForColumn(item, m);
-			stringArray.push(this._getFormatter(row, m)(row, cell, value, m, item));
+			stringArray.push(this._getFormatter(row, m, metadata)(row, cell, value, m, item));
 		}
 
 		stringArray.push('</div>');
@@ -1170,7 +1168,11 @@ class Grid {
 		}
 	}
 	_renderRows(range) {
-		let parentNode = this._canvas, stringArray = [], rows = [], needToReselectCell = false, dataLength = this.getDataLength();
+		let parentNode = this._canvas,
+			stringArray = [],
+			rows = [],
+			needToReselectCell = false,
+			dataLength = this.getDataLength();
 
 		for (let i = range.top, ii = range.bottom; i <= ii; i++) {
 			if (this._rowsCache[i]) {
