@@ -1,7 +1,7 @@
 import { extend } from '../util/misc';
 
 let defaultOptions = {
-		validationFailedMsg: "Some of the fields have failed validation",
+		validationFailedMsg: 'Some of the fields have failed validation',
 		show: null,
 		hide: null,
 		position: null,
@@ -35,19 +35,21 @@ function getCompositeEditor(options) {
 
 	class CompositeEditor {
 		constructor(options) {
-			let idx = columns.length;
+			this._columns = options.columns;
+
+			let idx = this._columns.length;
 
 			this._editors = [];
 			while (idx--) {
-				if (columns[ idx ].editor) {
+				if (this._columns[ idx ].editor) {
 					let newOptions = extend({}, options);
 					newOptions.container = containers[ idx ];
-					newOptions.column = columns[ idx ];
+					newOptions.column = this._columns[ idx ];
 					newOptions.position = getContainerBox(idx);
 					newOptions.commitChanges = noop;
 					newOptions.cancelChanges = noop;
 
-					this._editors[ idx ] = new (columns[ idx ].editor)(newOptions);
+					this._editors[ idx ] = new (this._columns[ idx ].editor)(newOptions);
 				}
 			}
 		}
@@ -57,8 +59,10 @@ function getCompositeEditor(options) {
 				editor.destroy();
 			});
 
-			options.destroy && options.destroy();
-		};
+			if (options.destroy) {
+				options.destroy();
+			}
+		}
 
 		focus() {
 			// if validation has failed, set the focus to the first invalid editor
@@ -116,27 +120,37 @@ function getCompositeEditor(options) {
 			} else {
 				return {
 					valid: true,
-					msg: ""
+					msg: ''
 				};
 			}
 		}
 
 		hide() {
 			this._editors.forEach((editor) => {
-				editor.hide && editor.hide();
+				if (editor.hide) {
+					editor.hide();
+				}
 			});
-			options.hide && options.hide();
+			if (options.hide) {
+				options.hide();
+			}
 		}
 
 		show() {
 			this._editors.forEach((editor) => {
-				editor.show && editor.show();
+				if (editor.show) {
+					editor.show();
+				}
 			});
-			options.show && options.show();
+			if (options.show) {
+				options.show();
+			}
 		}
 
 		position(box) {
-			options.position && options.position(box);
+			if (options.position) {
+				options.position(box);
+			}
 		}
 	}
 

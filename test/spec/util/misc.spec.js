@@ -1,4 +1,4 @@
-import { extend, query, closest, delegate,
+import { extend, deepExtend, query, closest, delegate,
 	createEl, setStyle, removeEl, slice, setPx, getPx, toggle, toggleClass } from 'spark/util/misc';
 
 (function(jas) {
@@ -28,6 +28,41 @@ import { extend, query, closest, delegate,
 				expect(extend({ a: 12, b: 'h', c: { h: 1, d: 23 } }, { a: 13 }, { c: { h: 12 }})).toEqual({ a: 13, b: 'h', c: { h: 12 } });
 			});
 		});
+		describe('deepExtend', function() {
+			it('basic', function() {
+				expect(deepExtend({}, { a: 1 })).toEqual({ a: 1 });
+			});
+			it('general', function() {
+				expect(deepExtend({ b: 3 }, { a: 1 })).toEqual({ b: 3,  a: 1 });
+			});
+			it('overwriting', function() {
+				expect(deepExtend({ b: 3, a: 1 }, { a: 'h' })).toEqual({ b: 3,  a: 'h' });
+			});
+			it('multi level merging', function() {
+				var obj = { hello: 'world'},
+					result = deepExtend({ b: 5, a : { fun: 'times' } }, { a: obj });
+				expect(result).toEqual({ b: 5, a: { hello: 'world', fun: 'times' }});
+			});
+			it('3 level merging', function() {
+				var obj = { hello: 'world', j: { k: 32 }},
+					result = deepExtend({ b: 10, a : { fun: 'times' } }, { a: obj, b: 20, c: 10 });
+				expect(result).toEqual({ b: 20, a: { hello: 'world', fun: 'times', j: { k: 32} }, c: 10});
+			});
+			it('array merging', function() {
+				var obj = [5,6,7],
+					result = deepExtend({ b: 10, a : [1,2,3] }, { a: obj, b: 20, c: 10 });
+				expect(result).toEqual({ b: 20, a: [5,6,7], c: 10});
+			});
+			it('null on second obj', function() {
+				var result = deepExtend({ b: 10, a : { k: 87 } }, { a: null, b: 20, c: 10 });
+				expect(result).toEqual({ b: 20, a: null, c: 10});
+			});
+			it('second missing prop', function() {
+				var result = deepExtend({ b: 10, a : { k: 87 } }, {  b: 20, c: 10 });
+				expect(result).toEqual({ b: 20, a: { k: 87 }, c: 10});
+			});
+		});
+
 		describe('query', function() {
 			var els = [];
 			beforeEach(function() {

@@ -232,15 +232,6 @@ class DataView {
 		}
 		return groupedRows;
 	}
-	_getFunctionInfo(fn) {
-		let fnRegex = /^function[^(]*\(([^)]*)\)\s*{([\s\S]*)}$/,
-			matches = fn.toString().match(fnRegex);
-
-		return {
-			params: matches[1].split(','),
-			body: matches[2]
-		};
-	}
 
 	_uncompiledFilter(items, args) {
 		let retval = [], idx = 0;

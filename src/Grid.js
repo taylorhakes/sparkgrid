@@ -2033,7 +2033,8 @@ class Grid {
 
 				if (validationResults.valid) {
 					if (this._activeRow < this.getDataLength()) {
-						let editCommand = {
+						let value = this._currentEditor.serializeValue(),
+							editCommand = {
 							row: this._activeRow,
 							cell: this._activeCell,
 							editor: this._currentEditor,
@@ -2045,7 +2046,10 @@ class Grid {
 								this._trigger('onCellChange', {
 									row: this._activeRow,
 									cell: this._activeCell,
-									item: item
+									item: item,
+									value,
+									prevValue: this._serializedEditorValue,
+									column
 								});
 							},
 							undo: function () {
@@ -2054,7 +2058,10 @@ class Grid {
 								this._trigger('onCellChange', {
 									row: this._activeRow,
 									cell: this._activeCell,
-									item: item
+									item: item,
+									value,
+									prevValue: this._serializedEditorValue,
+									column
 								});
 							}
 						};
@@ -2234,53 +2241,13 @@ class Grid {
 
 	/**
 	 * Get the grid canvas
-	 * @method getCanvasNode
+	 * @method getCanvasEl
 	 * @returns {HTMLElement}
 	 */
-	getCanvasNode() {
+	getCanvasEl() {
 		return this._canvas;
 	}
 
-	/**
-	 * Update the column header with different text and tooltip
-	 * @method updateColumnHeader
-	 * @param {string} columnId
-	 * @param {string} title
-	 * @param {string} toolTip
-	 */
-	updateColumnHeader(columnId, title, toolTip) {
-		if (!this._initialized) {
-			return;
-		}
-		let idx = this.getColumnIndex(columnId);
-		if (idx == null) {
-			return;
-		}
-
-		let columnDef = this._columns[idx],
-			header = this._headers.children[idx];
-		if (header) {
-			if (title !== undefined) {
-				this._columns[idx].name = title;
-			}
-			if (toolTip !== undefined) {
-				this._columns[idx].toolTip = toolTip;
-			}
-
-			this._trigger('onBeforeHeaderCellDestroy', {
-				node: header,
-				column: columnDef
-			});
-
-			header.setAttribute('title', toolTip || '');
-			header.children[0].innerHTML = title;
-
-			this._trigger('onHeaderCellRendered', {
-				node: header,
-				column: columnDef
-			});
-		}
-	}
 
 	/**
 	 * Get the header row DOM element

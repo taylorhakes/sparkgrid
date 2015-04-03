@@ -31,19 +31,7 @@ gulp.task('build', function () {
 
 gulp.task('lint', function() {
 	return gulp.src([
-		'./src/data/DataView.js',
-		'./src/Grid.js',
-		'./src/util/*.js',
-		'./src/selection/*.js',
-		'./src/grouping/*.js',
-		'./src/editing/*.js',
-		'./src/plugins/RowSelectionModel.js',
-		'./src/plugins/GroupItemMetadataProvider.js',
-		'./src/plugins/HeaderButtons.js',
-		'./src/plugins/HeaderMenu.js',
-		'./src/plugins/ReorderColumns.js',
-		'./src/plugins/Pager.js',
-		'./src/plugins/RowMoveManager.js'
+		'./src/**/*.js'
 	])
 		.pipe(jshint())
 		.pipe(jshint.reporter('default'));

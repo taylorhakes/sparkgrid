@@ -34,8 +34,8 @@ class AutoTooltips {
 						text;
 					if (node.clientWidth < node.scrollWidth) {
 						text = node.textContent.trim();
-						if (options.maxToolTipLength && text.length > options.maxToolTipLength) {
-							text = text.substr(0, options.maxToolTipLength - 3) + '...';
+						if (this._options.maxToolTipLength && text.length > this._options.maxToolTipLength) {
+							text = text.substr(0, this._options.maxToolTipLength - 3) + '...';
 						}
 					} else {
 						text = '';
@@ -49,7 +49,7 @@ class AutoTooltips {
 			this._boundHandleHeaderMouseEnter = (info) => {
 				let e = info.e, data = info.data,
 					column = data.column,
-					node = core.closest(e.target, '.slick-header-column');
+					node = closest(e.target, '.slick-header-column');
 				if (!column.toolTip) {
 					node.title = node.clientWidth < node.scrollWidth ? column.name : '';
 				}

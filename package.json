@@ -46,11 +46,11 @@
     "karma-chrome-launcher": "^0.1.7",
     "karma-safari-launcher": "^0.1.1",
     "karma-firefox-launcher": "^0.1.4",
-    "karma-babel-preprocessor": "^4.0.1",
     "gulp-babel": "^4.0.0",
-    "babelify": "^5.0.4",
+    "babelify": "^5.0.5",
     "karma-browserify": "^4.0.0",
-    "gulp-jshint": "^1.9.4"
+    "gulp-jshint": "^1.9.4",
+    "remapify": "^2.0.0"
   },
   "dependencies": {
     "gulp-logger": "0.0.2"

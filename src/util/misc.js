@@ -29,6 +29,27 @@ function extend(obj /* ...objects */) {
 	return obj;
 }
 
+function deepExtend(obj /* ...objects */) {
+	for (let i = 1, len = arguments.length; i < len; i++) {
+		let source = arguments[i];
+		if (source) {
+			for (let prop in source) {
+				if (source.hasOwnProperty(prop)) {
+					if (typeof source[prop] === 'object' && source[prop] && !Array.isArray(source[prop])) {
+						if (typeof obj[prop] !== 'object' || !obj[prop]) {
+							obj[prop] = {};
+						}
+						deepExtend(obj[prop], source[prop]);
+					} else {
+						obj[prop] = source[prop];
+					}
+				}
+			}
+		}
+	}
+	return obj;
+}
+
 /**
  * Wrapper for querySelectorAll, but returns an array
  * @param selector {string} Search selector, i.e. #myId, .myClass, etc.
@@ -205,5 +226,6 @@ export {
 	delegate,
 	closest,
 	extend,
+	deepExtend,
 	query
 };

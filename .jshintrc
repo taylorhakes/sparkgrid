@@ -7,5 +7,9 @@
   "eqnull": true,
   "browser": true,
   "undef": true,
-  "globals": {}
+  "globals": {
+    "describe": true,
+    "it": true,
+   "expect": true
+  }
 }

@@ -17,7 +17,7 @@ import { EventControl, Event } from 'spark/util/events';
 			eC.stop();
 			eC.stop();
 			expect(eC.isStopped()).toBe(true);
-		})
+		});
 	});
 
 	describe('Event', function() {

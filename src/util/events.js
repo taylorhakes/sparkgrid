@@ -136,8 +136,12 @@ const KEYCODES = Object.freeze({
 	SPACE: 32,
 	LEFT: 37,
 	RIGHT: 39,
+	UP: 38,
+	DOWN: 40,
 	ENTER: 13,
-	TAB: 9
+	TAB: 9,
+	C: 67,
+	V: 86
 });
 
 export {

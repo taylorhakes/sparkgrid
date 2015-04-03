@@ -112,7 +112,7 @@
     function toggleFilterRow() {
         grid.setTopPanelVisibility(!grid.getOptions().showTopPanel);
     }
-    require(['./Grid','./DataView', './editors', './formatters', './core', 'plugins/ColumnPicker', 'plugins/Pager', 'plugins/RowSelectionModel'],
+    require(['./Grid','./data/DataView', './editing/editors', './util/formatters', './util/misc', 'plugins/ColumnPicker', 'plugins/Pager', 'plugins/RowSelectionModel'],
             function (SparkGrid, DataView, editors, formatters, core, ColumnPicker, Pager, RowSelectionModel) {
         var columns = [
             {
@@ -164,15 +164,6 @@
                 sortable: true
             }
         ];
-
-        var options = {
-            editable: true,
-            enableAddRow: true,
-            enableCellNavigation: true,
-            asyncEditorLoading: true,
-            forceFitColumns: false,
-            topPanelHeight: 25
-        };
 
         var sortcol = "title";
         var sortdir = 1;
@@ -228,11 +219,29 @@
         }
 
         dataView = new DataView({inlineFilters: true});
-        grid = new SparkGrid("#myGrid", dataView, columns, options);
+        grid = new SparkGrid({
+            el: "#myGrid",
+            data: dataView,
+            columns: columns,
+            editable: true,
+            enableAddRow: true,
+            enableCellNavigation: true,
+            asyncEditorLoading: true,
+            forceFitColumns: false,
+            topPanelHeight: 25
+        });
         grid.setSelectionModel(new RowSelectionModel());
 
         var pager = new Pager(dataView, grid, document.getElementById('pager'));
-        var columnpicker = new ColumnPicker(columns, grid, options);
+        var columnPicker = new ColumnPicker({
+            editable: true,
+            enableAddRow: true,
+            enableCellNavigation: true,
+            asyncEditorLoading: true,
+            forceFitColumns: false,
+            topPanelHeight: 25
+        });
+        grid.registerPlugin(columnPicker);
 
         // move the filter panel defined in a hidden div into grid top panel
         var inlineFilter = document.getElementById("inlineFilterPanel");

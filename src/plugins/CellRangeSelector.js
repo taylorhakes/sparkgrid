@@ -1,4 +1,4 @@
-import { extend, hide } from '../util/misc';
+import { deepExtend, hide } from '../util/misc';
 import { Event, EventHandler } from '../util/events';
 import Range from '../selection/Range';
 import CellRangeDecorator from './CellRangeDecorator';
@@ -7,7 +7,7 @@ class CellRangeSelector {
 	constructor(options) {
 		let defaults = {
 			selectionCss: {
-				"border": "2px dashed blue"
+				border: '2px dashed blue'
 			}
 		};
 
@@ -16,16 +16,16 @@ class CellRangeSelector {
 		this._dragging = null;
 		this._decorator = null;
 		this._handler = new EventHandler();
-		this._options = extend({}, _defaults, options);
+		this._options = deepExtend({}, defaults, options);
 		this.onBeforeCellRangeSelected = new Event();
 		this.onCellRangeSelected = new Event();
 	}
 
 	init(grid) {
-		this._decorator = new CellRangeDecorator(options);
+		this._decorator = new CellRangeDecorator(this._options);
 		this._decorator.init(grid);
 		this._grid = grid;
-		this._canvas = this._grid.getCanvasNode();
+		this._canvas = this._grid.getCanvasEl();
 		this._handler
 			.subscribe(this._grid.onDragInit, this._handleDragInit.bind(this))
 			.subscribe(this._grid.onDragStart, this._handleDragStart.bind(this))
@@ -43,7 +43,7 @@ class CellRangeSelector {
 	}
 
 	_handleDragStart(e, dd) {
-		let cell = _grid.getCellFromEvent(e);
+		let cell = this._grid.getCellFromEvent(e);
 		if (this.onBeforeCellRangeSelected.notify(cell) !== false) {
 			if (this._grid.canCellBeSelected(cell.row, cell.cell)) {
 				this._dragging = true;
@@ -63,7 +63,7 @@ class CellRangeSelector {
 
 		dd.range = {start: start, end: {}};
 
-		return this._decorator.show(new Slick.Range(start.row, start.cell));
+		return this._decorator.show(new Range(start.row, start.cell));
 	}
 
 	_handleDrag(e, dd) {
