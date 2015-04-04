@@ -1,4 +1,4 @@
-import { extend }  from '../util/misc';
+import { extend, debounce }  from '../util/misc';
 import Group from '../grouping/Group';
 import GroupTotals from '../grouping/GroupTotals';
 import { Event, EventControl } from '../util/events';
@@ -36,7 +36,6 @@ class DataView {
 		this._rowsById = null;    // rows by id; lazy-calculated
 		this._filter = null;      // filter function
 		this._updated = null;     // updated item ids
-		this._suspend = false;    // suspends the recalculation
 		this._sortAsc = true;
 		this._fastSortField = null;
 		this._sortComparer = null;
@@ -63,6 +62,9 @@ class DataView {
 		this.onPagingInfoChanged = new Event();
 
 		this._options = extend({}, defaults, options);
+
+		// Call refresh at the next event loop
+		this.refresh = debounce(this.refresh, 1, 30);
 	}
 	_updateIdxById(startingIndex) {
 		startingIndex = startingIndex || 0;
@@ -367,21 +369,6 @@ class DataView {
 			}
 		}
 		return rows;
-	}
-
-	/**
-	 * Begin a data update. Hold refreshes until endUpdate
-	 */
-	beginUpdate() {
-		this._suspend = true;
-	}
-
-	/**
-	 * End a data update. Refresh the view
-	 */
-	endUpdate() {
-		this._suspend = false;
-		this.refresh();
 	}
 
 	/**
@@ -799,10 +786,6 @@ class DataView {
 	 * Refresh the view after data change
 	 */
 	refresh() {
-		if (this._suspend) {
-			return;
-		}
-
 		let countBefore = this._rows.length,
 			totalRowsBefore = this._totalRows,
 			diff = this._recalc(this._items, this._filter); // pass as direct refs to avoid closure perf hit

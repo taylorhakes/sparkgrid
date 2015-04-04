@@ -1,4 +1,4 @@
-import { extend, deepExtend, query, closest, delegate,
+import { extend, deepExtend, query, closest, delegate, debounce,
 	createEl, setStyle, removeEl, slice, setPx, getPx, toggle, toggleClass } from 'spark/util/misc';
 
 (function(jas) {
@@ -354,6 +354,58 @@ import { extend, deepExtend, query, closest, delegate,
 				expect(el.classList.contains('a')).toBe(true);
 			});
 		});
+		describe('debounce', function() {
+			beforeEach(function() {
+				jas.clock().install();
+			});
+			afterEach(function() {
+				jas.clock().uninstall();
+			});
+			it('basic', function(done) {
+				var me = {},
+					dbFn = debounce(function() {
+						expect(arguments[0]).toEqual('hello');
+						expect(arguments[1]).toEqual(123);
+						expect(this).toBe(me);
+						done();
+					}, 1);
+				dbFn.call(me, 'hello', 123);
+				jasmine.clock().tick(1);
+			});
+			it('delaying', function(done) {
+				var me = {},
+					another = {},
+					dbFn = debounce(function() {
+						expect(arguments[0]).toEqual('last');
+						expect(arguments[1]).toEqual(666);
+						expect(this).toBe(another);
+						done();
+					}, 10);
+				dbFn.call(me, 'hello', 123);
+				jasmine.clock().tick(9);
+				dbFn.call(me, 'hello', 123);
+				jasmine.clock().tick(9);
+				dbFn.call(another, 'last', 666);
+				jasmine.clock().tick(10);
+			});
+			it('max wait', function(done) {
+				var me = {},
+					another = {},
+					dbFn = debounce(function() {
+						expect(arguments[0]).toEqual('last');
+						expect(arguments[1]).toEqual(666);
+						expect(this).toBe(another);
+						done();
+					}, 10, 25);
+				dbFn.call(me, 'hello', 123);
+				jasmine.clock().tick(9);
+				dbFn.call(me, 'hello', 123);
+				jasmine.clock().tick(9);
+				dbFn.call(another, 'last', 666);
+				jasmine.clock().tick(7);
+			});
+		});
+
 	});
 
 })(jasmine);

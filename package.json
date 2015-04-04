@@ -50,7 +50,7 @@
     "babelify": "^5.0.5",
     "karma-browserify": "^4.0.0",
     "gulp-jshint": "^1.9.4",
-    "remapify": "^2.0.0"
+    "remapify": "^1.4.4"
   },
   "dependencies": {
     "gulp-logger": "0.0.2"

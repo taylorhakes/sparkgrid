@@ -297,7 +297,6 @@
         // wire up model events to drive the grid
         dataView.onRowCountChanged.subscribe(function () {
             grid.updateRowCount();
-            grid.render();
         });
 
         dataView.onRowsChanged.subscribe(function (info) {
@@ -357,14 +356,12 @@
         });
 
         // initialize the model after all the events have been hooked up
-        dataView.beginUpdate();
         dataView.setItems(data);
         dataView.setFilterArgs({
             percentCompleteThreshold: percentCompleteThreshold,
             searchString: searchString
         });
         dataView.setFilter(myFilter);
-        dataView.endUpdate();
 
         // if you don't want the items that are not visible (due to being filtered out
         // or being on a different page) to stay selected, pass 'false' to the second arg

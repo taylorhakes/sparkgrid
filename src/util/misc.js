@@ -211,6 +211,43 @@ function toggleClass(el, className) {
 	}
 }
 
+function debounce(fn, wait, maxWait) {
+	var timer = null,
+		maxTimer = null,
+		lastThis = null,
+		lastArgs = null;
+	return function() {
+		lastThis = this;
+		lastArgs = arguments;
+
+		if (maxWait && !maxTimer) {
+			maxTimer = setTimeout(executeFn, maxWait);
+		}
+
+		clearTimer();
+		timer = setTimeout(executeFn, wait);
+
+	};
+	function executeFn() {
+		clearTimer();
+
+		if (maxTimer) {
+			clearTimeout(maxTimer);
+			maxTimer = null;
+		}
+
+
+		fn.apply(lastThis, lastArgs);
+	}
+
+	function clearTimer() {
+		if (timer) {
+			clearTimeout(timer);
+			timer = null;
+		}
+	}
+}
+
 
 export {
 	slice,
@@ -227,5 +264,6 @@ export {
 	closest,
 	extend,
 	deepExtend,
-	query
+	query,
+	debounce
 };

@@ -751,7 +751,6 @@ class Grid {
 			el.appendChild(handle);
 		});
 	}
-
 	_createCssRules() {
 		this._style = createEl({
 			tag: 'style',
@@ -2538,6 +2537,7 @@ class Grid {
 		if (scrollToTop) {
 			this._scrollTo(0);
 		}
+		this.render();
 	}
 
 	/**
@@ -2634,10 +2634,9 @@ class Grid {
 	 * Invalidate all rows and rerender the grid
 	 * @method invalidate
 	 */
-	invalidate() {
+	refresh() {
 		this.updateRowCount();
 		this.invalidateAllRows();
-		this.render();
 	}
 
 	/**
@@ -2651,6 +2650,7 @@ class Grid {
 		for (let row in this._rowsCache) {
 			this._removeRowFromCache(row);
 		}
+		this.render();
 	}
 
 	/**
@@ -2671,6 +2671,7 @@ class Grid {
 				this._removeRowFromCache(rows[i]);
 			}
 		}
+		this.render();
 	}
 
 	/**
@@ -2731,7 +2732,7 @@ class Grid {
 	}
 
 	/**
-	 * Resize canvas. Normally done when data changes
+	 * Resize canvas. Normally done when the grid is resized
 	 * @method resizeCanvas
 	 */
 	resizeCanvas() {
