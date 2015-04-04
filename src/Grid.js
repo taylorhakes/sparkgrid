@@ -4,7 +4,6 @@ import Range from './selection/Range';
 import { Event }  from './util/events';
 import EditorLock from './editing/EditorLock';
 
-
 // shared across all grids on the page
 let scrollbarDimensions,
 	maxSupportedCssHeight, // browser's breaking point
@@ -64,7 +63,6 @@ function defaultFormatter(row, cell, value, columnDef, dataContext) {
 		return (value + '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	}
 }
-
 
 class Grid {
 	constructor(options) {
@@ -844,9 +842,9 @@ class Grid {
 				rule = this._getColumnCssRules(i);
 
 			rule.left.style.left = x + 'px';
-			rule.right.style.right = (this._canvasWidth - x - w) + 'px';
+			rule.right.style.width = w + 'px';
 
-			x += this._columns[i].width;
+			x += w;
 		}
 	}
 	_handleSelectedRangesChanged(info) {
@@ -1596,7 +1594,7 @@ class Grid {
 				clearTimeout(this._h_editorLoader);
 
 				if (this._options.asyncEditorLoading) {
-					this._h_editorLoader = setTimeout(function () {
+					this._h_editorLoader = setTimeout(() => {
 						this.editActiveCell();
 					}, this._options.asyncEditorLoadDelay);
 				} else {
@@ -1803,7 +1801,6 @@ class Grid {
 		}
 		return null;
 	}
-
 	_findLastFocusableCell(row) {
 		let cell = 0,
 			lastFocusableCell = null;
@@ -1815,7 +1812,6 @@ class Grid {
 		}
 		return lastFocusableCell;
 	}
-
 	_gotoRight(row, cell, posX) {
 		if (cell >= this._columns.length) {
 			return null;
@@ -1834,7 +1830,6 @@ class Grid {
 		}
 		return null;
 	}
-
 	_gotoLeft(row, cell, posX) {
 		if (cell <= 0) {
 			return null;
@@ -1862,7 +1857,6 @@ class Grid {
 			prev = pos;
 		}
 	}
-
 	_gotoDown(row, cell, posX) {
 		let prevCell,
 			dataLengthIncludingAddNew = this._getDataLengthIncludingAddNew();
@@ -1886,7 +1880,6 @@ class Grid {
 			}
 		}
 	}
-
 	_gotoUp(row, cell, posX) {
 		let prevCell;
 		while (true) {
@@ -1909,7 +1902,6 @@ class Grid {
 			}
 		}
 	}
-
 	_gotoNext(row, cell, posX) {
 		if (row == null && cell == null) {
 			row = cell = posX = 0;
@@ -1941,7 +1933,6 @@ class Grid {
 		}
 		return null;
 	}
-
 	_gotoPrev(row, cell, posX) {
 		if (row == null && cell == null) {
 			row = this._getDataLengthIncludingAddNew() - 1;
@@ -2025,7 +2016,8 @@ class Grid {
 	}
 	_commitCurrentEdit() {
 		let item = this.getDataItem(this._activeRow),
-			column = this._columns[this._activeCell];
+			column = this._columns[this._activeCell],
+			me = this;
 
 		if (this._currentEditor) {
 			if (this._currentEditor.isValueChanged()) {
@@ -2042,8 +2034,8 @@ class Grid {
 							prevSerializedValue: this._serializedEditorValue,
 							execute: function () {
 								this.editor.applyValue(item, this.serializedValue);
-								this.updateRow(this.row);
-								this._trigger('onCellChange', {
+								me.updateRow(this.row);
+								me._trigger('onCellChange', {
 									row: this._activeRow,
 									cell: this._activeCell,
 									item: item,
@@ -2054,8 +2046,8 @@ class Grid {
 							},
 							undo: function () {
 								this.editor.applyValue(item, this.prevSerializedValue);
-								this.updateRow(this.row);
-								this._trigger('onCellChange', {
+								me.updateRow(this.row);
+								me._trigger('onCellChange', {
 									row: this._activeRow,
 									cell: this._activeCell,
 									item: item,
@@ -2109,12 +2101,10 @@ class Grid {
 		}
 		return true;
 	}
-
 	_cancelCurrentEdit() {
 		this._makeActiveCellNormal();
 		return true;
 	}
-
 	_rowsToRanges(rows) {
 		let ranges = [],
 			lastCell = this._columns.length - 1;
@@ -2932,6 +2922,12 @@ class Grid {
 		this._h_render = null;
 	}
 
+	/**
+	 * Add css class to a group of cells
+	 * @method addCellCssStyles
+	 * @param {string} key Unique key to group and possibly later delete the styles
+	 * @param hash Hash of rows to cells { <row_num>: { <column_id> : <css_class> } }
+	 */
 	addCellCssStyles(key, hash) {
 		if (this._cellCssClasses[key]) {
 			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');
@@ -2942,6 +2938,12 @@ class Grid {
 
 		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
 	}
+
+	/**
+	 * Remove css class from a group of cell
+	 * @method removeCellCssStyles
+	 * @param {string} key Unique key to remove CSS class
+	 */
 	removeCellCssStyles(key) {
 		if (!this._cellCssClasses[key]) {
 			return;
@@ -2952,6 +2954,13 @@ class Grid {
 
 		this._trigger('onCellCssStylesChanged', {key: key, hash: null});
 	}
+
+	/**
+	 * Update css class to a group of cells
+	 * @method setCellCssStyles
+	 * @param {string} key Unique key to group and possibly later delete the styles
+	 * @param hash Hash of rows to cells { <row_num>: { <column_id> : <css_class> } }
+	 */
 	setCellCssStyles(key, hash) {
 		let prevHash = this._cellCssClasses[key];
 
@@ -2960,9 +2969,23 @@ class Grid {
 
 		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
 	}
+
+	/**
+	 * Get the CSS styles associated with a specific key
+	 * @method getCssStyles
+	 * @param {string} key Unique key associated with CSS classes
+	 * @returns {Object}
+	 */
 	getCellCssStyles(key) {
 		return this._cellCssClasses[key];
 	}
+
+	/**
+	 * Get the cell at a specific x,y coordinate
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {{row: *, cell: number}}
+	 */
 	getCellFromPoint(x, y) {
 		let row = this._getRowFromPosition(y),
 			cell = 0,
@@ -2979,6 +3002,11 @@ class Grid {
 		return {row: row, cell: cell - 1};
 	}
 
+	/**
+	 * Get the cell associate with an event
+	 * @param {Event} e
+	 * @returns {Object}
+	 */
 	getCellFromEvent(e) {
 		let cell = closest(e.target, '.spark-cell');
 		if (!cell) {
@@ -2997,6 +3025,18 @@ class Grid {
 			};
 		}
 	}
+
+	/**
+	 * Get the node from row and cell
+	 * @param {number} row
+	 * @param {number} cell
+	 * @returns {{
+	 * 	top: number,
+	 * 	left: number,
+	 * 	bottom: number,
+	 * 	right: number
+	 * }}
+	 */
 	getCellNodeBox(row, cell) {
 		if (!this._cellExists(row, cell)) {
 			return null;
@@ -3017,9 +3057,17 @@ class Grid {
 			right: x2
 		};
 	}
+
+	/**
+	 * Reset/Clear the active cell
+	 */
 	resetActiveCell() {
 		this._setActiveCellInternal(null, false);
 	}
+
+	/**
+	 * Focus the grid
+	 */
 	setFocus() {
 		if (this._tabbingDirection === -1) {
 			this._focusSink.focus();
@@ -3027,6 +3075,13 @@ class Grid {
 			this._focusSink2.focus();
 		}
 	}
+
+	/**
+	 * Scroll a specific cell info view and render
+	 * @param {number} row
+	 * @param {number} cell
+	 * @param {boolean} doPaging
+	 */
 	scrollCellIntoView(row, cell, doPaging) {
 		this.scrollRowIntoView(row, doPaging);
 
@@ -3044,6 +3099,10 @@ class Grid {
 		}
 	}
 
+	/**
+	 * Edit the active cell with a specific editor class
+	 * @param {Editor} Editor
+	 */
 	editActiveCell(Editor) {
 		if (!this._activeCellNode) {
 			return;
@@ -3100,16 +3159,34 @@ class Grid {
 		}
 	}
 
+	/**
+	 * Get the coordinates of the active cell
+	 * @returns {*}
+	 */
 	getActiveCellPosition() {
 		return this._absBox(this._activeCellNode);
 	}
+
+	/**
+	 * Get the coordinates of the grid
+	 * @returns {*}
+	 */
 	getGridPosition() {
 		return this._absBox(this._container);
 	}
 
+	/**
+	 * Get the current editor if there is one
+	 * @returns {null|Editor|*}
+	 */
 	getCellEditor() {
 		return this._currentEditor;
 	}
+
+	/**
+	 * Get the active cell element
+	 * @returns {null|{ row: number, cell: number }}
+	 */
 	getActiveCell() {
 		if (!this._activeCellNode) {
 			return null;
@@ -3117,9 +3194,20 @@ class Grid {
 			return {row: this._activeRow, cell: this._activeCell};
 		}
 	}
+
+	/**
+	 * Get the active cell HTMLElement
+	 * @returns {null|HTMLELement}
+	 */
 	getActiveCellNode() {
-		return this._activeCellNode;
+		returnthis._activeCellNode ;
 	}
+
+	/**
+	 * Sroll a row into view
+	 * @param {number} row
+	 * @param {boolean} doPaging Go to the next page if necessary
+	 */
 	scrollRowIntoView(row, doPaging) {
 		let rowAtTop = row * this._options.rowHeight,
 			rowAtBottom = (row + 1) * this._options.rowHeight - this._viewportH + (this._viewportHasHScroll ? scrollbarDimensions.height : 0);
@@ -3135,60 +3223,100 @@ class Grid {
 			this.render();
 		}
 	}
+
+	/**
+	 * Scroll a row to the top of the grid
+	 * @param {number} row
+	 */
 	scrollRowToTop(row) {
 		this._scrollTo(row * this._options.rowHeight);
 		this.render();
 	}
 
+	/**
+	 * Navigate to the next page
+	 */
 	navigatePageDown() {
 		this._scrollPage(1);
 	}
+
+	/**
+	 * Navigate to the previous page
+	 */
 	navigatePageUp() {
 		this._scrollPage(-1);
 	}
 
-
-
+	/**
+	 * Get the header HTMLElement
+	 * @returns {null|Element}
+	 */
 	getHeader() {
 		return this._headers;
 	}
 
+	/**
+	 * The unique ID associated with the grid. Used for CSS
+	 * @returns {string}
+	 */
 	getUid() {
 		return this._uid;
 	}
 
-
-
+	/**
+	 * Navigate to the cell to the right
+	 * @returns {boolean}
+	 */
 	navigateRight() {
 		return this._navigate('right');
 	}
 
+	/**
+	 * Navigate to the cell to the left
+	 * @returns {boolean}
+	 */
 	navigateLeft() {
 		return this._navigate('left');
 	}
 
+	/**
+	 * Navigate to the cell below
+	 * @returns {boolean}
+	 */
 	navigateDown() {
 		return this._navigate('down');
 	}
 
+	/**
+	 * Navigate to the cell above
+	 * @returns {boolean}
+	 */
 	navigateUp() {
 		return this._navigate('up');
 	}
 
+	/**
+	 * Navigate to the next cell
+	 * @returns {boolean}
+	 */
 	navigateNext() {
 		return this._navigate('next');
 	}
 
+	/**
+	 * Navigate to the previous cell
+	 * @returns {boolean}
+	 */
 	navigatePrev() {
 		return this._navigate('prev');
 	}
 
 	/**
-	 * @param {string} dir Navigation direction.
-	 * @return {boolean} Whether navigation resulted in a change of active cell.
+	 * Get the cell node at a row and cell number
+	 * @param {number} row
+	 * @param {number} cell
+	 * @returns {null|HTMLElement}
 	 */
-
-
 	getCellNode(row, cell) {
 		if (this._rowsCache[row]) {
 			this._ensureCellNodesInRowsCache(row);
@@ -3197,6 +3325,11 @@ class Grid {
 		return null;
 	}
 
+	/**
+	 * Set the active cell by row and cell number
+	 * @param {number} row
+	 * @param {number} cell
+	 */
 	setActiveCell(row, cell) {
 		if (!this._initialized) {
 			return;
@@ -3213,6 +3346,12 @@ class Grid {
 		this._setActiveCellInternal(this.getCellNode(row, cell), false);
 	}
 
+	/**
+	 * Check if the cell can be active at row and cell number
+	 * @param {number} row
+	 * @param {number} cell
+	 * @returns {boolean}
+	 */
 	canCellBeActive(row, cell) {
 		if (!this._options.enableCellNavigation || row >= this._getDataLengthIncludingAddNew() || row < 0 || cell >= this._columns.length || cell < 0) {
 			return false;
@@ -3234,6 +3373,12 @@ class Grid {
 		return this._columns[cell].focusable;
 	}
 
+	/**
+	 * Can the row and celll number be selected
+	 * @param {number} row
+	 * @param {number} cell
+	 * @returns {boolean}
+	 */
 	canCellBeSelected(row, cell) {
 		if (row >= this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
 			return false;
@@ -3252,6 +3397,12 @@ class Grid {
 		return this._columns[cell].selectable;
 	}
 
+	/**
+	 * Go to cell and make it active, optionally edit the cell
+	 * @param {number} row
+	 * @param {number} cell
+	 * @param {boolean} forceEdit
+	 */
 	gotoCell(row, cell, forceEdit) {
 		if (!this._initialized) {
 			return;
@@ -3277,11 +3428,10 @@ class Grid {
 		}
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	// IEditor implementation for the editor lock
-
-
-
+	/**
+	 * Get the selected rows in the grid
+	 * @returns {Array<number>}
+	 */
 	getSelectedRows() {
 		if (!this._selectionModel) {
 			throw new Error('Selection model is not set');
@@ -3289,6 +3439,10 @@ class Grid {
 		return this._selectedRows;
 	}
 
+	/**
+	 * Set the selected rows in the grid
+	 * @param {Array<number>} rows
+	 */
 	setSelectedRows(rows) {
 		if (!this._selectionModel) {
 			throw new Error('Selection model is not set');
@@ -3297,6 +3451,11 @@ class Grid {
 	}
 }
 
+/**
+ * Singleton editor lock for allowing only one cell on any grid to be editable
+ */
 Grid.GlobalEditorLock = GlobalEditorLock;
+
+
 
 export default Grid;

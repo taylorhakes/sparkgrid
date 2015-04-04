@@ -248,11 +248,13 @@
         grid.getTopPanel().appendChild(inlineFilter);
         inlineFilter.style.display = '';
 
-        grid.onCellChange.subscribe(function (e, args) {
+        grid.onCellChange.subscribe(function (info) {
+            var args = info.data;
             dataView.updateItem(args.item.id, args.item);
         });
 
-        grid.onAddNewRow.subscribe(function (e, args) {
+        grid.onAddNewRow.subscribe(function (info) {
+            var args = info.data;
             var item = {
                 "num": data.length,
                 "id": "new_" + (Math.round(Math.random() * 10000)),
@@ -267,7 +269,8 @@
             dataView.addItem(item);
         });
 
-        grid.onKeyDown.subscribe(function (e) {
+        grid.onKeyDown.subscribe(function (info) {
+            var e = info.event;
             // select all rows on ctrl-a
             if (e.which != 65 || !e.ctrlKey) {
                 return false;
@@ -282,7 +285,9 @@
             e.preventDefault();
         });
 
-        grid.onSort.subscribe(function (e, args) {
+        grid.onSort.subscribe(function (info) {
+            var e = info.event,
+                args = info.data;
             sortdir = args.sortAsc ? 1 : -1;
             sortcol = args.sortCol.field;
 
@@ -290,17 +295,19 @@
         });
 
         // wire up model events to drive the grid
-        dataView.onRowCountChanged.subscribe(function (e, args) {
+        dataView.onRowCountChanged.subscribe(function () {
             grid.updateRowCount();
             grid.render();
         });
 
-        dataView.onRowsChanged.subscribe(function (e, args) {
+        dataView.onRowsChanged.subscribe(function (info) {
+            var args = info.data;
             grid.invalidateRows(args.rows);
             grid.render();
         });
 
-        dataView.onPagingInfoChanged.subscribe(function (e, pagingInfo) {
+        dataView.onPagingInfoChanged.subscribe(function (info) {
+            var pagingInfo = info.data;
             var isLastPage = pagingInfo.pageNum == pagingInfo.totalPages - 1;
             var enableAddRow = isLastPage || pagingInfo.pageSize == 0;
             var options = grid.getOptions();
@@ -313,7 +320,7 @@
         var h_runfilters = null;
 
         function onKeyUpSearch(e) {
-            core.GlobalEditorLock.cancelCurrentEdit();
+            SparkGrid.GlobalEditorLock.cancelCurrentEdit();
 
             // clear on Esc
             if (e.which == 27) {
@@ -337,7 +344,7 @@
         }
 
         document.getElementById('btnSelectRows').addEventListener('click', function () {
-            if (!core.GlobalEditorLock.commitCurrentEdit()) {
+            if (!SparkGrid.GlobalEditorLock.commitCurrentEdit()) {
                 return;
             }
 

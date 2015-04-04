@@ -1,7 +1,6 @@
 import { extend, createEl, removeEl, setStyle } from '../util/misc';
 import { KEYCODES } from '../util/events';
 
-
 class Text {
 	constructor(options) {
 		this._defaultValue = null;

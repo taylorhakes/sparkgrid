@@ -347,6 +347,28 @@ class DataView {
 		return diff;
 	}
 
+	_mapRowsToIds(rowArray) {
+		var ids = [];
+		for (var i = 0, l = rowArray.length; i < l; i++) {
+			if (rowArray[i] < this._rows.length) {
+				ids[ids.length] = this._rows[rowArray[i]][this._idProperty];
+			}
+		}
+		return ids;
+	}
+
+	_mapIdsToRows(idArray) {
+		var rows = [];
+		this._ensureRowsByIdCache();
+		for (var i = 0, l = idArray.length; i < l; i++) {
+			var row = this._rowsById[idArray[i]];
+			if (row != null) {
+				rows[rows.length] = row;
+			}
+		}
+		return rows;
+	}
+
 	/**
 	 * Begin a data update. Hold refreshes until endUpdate
 	 */
@@ -814,9 +836,9 @@ class DataView {
 	 * @param {boolean} preserveHiddenOnSelectionChange
 	 * @returns {Event}
 	 */
-	syncGridSelection(grid, preserveHidden, preserveHiddenOnSelectionChange) {
+	syncGridSelection(grid, preserveHidden, preserveHiddenOnSelectionChange = false) {
 		let inHandler,
-			selectedRowIds = this.mapRowsToIds(grid.getSelectedRows()),
+			selectedRowIds = this._mapRowsToIds(grid.getSelectedRows()),
 			onSelectedRowIdsChanged = new Event();
 
 		let setSelectedRowIds = (rowIds) => {
@@ -834,9 +856,9 @@ class DataView {
 
 		let update = () => {
 			if (selectedRowIds.length > 0) {
-				let selectedRows = this.mapIdsToRows(selectedRowIds);
+				let selectedRows = this._mapIdsToRows(selectedRowIds);
 				if (!preserveHidden) {
-					setSelectedRowIds(this.mapRowsToIds(selectedRows));
+					setSelectedRowIds(this._mapRowsToIds(selectedRows));
 				}
 				grid.setSelectedRows(selectedRows);
 				inHandler = false;
@@ -847,7 +869,7 @@ class DataView {
 			if (inHandler) {
 				return;
 			}
-			let newSelectedRowIds = this.mapRowsToIds(grid.getSelectedRows());
+			let newSelectedRowIds = this._mapRowsToIds(grid.getSelectedRows());
 			if (!preserveHiddenOnSelectionChange || !grid.getOptions().multiSelect) {
 				setSelectedRowIds(newSelectedRowIds);
 			} else {
