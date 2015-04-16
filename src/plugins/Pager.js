@@ -125,7 +125,7 @@ class Pager {
 		[
 			['spark-icon-first-page', this._boundGotoFirst],
 			['spark-icon-prev-page', this._boundGotoPrev],
-			['spark-icon-next-page', this.boundGotoNext],
+			['spark-icon-next-page', this._boundGotoNext],
 			['spark-icon-last-page', this._boundGotoLast]
 		].forEach(function (item) {
 				node = createEl({

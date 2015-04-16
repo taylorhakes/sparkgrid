@@ -29,6 +29,7 @@ class DataView {
 	constructor(options) {
 
 		// Private
+		this._grid = null;
 		this._idProperty = 'id';  // property holding a unique row id
 		this._items = [];         // data by index
 		this._rows = [];          // data by row
@@ -369,6 +370,46 @@ class DataView {
 			}
 		}
 		return rows;
+	}
+
+	_onGridRowCountChanged() {
+		this._grid.updateRowCount();
+	}
+
+	/**
+	 * Initialize the view with the grid. This is called by the grid
+	 * @param {Grid} grid
+	 */
+	init(grid) {
+
+		// wire up model events to drive the grid
+		this.onRowCountChanged.subscribe(function () {
+			grid.updateRowCount();
+		});
+
+		this.onRowsChanged.subscribe(function (info) {
+			var args = info.data;
+			grid.invalidateRows(args.rows);
+			grid.render();
+		});
+
+		this.onPagingInfoChanged.subscribe(function (info) {
+			var pagingInfo = info.data;
+			var isLastPage = pagingInfo.pageNum === pagingInfo.totalPages - 1;
+			var enableAddRow = isLastPage || pagingInfo.pageSize == 0;
+			var options = grid.getOptions();
+
+			if (options.enableAddRow != enableAddRow) {
+				grid.setOptions({enableAddRow: enableAddRow});
+			}
+		});
+	}
+
+	/**
+	 * Destroy the view
+	 */
+	destroy() {
+
 	}
 
 	/**

@@ -294,27 +294,7 @@
             dataView.sort(comparer, args.sortAsc);
         });
 
-        // wire up model events to drive the grid
-        dataView.onRowCountChanged.subscribe(function () {
-            grid.updateRowCount();
-        });
 
-        dataView.onRowsChanged.subscribe(function (info) {
-            var args = info.data;
-            grid.invalidateRows(args.rows);
-            grid.render();
-        });
-
-        dataView.onPagingInfoChanged.subscribe(function (info) {
-            var pagingInfo = info.data;
-            var isLastPage = pagingInfo.pageNum == pagingInfo.totalPages - 1;
-            var enableAddRow = isLastPage || pagingInfo.pageSize == 0;
-            var options = grid.getOptions();
-
-            if (options.enableAddRow != enableAddRow) {
-                grid.setOptions({enableAddRow: enableAddRow});
-            }
-        });
 
         var h_runfilters = null;
 

@@ -12,6 +12,7 @@ var path = {
 	output:'dist/',
 	doc:'./doc'
 };
+var babelOptions = { modules:'umd', loose: 'all' };
 
 gulp.task('watch', function() {
 	return watch(path.source)
@@ -20,12 +21,12 @@ gulp.task('watch', function() {
 			after: 'Transpile complete!',
 			showChange: true
 		}))
-		.pipe(babel({modules:'umd'}))
+		.pipe(babel(babelOptions))
 		.pipe(gulp.dest(path.output));
 });
 gulp.task('build', function () {
 	return gulp.src(path.source)
-		.pipe(babel({modules:'umd'}))
+		.pipe(babel(babelOptions))
 		.pipe(gulp.dest(path.output));
 });
 
