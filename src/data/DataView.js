@@ -1,4 +1,4 @@
-import { extend, debounce }  from '../util/misc';
+import { extend, throttle }  from '../util/misc';
 import Group from '../grouping/Group';
 import GroupTotals from '../grouping/GroupTotals';
 import { Event, EventControl } from '../util/events';
@@ -13,7 +13,10 @@ let groupingInfoDefaults = {
 	getter: null,
 	formatter: null,
 	comparer(a, b) {
-		return a.value - b.value;
+		if (a.value === b.value) {
+			return 0;
+		}
+		return a.value > b.value ? 1 : -1;
 	},
 	predefinedValues: [],
 	aggregators: [],
@@ -38,13 +41,9 @@ class DataView {
 		this._filter = null;      // filter function
 		this._updated = null;     // updated item ids
 		this._sortAsc = true;
-		this._fastSortField = null;
 		this._sortComparer = null;
-		this._refreshHints = {};
-		this._prevRefreshHints = {};
 		this._filterArgs = null;
 		this._filteredItems = [];
-		this._filterCache = [];
 
 		// Grouping
 		this._groupingInfos = [];
@@ -53,19 +52,21 @@ class DataView {
 		this._groupingDelimiter = ':|:';
 
 		// Paging
-		this._pagesize = 0;
-		this._pagenum = 0;
+		this._tempPageNum = null;
+		this._pageSize = 0;
+		this._pageNum = 0;
 		this._totalRows = 0;
 
 		// events
 		this.onRowCountChanged = new Event();
 		this.onRowsChanged = new Event();
 		this.onPagingInfoChanged = new Event();
+		this.onRefresh = new Event();
 
 		this._options = extend({}, defaults, options);
 
 		// Call refresh at the next event loop
-		this.refresh = debounce(this.refresh, 1, 30);
+		this.refresh = throttle(this.refresh);
 	}
 	_updateIdxById(startingIndex) {
 		startingIndex = startingIndex || 0;
@@ -236,55 +237,34 @@ class DataView {
 		return groupedRows;
 	}
 
-	_uncompiledFilter(items, args) {
-		let retval = [], idx = 0;
+	_wrappedFilter(items, args) {
+		let filteredItems = [];
 
-		for (let i = 0, ii = items.length; i < ii; i++) {
+		for (let i = 0, len = items.length; i < len; i++) {
 			if (this._filter(items[i], args)) {
-				retval[idx++] = items[i];
+				filteredItems[i] = items[i];
 			}
 		}
 
-		return retval;
-	}
-	_uncompiledFilterWithCaching(items, args, cache) {
-		let retval = [], idx = 0, item;
-
-		for (let i = 0, ii = items.length; i < ii; i++) {
-			item = items[i];
-			if (cache[i]) {
-				retval[idx++] = item;
-			} else if (this._filter(item, args)) {
-				retval[idx++] = item;
-				cache[i] = true;
-			}
-		}
-
-		return retval;
+		return filteredItems;
 	}
 	_getFilteredAndPagedItems(items) {
 		if (this._filter) {
-			if (this._refreshHints.isFilterNarrowing) {
-				this._filteredItems = this._uncompiledFilter(this._filteredItems, this._filterArgs);
-			} else if (this._refreshHints.isFilterExpanding) {
-				this._filteredItems = this._uncompiledFilterWithCaching(items, this._filterArgs, this._filterCache);
-			} else if (!this._refreshHints.isFilterUnchanged) {
-				this._filteredItems = this._uncompiledFilter(items, this._filterArgs);
-			}
+			this._filteredItems = this._wrappedFilter(items, this._filterArgs);
 		} else {
 			// special case:  if not filtering and not paging, the resulting
 			// rows collection needs to be a copy so that changes due to sort
 			// can be caught
-			this._filteredItems = this._pagesize ? items : items.concat();
+			this._filteredItems = this._pageSize ? items : items.concat();
 		}
 
 		// get the current page
 		let paged;
-		if (this._pagesize) {
-			if (this._filteredItems.length < this._pagenum * this._pagesize) {
-				this._pagenum = Math.floor(this._filteredItems.length / this._pagesize);
+		if (this._pageSize) {
+			if (this._filteredItems.length < this._pageNum * this._pageSize) {
+				this._pageNum = Math.floor(this._filteredItems.length / this._pageSize);
 			}
-			paged = this._filteredItems.slice(this._pagesize * this._pagenum, this._pagesize * this._pagenum + this._pagesize);
+			paged = this._filteredItems.slice(this._pageSize * this._pageNum, this._pageSize * this._pageNum + this._pageSize);
 		} else {
 			paged = this._filteredItems;
 		}
@@ -297,14 +277,6 @@ class DataView {
 	_getRowDiffs(rows, newRows) {
 		let item, r, eitherIsNonData, diff = [],
 			from = 0, to = newRows.length;
-
-		if (this._refreshHints && this._refreshHints.ignoreDiffsBefore) {
-			from = Math.max(0, Math.min(newRows.length, this._refreshHints.ignoreDiffsBefore));
-		}
-
-		if (this._refreshHints && this._refreshHints.ignoreDiffsAfter) {
-			to = Math.min(newRows.length, Math.max(0, this._refreshHints.ignoreDiffsAfter));
-		}
 
 		for (let i = from, rl = rows.length; i < to; i++) {
 			if (i >= rl) {
@@ -325,10 +297,6 @@ class DataView {
 	}
 	_recalc(items) {
 		this._rowsById = null;
-
-		if (this._refreshHints.isFilterNarrowing !== this._prevRefreshHints.isFilterNarrowing || this._refreshHints.isFilterExpanding !== this._prevRefreshHints.isFilterExpanding) {
-			this._filterCache = [];
-		}
 
 		let filteredItems = this._getFilteredAndPagedItems(items);
 		this._totalRows = filteredItems.totalRows;
@@ -372,10 +340,6 @@ class DataView {
 		return rows;
 	}
 
-	_onGridRowCountChanged() {
-		this._grid.updateRowCount();
-	}
-
 	/**
 	 * Initialize the view with the grid. This is called by the grid
 	 * @param {Grid} grid
@@ -410,19 +374,6 @@ class DataView {
 	 */
 	destroy() {
 
-	}
-
-	/**
-	 * Add hints for speeding up refresh
-	 * @param {Object} hints
-	 * @param {boolean} hints.isFilterNarrowing
-	 * @param {boolean} hints.isFilterExpanding
-	 * @param {boolean} hints.isFilterUnchanged
-	 * @param {boolean} hints.ignoreDiffsBefore
-	 * @param {boolean} hints.ignoreDiffsAfter
-	 */
-	setRefreshHints(hints) {
-		this._refreshHints = hints;
 	}
 
 	/**
@@ -467,15 +418,14 @@ class DataView {
 	 */
 	setPagingOptions({ pageSize, pageNum }) {
 		if (pageSize !== undefined) {
-			this._pagesize = pageSize;
-			this._pagenum = this._pagesize ? Math.min(this._pagenum, Math.max(0, Math.ceil(this._totalRows / this._pagesize) - 1)) : 0;
+			this._pageSize = pageSize;
+
 		}
 
 		if (pageNum !== undefined) {
-			this._pagenum = Math.min(pageNum, Math.max(0, Math.ceil(this._totalRows / this._pagesize) - 1));
+			this._tempPageNum = pageNum;
 		}
 
-		this.onPagingInfoChanged.notify(this.getPagingInfo(), null, this);
 		this.refresh();
 	}
 
@@ -484,10 +434,10 @@ class DataView {
 	 * @returns {{pageSize: number, pageNum: number, totalRows: number, totalPages: number}}
 	 */
 	getPagingInfo() {
-		let totalPages = this._pagesize ? Math.max(1, Math.ceil(this._totalRows / this._pagesize)) : 1;
+		let totalPages = this._pageSize ? Math.max(1, Math.ceil(this._totalRows / this._pageSize)) : 1;
 		return {
-			pageSize: this._pagesize,
-			pageNum: this._pagenum,
+			pageSize: this._pageSize,
+			pageNum: this._pageNum,
 			totalRows: this._totalRows,
 			totalPages: totalPages
 		};
@@ -501,7 +451,6 @@ class DataView {
 	sort(compareFn, ascending) {
 		this._sortAsc = ascending;
 		this._sortComparer = compareFn;
-		this._fastSortField = null;
 		if (ascending === false) {
 			this._items.reverse();
 		}
@@ -520,8 +469,6 @@ class DataView {
 	reSort() {
 		if (this._sortComparer) {
 			this.sort(this._sortComparer, this._sortAsc);
-		} else if (this._fastSortField) {
-			this.fastSort(this._fastSortField, this._sortAsc);
 		}
 	}
 
@@ -831,16 +778,18 @@ class DataView {
 			totalRowsBefore = this._totalRows,
 			diff = this._recalc(this._items, this._filter); // pass as direct refs to avoid closure perf hit
 
+		if (this._tempPageNum) {
+			this._pageNum = this._pageSize ? Math.min(this._tempPageNum, Math.max(0, Math.ceil(this._totalRows / this._pageSize) - 1)) : 0;
+		}
+
 		// if the current page is no longer valid, go to last page and recalc
 		// we suffer a performance penalty here, but the main loop (recalc) remains highly optimized
-		if (this._pagesize && this._totalRows < this._pagenum * this._pagesize) {
-			this._pagenum = Math.max(0, Math.ceil(this._totalRows / this._pagesize) - 1);
+		if (this._pageSize && this._totalRows < this._pageNum * this._pageSize) {
+			this._pageNum = Math.max(0, Math.ceil(this._totalRows / this._pageSize) - 1);
 			diff = this._recalc(this._items, this._filter);
 		}
 
 		this._updated = null;
-		this._prevRefreshHints = this._refreshHints;
-		this._refreshHints = {};
 
 		if (totalRowsBefore !== this._totalRows) {
 			this.onPagingInfoChanged.notify(this.getPagingInfo(), null, this);
@@ -851,6 +800,7 @@ class DataView {
 		if (diff.length > 0) {
 			this.onRowsChanged.notify({rows: diff}, null, this);
 		}
+		this.onRefresh.notify(null, null, this);
 	}
 
 	/**

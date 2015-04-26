@@ -33,7 +33,7 @@ describe('DataView', function() {
 			});
 			expect(dv.getPagingInfo()).toEqual({ pageSize: 10, pageNum: 0, totalRows: 0, totalPages: 1 });
 		});
-		it('single page', function() {
+		it('single page', function(done) {
 			dv = new DataView();
 			dv.setItems([
 				{
@@ -47,9 +47,12 @@ describe('DataView', function() {
 				pageSize: 10,
 				pageNum: 1
 			});
-			expect(dv.getPagingInfo()).toEqual({ pageSize: 10, pageNum: 0, totalRows: 2, totalPages: 1 });
+			dv.onRefresh.subscribe(function() {
+				expect(dv.getPagingInfo()).toEqual({ pageSize: 10, pageNum: 0, totalRows: 2, totalPages: 1 });
+				done();
+			});
 		});
-		it('multiple pages', function() {
+		it('multiple pages', function(done) {
 			dv = new DataView();
 			var data = [];
 			for(var i = 0; i < 50; i++) {
@@ -63,7 +66,10 @@ describe('DataView', function() {
 				pageSize: 12,
 				pageNum: 2
 			});
-			expect(dv.getPagingInfo()).toEqual({ pageSize: 12, pageNum: 2, totalRows: 50, totalPages: 5 });
+			dv.onRefresh.subscribe(function() {
+				expect(dv.getPagingInfo()).toEqual({ pageSize: 12, pageNum: 2, totalRows: 50, totalPages: 5 });
+				done();
+			});
 		});
 	});
 	describe('setItems & getItems', function() {
@@ -99,7 +105,7 @@ describe('DataView', function() {
 		});
 	});
 	describe('setFilter', function() {
-		it('basic fn', function() {
+		it('basic fn', function(done) {
 			dv = new DataView();
 			var data = [
 				{
@@ -113,9 +119,12 @@ describe('DataView', function() {
 			dv.setFilter(function(item) {
 				return item.id === 1;
 			});
-			expect(dv.getFilteredItems()).toEqual([
-				{ id: 1 }
-			]);
+			dv.onRefresh.subscribe(function() {
+				expect(dv.getFilteredItems()).toEqual([
+					{ id: 1 }
+				]);
+				done();
+			});
 		});
 	});
 	describe('sort', function() {

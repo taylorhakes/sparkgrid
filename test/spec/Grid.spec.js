@@ -418,11 +418,13 @@ import { q } from './util';
 				beforeEach(function() {
 					el = newEl();
 					document.body.appendChild(el);
+					jas.clock().install();
 				});
 				afterEach(function() {
 					if (el.parentNode) {
 						el.parentNode.removeChild(el);
 					}
+					jas.clock().uninstall();
 				});
 				it('basic data', function() {
 					el.style.height = '200px';
@@ -433,7 +435,7 @@ import { q } from './util';
 						data.push({
 							id: 'id' + i,
 							name: 'name' + i
-						})
+						});
 					}
 
 					var grid = new Grid({
@@ -450,6 +452,7 @@ import { q } from './util';
 						expect(el.children[0].innerHTML).toBe('id' + index);
 						expect(el.children[1].innerHTML).toBe('name' + index);
 					});
+					jas.clock().tick(1);
 					expect(rowEls.length).toBe(15);
 					expect(grid.getVisibleRange()).toEqual(jas.objectContaining({
 						top: 0,

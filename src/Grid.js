@@ -1,5 +1,5 @@
 import { extend, createEl, delegate, getPx, setPx,
-	slice, closest, toggleClass, removeEl } from './util/misc';
+	slice, closest, toggleClass, removeEl, throttle } from './util/misc';
 import Range from './selection/Range';
 import { Event }  from './util/events';
 import EditorLock from './editing/EditorLock';
@@ -202,6 +202,9 @@ class Grid {
 		this._zombieRowNodeFromLastMouseWheelEvent = null;  // node that was hidden instead of getting deleted
 
 		this._data = options.data || [];
+
+		// Throttle the render function so it can be called multiple times
+		this.render = throttle(this.render);
 
 		this._updateColumnCache(this._options.columns);
 		this._createGrid();
@@ -574,11 +577,10 @@ class Grid {
 				lastResizable = i;
 			}
 		});
+
 		if (firstResizable === undefined) {
 			return;
 		}
-
-
 
 		columnElements.forEach((el, i) => {
 			if (i < firstResizable || (this._options.forceFitColumns && i >= lastResizable)) {
@@ -665,18 +667,24 @@ class Grid {
 				document.body.removeEventListener('mouseup', handleMouseUp);
 				document.body.removeEventListener('mousemove', handleDrag);
 				e.target.parentNode.classList.remove('spark-header-column-active');
+
+				let resizedColumns = [];
 				for (j = 0; j < columnElements.length; j++) {
 					c = this._columns[j];
 					let newWidth = columnElements[j].clientWidth;
 
-					if (c.previousWidth !== newWidth && c.rerenderOnResize) {
-						this.invalidateAllRows();
+					if (c.previousWidth !== newWidth) {
+						resizedColumns.push(c);
+						if (c.rerenderOnResize) {
+							this.invalidateAllRows();
+						}
+
 					}
 				}
 
 				this._updateCanvasWidth(true);
 				this.render();
-				this._trigger('onColumnsResized', {});
+				this._trigger('onColumnsResized', resizedColumns);
 			};
 
 			let handleMousedown = (e) => {

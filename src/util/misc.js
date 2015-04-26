@@ -211,40 +211,26 @@ function toggleClass(el, className) {
 	}
 }
 
-function debounce(fn, wait, maxWait) {
+let throttleFn = window.requestAnimationFrame || window.setImmediate || ((fn) => window.setTimeout(fn, 0));
+function throttle(fn) {
 	var timer = null,
-		maxTimer = null,
 		lastThis = null,
 		lastArgs = null;
+
 	return function() {
 		lastThis = this;
 		lastArgs = arguments;
 
-		if (maxWait && !maxTimer) {
-			maxTimer = setTimeout(executeFn, maxWait);
+		if (timer) {
+			return;
 		}
 
-		clearTimer();
-		timer = setTimeout(executeFn, wait);
+		timer = throttleFn(executeFn);
 
 	};
 	function executeFn() {
-		clearTimer();
-
-		if (maxTimer) {
-			clearTimeout(maxTimer);
-			maxTimer = null;
-		}
-
-
+		timer = null;
 		fn.apply(lastThis, lastArgs);
-	}
-
-	function clearTimer() {
-		if (timer) {
-			clearTimeout(timer);
-			timer = null;
-		}
 	}
 }
 
@@ -265,5 +251,5 @@ export {
 	extend,
 	deepExtend,
 	query,
-	debounce
+	throttle
 };
