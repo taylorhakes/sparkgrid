@@ -2271,7 +2271,7 @@ class Grid {
 	 * @method destroy
 	 */
 	destroy() {
-		this.getEditorLock()._cancelCurrentEdit();
+		this.getEditorLock().cancelCurrentEdit();
 
 		this._trigger('onBeforeDestroy', {});
 
@@ -2280,15 +2280,12 @@ class Grid {
 			this.unregisterPlugin(this._plugins[i]);
 		}
 
-		if (this._options.enableColumnReorder) {
-			this._headers.filter(':ui-sortable').sortable('destroy');
-		}
-
 		this._unbindAncestorScrollEvents();
 		this._removeCssRules();
 
 		//canvas.unbind('draginit dragstart dragend drag');
-		this._container.empty().classList.remove(this._uid, 'sparkgrid');
+		this._container.innerHTML = '';
+		this._container.classList.remove(this._uid, 'sparkgrid');
 	}
 
 	/**

@@ -1,5 +1,5 @@
 import Grid from 'spark/Grid';
-import { q } from './util';
+import { q, ThrottleMock } from './util';
 
 (function(jas, describe, it, expect, beforeEach) {
 	function newEl() {
@@ -42,25 +42,30 @@ import { q } from './util';
 			forceSyncScrolling: true,
 			addNewRowCssClass: "old"
 		};
+		afterEach(function() {
+			if (this.grid) {
+				this.grid.destroy();
+			}
+		});
 
 		describe('constructor', function() {
 			it('minimal options', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: []
 				});
-				expect(grid instanceof Grid).toBe(true);
+				expect(this.grid instanceof Grid).toBe(true);
 			});
 			it('columns', function() {
 				var columns = [
 					{ id: "title", name: "Title", field: "title" },
 					{ id: "duration", name: "Duration", field: "duration" }
 				];
-				var grid = new Grid({
+				this.grid =new Grid({
 					el: newEl(),
 					columns: columns
 				});
-				var newColumns = grid.getColumns();
+				var newColumns = this.grid.getColumns();
 				newColumns.forEach(function(c, i) {
 					expect(c).toEqual(jas.objectContaining(columns[i]));
 				});
@@ -68,11 +73,11 @@ import { q } from './util';
 			});
 			it('options', function() {
 				var columns = [];
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: columns
 				});
-				expect(grid.getOptions()).toEqual(jas.objectContaining({
+				expect(this.grid.getOptions()).toEqual(jas.objectContaining({
 					explicitInitialization: false,
 					rowHeight: 25,
 					defaultColumnWidth: 80,
@@ -107,7 +112,7 @@ import { q } from './util';
 			});
 			it('options changed', function() {
 				var columns = [];
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: columns,
 					explicitInitialization: true,
@@ -141,42 +146,42 @@ import { q } from './util';
 					forceSyncScrolling: true,
 					addNewRowCssClass: "old"
 				});
-				expect(grid.getOptions()).toEqual(jas.objectContaining(changedOptions));
+				expect(this.grid.getOptions()).toEqual(jas.objectContaining(changedOptions));
 			});
 			it('error on empty options', function() {
 				expect(function() {
-					new Grid();
+					this.grid = new Grid();
 				}).toThrow();
 			});
 			it('error on no container', function() {
 				expect(function() {
-					new Grid({});
+					this.grid = new Grid({});
 				}).toThrow();
 			});
 			it('error on no columns', function() {
 				expect(function() {
-					new Grid({
+					this.grid = new Grid({
 						el: newEl()
 					});
 				}).toThrow();
 			});
 			it('error on init twice', function() {
 				expect(function() {
-					var grid = new Grid({
+					this.grid = new Grid({
 						el: newEl(),
 						columns: []
 					});
-					grid.init();
+					this.grid.init();
 				}).toThrow();
 			});
 			it('no error on explicit init', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: [],
 					explicitInitialization: true
 				});
-				grid.init();
-				expect(grid instanceof Grid).toBe(true);
+				this.grid.init();
+				expect(this.grid instanceof Grid).toBe(true);
 			});
 		});
 		describe('plugins', function() {
@@ -185,42 +190,42 @@ import { q } from './util';
 				fakePlugin = {
 					init: jas.createSpy('init'),
 					destroy: jas.createSpy('destroy')
-				}
+				};
 			});
 			it('registerPlugin', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: []
 				});
-				grid.registerPlugin(fakePlugin);
-				expect(fakePlugin.init).toHaveBeenCalledWith(grid);
+				this.grid.registerPlugin(fakePlugin);
+				expect(fakePlugin.init).toHaveBeenCalledWith(this.grid);
 			});
 			it('unregisterPlugin', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: []
 				});
-				grid.registerPlugin(fakePlugin);
-				grid.unregisterPlugin(fakePlugin);
+				this.grid.registerPlugin(fakePlugin);
+				this.grid.unregisterPlugin(fakePlugin);
 				expect(fakePlugin.destroy).toHaveBeenCalled();
 			});
 			it('unregisterPlugin no destroy fn', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: []
 				});
 				delete fakePlugin.destroy;
-				grid.registerPlugin(fakePlugin);
-				grid.unregisterPlugin(fakePlugin);
+				this.grid.registerPlugin(fakePlugin);
+				this.grid.unregisterPlugin(fakePlugin);
 				expect(typeof fakePlugin).toBe('object');
 			});
 			it('unregisterPlugin not registered', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: []
 				});
 				delete fakePlugin.destroy;
-				grid.unregisterPlugin(fakePlugin);
+				this.grid.unregisterPlugin(fakePlugin);
 				expect(typeof fakePlugin).toBe('object');
 			});
 		});
@@ -230,22 +235,22 @@ import { q } from './util';
 				columns = [
 					{ id: "title", name: "Title", field: "title" },
 					{ id: "duration", name: "Duration", field: "duration" }
-				]
+				];
 			});
 			describe('setColumns & getColumns', function() {
 				it('empty columns', function() {
-					var grid = new Grid({
+					this.grid = new Grid({
 						el: newEl(),
 						columns: []
 					});
-					grid.setColumns(columns);
-					var newColumns = grid.getColumns();
+					this.grid.setColumns(columns);
+					var newColumns = this.grid.getColumns();
 					newColumns.forEach(function(c, i) {
-						expect(c).toEqual(jas.objectContaining(newColumns[i]));
+						expect(c).toEqual(jas.objectContaining(columns[i]));
 					});
 				});
 				it('multiple columns', function() {
-					var grid = new Grid({
+					this.grid = new Grid({
 						el: newEl(),
 						columns: [
 							{ id: 'test', name: 'Test', field: 'test'},
@@ -253,67 +258,66 @@ import { q } from './util';
 							{ id: 'hello', name: 'Hello', field: 'hello'}
 						]
 					});
-					grid.setColumns(columns);
-					var newColumns = grid.getColumns();
+					this.grid.setColumns(columns);
+					var newColumns = this.grid.getColumns();
 					newColumns.forEach(function(c, i) {
-						expect(c).toEqual(jas.objectContaining(newColumns[i]));
+						expect(c).toEqual(jas.objectContaining(columns[i]));
 					});
 				});
 			});
 			describe('getColumnIndex', function() {
 				it('empty', function() {
-					var grid = new Grid({
+					this.grid = new Grid({
 						el: newEl(),
 						columns: []
 					});
-					expect(grid.getColumnIndex('id')).toBe(undefined);
+					expect(this.grid.getColumnIndex('id')).toBe(undefined);
 				});
 				it('multiple', function() {
-					var grid = new Grid({
+					this.grid = new Grid({
 						el: newEl(),
 						columns: columns
 					});
-					expect(grid.getColumnIndex('duration')).toBe(1);
+					expect(this.grid.getColumnIndex('duration')).toBe(1);
 				});
 			});
 			describe('setSortColumns', function() {
 				var grid;
 				beforeEach(function() {
-					grid = new Grid({
+					this.grid = new Grid({
 						el: newEl(),
 						columns: columns
-					})
+					});
 				});
 
 				it('single col', function() {
 					var sortCols = [{ columnId: 'duration' }];
-					grid.setSortColumns(sortCols);
-					expect(grid.getSortColumns()).toBe(sortCols);
+					this.grid.setSortColumns(sortCols);
+					expect(this.grid.getSortColumns()).toBe(sortCols);
 				});
 				it('multiple cols', function() {
 					var sortCols = [{ columnId: 'duration' }, { columnId: 'title'}];
-					grid.setSortColumns(sortCols);
-					expect(grid.getSortColumns()).toBe(sortCols);
+					this.grid.setSortColumns(sortCols);
+					expect(this.grid.getSortColumns()).toBe(sortCols);
 				});
 				it('multiple cols sortAsc', function() {
 					var sortCols = [{ columnId: 'duration', sortAsc: false }, { columnId: 'title'}];
-					grid.setSortColumns(sortCols);
-					expect(grid.getSortColumns()).toBe(sortCols);
+					this.grid.setSortColumns(sortCols);
+					expect(this.grid.getSortColumns()).toBe(sortCols);
 				});
 			});
 		});
 		describe('options', function() {
-			var grid;
 			beforeEach(function() {
-				grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: []
-				})
+				});
 			});
 
 			it('setOptions', function() {
-				grid.setOptions(changedOptions);
-				expect(grid.getOptions()).toEqual(jas.objectContaining(changedOptions));
+				this.grid.setOptions(changedOptions);
+				expect(this.grid.getOptions()).toEqual(jas.objectContaining(changedOptions));
 			});
 		});
 		describe('data', function() {
@@ -332,45 +336,45 @@ import { q } from './util';
 				];
 			});
 			it('default empty', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: []
 				});
-				expect(grid.getData()).toEqual([]);
+				expect(this.grid.getData()).toEqual([]);
 			});
 			it('simple data', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: [],
 					data: data
 				});
-				expect(grid.getData()).toEqual(data);
+				expect(this.grid.getData()).toEqual(data);
 			});
 			it('data length', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 						el: newEl(),
 						columns: [],
 						data: data
 					});
-				expect(grid.getDataLength()).toEqual(3);
+				expect(this.grid.getDataLength()).toEqual(3);
 			});
 			it('getDataItem', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: [],
 					data: data
 				});
-				expect(grid.getDataItem(1)).toEqual({
+				expect(this.grid.getDataItem(1)).toEqual({
 					id: 2
 				});
 			});
 			it('setData', function() {
-				var grid = new Grid({
+				this.grid = new Grid({
 					el: newEl(),
 					columns: [],
 					data: data
-				}),
-				newData = [
+				});
+				let newData = [
 					{
 						id: 10
 					},
@@ -378,21 +382,21 @@ import { q } from './util';
 						id: 8
 					}
 				];
-				grid.setData(newData);
-				expect(grid.getDataItem(1)).toEqual({
+				this.grid.setData(newData);
+				expect(this.grid.getDataItem(1)).toEqual({
 					id: 8
 				});
-				expect(grid.getData()).toEqual(newData);
+				expect(this.grid.getData()).toEqual(newData);
 			});
 		});
 		describe('getEl', function() {
 			it('returns correct element', function() {
-				var el = newEl(),
-				grid = new Grid({
+				var el = newEl();
+				this.grid = new Grid({
 					el: el,
 					columns: []
 				});
-				expect(grid.getEl()).toBe(el);
+				expect(this.grid.getEl()).toBe(el);
 			});
 		});
 		describe('getUid', function() {
@@ -414,19 +418,19 @@ import { q } from './util';
 		});
 		describe('functional tests', function() {
 			describe('check data rendered correctly', function() {
-				var el;
 				beforeEach(function() {
-					el = newEl();
-					document.body.appendChild(el);
-					jas.clock().install();
+					this.el = newEl();
+					document.body.appendChild(this.el);
+					ThrottleMock.install();
 				});
 				afterEach(function() {
-					if (el.parentNode) {
-						el.parentNode.removeChild(el);
+					if (this.el.parentNode) {
+						this.el.parentNode.removeChild(this.el);
 					}
-					jas.clock().uninstall();
+					ThrottleMock.uninstall();
 				});
 				it('basic data', function() {
+					let el = this.el;
 					el.style.height = '200px';
 
 					var data = [];
@@ -438,7 +442,7 @@ import { q } from './util';
 						});
 					}
 
-					var grid = new Grid({
+					this.grid = new Grid({
 						el: el,
 						columns: [
 							{ id: 'id', name: 'Id', field: 'id'},
@@ -446,15 +450,14 @@ import { q } from './util';
 						],
 						data: data
 					});
-
+					ThrottleMock.tick();
 					var rowEls = q('.spark-canvas .spark-row');
 					rowEls.forEach(function(el, index) {
 						expect(el.children[0].innerHTML).toBe('id' + index);
 						expect(el.children[1].innerHTML).toBe('name' + index);
 					});
-					jas.clock().tick(1);
 					expect(rowEls.length).toBe(15);
-					expect(grid.getVisibleRange()).toEqual(jas.objectContaining({
+					expect(this.grid.getVisibleRange()).toEqual(jas.objectContaining({
 						top: 0,
 						bottom: 7
 					}));

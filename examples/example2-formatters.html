@@ -39,7 +39,7 @@
 <script src="config.js"></script>
 <script>
     var grid, data = [];
-    require(['./Grid', './formatters', 'plugins/MovableColumns'], function (SparkGrid, formatters, MovableColumns) {
+    require(['./Grid', './util/formatters', 'plugins/ReorderColumns'], function (SparkGrid, formatters, MovableColumns) {
         function formatter(row, cell, value, columnDef, dataContext) {
             return value;
         }

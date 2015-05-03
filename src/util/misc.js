@@ -211,7 +211,7 @@ function toggleClass(el, className) {
 	}
 }
 
-let throttleFn = window.requestAnimationFrame || window.setImmediate || ((fn) => window.setTimeout(fn, 0));
+
 function throttle(fn) {
 	var timer = null,
 		lastThis = null,
@@ -225,7 +225,7 @@ function throttle(fn) {
 			return;
 		}
 
-		timer = throttleFn(executeFn);
+		timer = throttle._throttleFn(executeFn);
 
 	};
 	function executeFn() {
@@ -233,6 +233,9 @@ function throttle(fn) {
 		fn.apply(lastThis, lastArgs);
 	}
 }
+
+// For testing
+throttle._throttleFn = window.requestAnimationFrame.bind(window) || window.setImmediate.bind(window) || ((fn) => window.setTimeout(fn, 0));
 
 
 export {

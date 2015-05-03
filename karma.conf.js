@@ -17,6 +17,7 @@ module.exports = function(config) {
     files: [
 		'css/spark.css',
 		'css/themes/material-theme.css',
+        'test/spec/mockRequestAnimationFrame.js',
       'test/**/*.spec.js'
     ],
 
