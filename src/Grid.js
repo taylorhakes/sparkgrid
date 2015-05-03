@@ -56,6 +56,7 @@ let defaults = {
 		selectable: true
 	};
 
+// Example default formatter
 function defaultFormatter(row, cell, value, columnDef, dataContext) {
 	if (value == null) {
 		return '';
@@ -2846,14 +2847,7 @@ class Grid {
 	 * @param {number} viewportLeft
 	 * @returns {{top: number, bottom: number, leftPx: number, rightPx: number}}
 	 */
-	getVisibleRange(viewportTop, viewportLeft) {
-		if (viewportTop == null) {
-			viewportTop = this._scrollTop;
-		}
-		if (viewportLeft == null) {
-			viewportLeft = this._scrollLeft;
-		}
-
+	getVisibleRange(viewportTop = this._scrollTop, viewportLeft  = this._scrollLeft) {
 		return {
 			top: this._getRowFromPosition(viewportTop),
 			bottom: this._getRowFromPosition(viewportTop + this._viewportH) + 1,
@@ -3206,7 +3200,7 @@ class Grid {
 	 * @returns {null|HTMLELement}
 	 */
 	getActiveCellNode() {
-		returnthis._activeCellNode ;
+		return this._activeCellNode;
 	}
 
 	/**
