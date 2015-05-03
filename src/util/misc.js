@@ -235,7 +235,8 @@ function throttle(fn) {
 }
 
 // For testing
-throttle._throttleFn = window.requestAnimationFrame.bind(window) || window.setImmediate.bind(window) || ((fn) => window.setTimeout(fn, 0));
+throttle._throttleFn = (window.requestAnimationFrame && window.requestAnimationFrame.bind(window)) ||
+	(window.setImmediate && window.setImmediate.bind(window)) || ((fn) => window.setTimeout(fn, 0));
 
 
 export {
