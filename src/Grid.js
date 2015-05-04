@@ -855,7 +855,7 @@ class Grid {
 			x += w;
 		}
 	}
-	_handleSelectedRangesChanged({ data: ranges }) {
+	_handleSelectedRangesChanged({ data: ranges, e }) {
 		this._selectedRows = [];
 		let hash = {};
 		for (let i = 0; i < ranges.length; i++) {
@@ -874,7 +874,7 @@ class Grid {
 
 		this.setCellCssStyles(this._options.selectedCellCssClass, hash);
 
-		this._trigger('onSelectedRowsChanged', {rows: this.getSelectedRows()}, info.e);
+		this._trigger('onSelectedRowsChanged', {rows: this.getSelectedRows()}, e);
 	}
 	_trigger(evt, args, e) {
 		args = args || {};
