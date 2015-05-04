@@ -855,10 +855,9 @@ class Grid {
 			x += w;
 		}
 	}
-	_handleSelectedRangesChanged(info) {
+	_handleSelectedRangesChanged({ data: ranges }) {
 		this._selectedRows = [];
-		let hash = {},
-			ranges = info.data;
+		let hash = {};
 		for (let i = 0; i < ranges.length; i++) {
 			for (let j = ranges[i].fromRow; j <= ranges[i].toRow; j++) {
 				if (!hash[j]) {  // prevent duplicates
@@ -3455,7 +3454,5 @@ class Grid {
  * Singleton editor lock for allowing only one cell on any grid to be editable
  */
 Grid.GlobalEditorLock = GlobalEditorLock;
-
-
 
 export default Grid;
