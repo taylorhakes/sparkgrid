@@ -1,4 +1,4 @@
-# SparkGrid
+# SparkGrid [![Build Status](https://travis-ci.org/taylorhakes/sparkgrid.png?branch=master)](https://travis-ci.org/taylorhakes/sparkgrid)
 
 SparkGrid is based on [SlickGrid](https://github.com/mleibman/SlickGrid)
 
