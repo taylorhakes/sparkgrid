@@ -458,6 +458,12 @@ import EditorLock from './mocks/EditorLock';
 				expect(this.grid.getTopPanel().parentNode.style.display).toBe('');
 			});
 		});
+		describe('header row', function() {
+			it('hidden by default', function() {
+				gridInit(this);
+				expect(this.grid.getHeaderRow().parentNode.style.display).toBe('none');
+			});
+		});
 		describe('getUid', function() {
 			it('unique', function() {
 				var grid1 = new Grid({
