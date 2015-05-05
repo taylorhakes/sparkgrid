@@ -442,12 +442,12 @@ import EditorLock from './mocks/EditorLock';
 			});
 			it('top panel visibility', function() {
 				gridInit(this);
-				expect(this.grid.getTopPanel().style.display).toBe('none');
+				expect(this.grid.getTopPanel().parentNode.style.display).toBe('none');
 			});
 			it('top panel change visibility', function() {
 				gridInit(this);
 				this.grid.setTopPanelVisibility(true);
-				expect(this.grid.getTopPanel().style.display).toBe('');
+				expect(this.grid.getTopPanel().parentNode.style.display).toBe('');
 			});
 			it('top panel change visibility change options', function() {
 				this.grid = new Grid({
@@ -455,7 +455,7 @@ import EditorLock from './mocks/EditorLock';
 					columns: [],
 					showTopPanel: true
 				});
-				expect(this.grid.getTopPanel().style.display).toBe('');
+				expect(this.grid.getTopPanel().parentNode.style.display).toBe('');
 			});
 		});
 		describe('getUid', function() {

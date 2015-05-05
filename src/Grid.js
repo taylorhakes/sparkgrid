@@ -2625,10 +2625,10 @@ class Grid {
 		if (this._options.showHeaderRow !== visible) {
 			this._options.showHeaderRow = visible;
 			if (visible) {
-				this._topPanelScroller.style.display = '';
+				this._headerRowScroller.style.display = '';
 				this.resizeCanvas();
 			} else {
-				this._topPanelScroller.style.display = 'none';
+				this._headerRowScroller.style.display = 'none';
 				this.resizeCanvas();
 			}
 		}
