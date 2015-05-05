@@ -360,10 +360,10 @@ class DataView {
 		this.onPagingInfoChanged.subscribe(function (info) {
 			var pagingInfo = info.data;
 			var isLastPage = pagingInfo.pageNum === pagingInfo.totalPages - 1;
-			var enableAddRow = isLastPage || pagingInfo.pageSize == 0;
+			var enableAddRow = isLastPage || pagingInfo.pageSize === 0;
 			var options = grid.getOptions();
 
-			if (options.enableAddRow != enableAddRow) {
+			if (options.enableAddRow !== enableAddRow) {
 				grid.setOptions({enableAddRow: enableAddRow});
 			}
 		});

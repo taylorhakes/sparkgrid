@@ -26,13 +26,6 @@ module.exports = function (config) {
 
 		browserify: {
 			debug: true,
-			plugin: [ [ 'remapify', [
-				{
-					cwd: './src',
-					src: '**/*.js', // glob for the files to remap
-					expose: 'spark' // this will expose `__dirname + /client/views/home.js` as `views/home.js`
-				}
-			] ] ],
 			transform: [ 'babelify' ],
 			extensions: [ '.js' ]
 		},
