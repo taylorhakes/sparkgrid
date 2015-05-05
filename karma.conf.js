@@ -26,7 +26,11 @@ module.exports = function (config) {
 
 		browserify: {
 			debug: true,
-			transform: [ 'babelify' ],
+			transform: [ 'babelify', [ 'aliasify', {
+				aliases: {
+					spark: './src'
+				}
+			} ] ],
 			extensions: [ '.js' ]
 		},
 
