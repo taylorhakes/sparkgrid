@@ -26,6 +26,7 @@ function extend(obj /* ...objects */) {
 			}
 		}
 	}
+
 	return obj;
 }
 
@@ -39,6 +40,7 @@ function deepExtend(obj /* ...objects */) {
 						if (typeof obj[prop] !== 'object' || !obj[prop]) {
 							obj[prop] = {};
 						}
+
 						deepExtend(obj[prop], source[prop]);
 					} else {
 						obj[prop] = source[prop];
@@ -47,6 +49,7 @@ function deepExtend(obj /* ...objects */) {
 			}
 		}
 	}
+
 	return obj;
 }
 
@@ -66,9 +69,11 @@ function closest(el, selector, lastEl) {
 		if (el && (el === selector || (typeof selector === 'string' && el[matchesSelector] && el[matchesSelector](selector)))) {
 			return el;
 		}
+
 		if (!el || el === lastEl || (typeof lastEl === 'string' && el[matchesSelector](lastEl))) {
 			return null;
 		}
+
 		el = el.parentNode;
 	}
 }
@@ -106,6 +111,7 @@ function createEl(options) {
 	if (options.style) {
 		setStyle(el, options.style);
 	}
+
 	delete options.style;
 	delete options.tag;
 
@@ -134,7 +140,7 @@ function removeEl(els) {
 	}
 
 	let index = els.length;
-	while(index--) {
+	while (index--) {
 		let el = els[index];
 		if (el && el.parentNode) {
 			el.parentNode.removeChild(el);
@@ -148,6 +154,7 @@ function removeEl(els) {
 function slice(item, start, end) {
 	return Array.prototype.slice.call(item, start, end);
 }
+
 //var slice = Function.prototype.call.bind(Array.prototype.slice);
 
 /**
@@ -211,7 +218,6 @@ function toggleClass(el, className) {
 	}
 }
 
-
 function throttle(fn) {
 	var timer = null,
 		lastThis = null,
@@ -237,7 +243,6 @@ function throttle(fn) {
 // For testing
 throttle._throttleFn = (window.requestAnimationFrame && window.requestAnimationFrame.bind(window)) ||
 	(window.setImmediate && window.setImmediate.bind(window)) || ((fn) => window.setTimeout(fn, 0));
-
 
 export {
 	slice,

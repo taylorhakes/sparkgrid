@@ -45,13 +45,14 @@ class ReorderColumns {
 		for (let i = 0; i < len; i++) {
 			ids.push(parent.children[i].id);
 		}
+
 		for (let i = 0; i < ids.length; i++) {
 			reorderedColumns.push(columns[this._grid.getColumnIndex(ids[i].replace(uid, ''))]);
 		}
+
 		this._grid.setColumns(reorderedColumns);
 		this.onColumnsReordered.notify();
 	}
-
 
 	destroy() {
 		this._grid.onHeadersRendered.unsubscribe(this._boundMovableInit);

@@ -79,11 +79,9 @@ class HeaderButtons {
 		grid.setColumns(grid.getColumns());
 	}
 
-
 	destroy() {
 		this._handler.unsubscribeAll();
 	}
-
 
 	_handleHeaderCellRendered(info) {
 		let column = info.data.column;
@@ -131,7 +129,6 @@ class HeaderButtons {
 		}
 	}
 
-
 	_handleBeforeHeaderCellDestroy(info) {
 		var column = info.data.column;
 
@@ -139,12 +136,11 @@ class HeaderButtons {
 			// Removing buttons via jQuery will also clean up any event handlers and data.
 			// NOTE: If you attach event handlers directly or using a different framework,
 			//       you must also clean them up here to avoid memory leaks.
-			slice(info.data.node.querySelectorAll('.' + this._options.buttonCssClass)).forEach(function (btn) {
+			slice(info.data.node.querySelectorAll('.' + this._options.buttonCssClass)).forEach(function(btn) {
 				removeEl(btn);
 			});
 		}
 	}
-
 
 	_handleButtonClick(info) {
 		let e = info.event,

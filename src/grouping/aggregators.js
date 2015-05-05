@@ -22,6 +22,7 @@ class Avg {
 		if (!groupTotals.avg) {
 			groupTotals.avg = {};
 		}
+
 		if (this.nonNullCount_ !== 0) {
 			groupTotals.avg[this.field_] = this.sum_ / this.nonNullCount_;
 		}
@@ -50,6 +51,7 @@ class Min {
 		if (!groupTotals.min) {
 			groupTotals.min = {};
 		}
+
 		groupTotals.min[this.field_] = this.min_;
 	}
 }
@@ -76,6 +78,7 @@ class Max {
 		if (!groupTotals.max) {
 			groupTotals.max = {};
 		}
+
 		groupTotals.max[this.field_] = this.max_;
 	}
 }
@@ -100,6 +103,7 @@ class Sum {
 		if (!groupTotals.sum) {
 			groupTotals.sum = {};
 		}
+
 		groupTotals.sum[this.field_] = this.sum_;
 	}
 }

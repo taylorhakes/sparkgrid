@@ -114,6 +114,7 @@ class CellSelectionModel {
 
 			let dRow = last.toRow - last.fromRow,
 				dCell = last.toCell - last.fromCell,
+
 			// walking direction
 				dirRow = active.row === last.fromRow ? 1 : -1,
 				dirCell = active.cell === last.fromCell ? 1 : -1;
@@ -140,7 +141,6 @@ class CellSelectionModel {
 			else {
 				ranges.push(last);
 			}
-
 
 			this.setSelectedRanges(ranges);
 

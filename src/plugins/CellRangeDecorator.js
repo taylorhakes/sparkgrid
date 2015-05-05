@@ -24,6 +24,7 @@ class CellRangeDecorator {
 		this._el = null;
 		this._options = deepExtend({}, defaults, options);
 	}
+
 	init(grid) {
 		this._grid = grid;
 	}

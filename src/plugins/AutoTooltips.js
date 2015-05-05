@@ -40,11 +40,13 @@ class AutoTooltips {
 					} else {
 						text = '';
 					}
+
 					node.title = text;
 				}
 			};
 			this._grid.onMouseEnter.subscribe(this._boundHandleMouseEnter);
 		}
+
 		if (this._options.enableForHeaderCells) {
 			this._boundHandleHeaderMouseEnter = (info) => {
 				let e = info.e, data = info.data,
@@ -65,6 +67,7 @@ class AutoTooltips {
 		if (this._options.enableForCells) {
 			this._grid.onMouseEnter.unsubscribe(this._boundHandleMouseEnter);
 		}
+
 		if (this._options.enableForHeaderCells) {
 			this._grid.onHeaderMouseEnter.unsubscribe(this._boundHandleHeaderMouseEnter());
 		}

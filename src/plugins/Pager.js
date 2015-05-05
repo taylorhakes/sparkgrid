@@ -117,7 +117,7 @@ class Pager {
 			tag: 'span',
 			className: 'spark-icon-settings'
 		});
-		node.addEventListener('click', function () {
+		node.addEventListener('click', function() {
 			toggle(settings.children[0]);
 		});
 		settings.appendChild(node);
@@ -127,7 +127,7 @@ class Pager {
 			['spark-icon-prev-page', this._boundGotoPrev],
 			['spark-icon-next-page', this._boundGotoNext],
 			['spark-icon-last-page', this._boundGotoLast]
-		].forEach(function (item) {
+		].forEach(function(item) {
 				node = createEl({
 					tag: 'span',
 					className: item[0]
@@ -140,7 +140,7 @@ class Pager {
 			tag: 'div',
 			className: 'spark-pager'
 		});
-		slice(this._container.children).forEach(function (c) {
+		slice(this._container.children).forEach(function(c) {
 			wrapper.appendChild(c);
 		});
 		this._container.appendChild(wrapper);
@@ -149,26 +149,29 @@ class Pager {
 	updatePager(pagingInfo) {
 		let state = this.getNavState();
 
-		query('.spark-pager-nav span', this._container).forEach(function (span) {
+		query('.spark-pager-nav span', this._container).forEach(function(span) {
 			span.classList.remove('spark-disabled');
 		});
 		if (!state.canGotoFirst) {
-			query('.spark-icon-first-page', this._container).forEach(function (icon) {
+			query('.spark-icon-first-page', this._container).forEach(function(icon) {
 				icon.classList.add('spark-disabled');
 			});
 		}
+
 		if (!state.canGotoLast) {
-			query('.spark-icon-last-page', this._container).forEach(function (icon) {
+			query('.spark-icon-last-page', this._container).forEach(function(icon) {
 				icon.classList.add('spark-disabled');
 			});
 		}
+
 		if (!state.canGotoNext) {
-			query('.spark-icon-next-page', this._container).forEach(function (icon) {
+			query('.spark-icon-next-page', this._container).forEach(function(icon) {
 				icon.classList.add('spark-disabled');
 			});
 		}
+
 		if (!state.canGotoPrev) {
-			query('.spark-icon-prev-page', this._container).forEach(function (icon) {
+			query('.spark-icon-prev-page', this._container).forEach(function(icon) {
 				icon.classList.add('spark-disabled');
 			});
 		}
@@ -181,6 +184,7 @@ class Pager {
 			} else {
 				this._status.textContent = 'Showing all ' + totalRowsCount + ' rows';
 			}
+
 			this._status.textContent = 'Showing all ' + pagingInfo.totalRows + ' rows';
 		} else {
 			this._status.textContent = 'Showing page ' + (pagingInfo.pageNum + 1) + ' of ' + pagingInfo.totalPages;

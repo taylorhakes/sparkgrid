@@ -16,6 +16,7 @@ class RowSelectionModel {
 
 		this.onSelectedRangesChanged = new Event();
 	}
+
 	_handleActiveCellChange(info) {
 		let data = info.data;
 		if (this._options.selectActiveRow && data.row != null) {
@@ -76,7 +77,7 @@ class RowSelectionModel {
 			selection.push(cell.row);
 			this._grid.setActiveCell(cell.row, cell.cell);
 		} else if (idx !== -1 && (e.ctrlKey || e.metaKey)) {
-			selection = selection.filter(function (o, i) {
+			selection = selection.filter(function(o, i) {
 				return (o !== cell.row);
 			});
 			this._grid.setActiveCell(cell.row, cell.cell);
@@ -90,6 +91,7 @@ class RowSelectionModel {
 					selection.push(i);
 				}
 			}
+
 			selection.push(last);
 			this._grid.setActiveCell(cell.row, cell.cell);
 		}
@@ -100,6 +102,7 @@ class RowSelectionModel {
 
 		return true;
 	}
+
 	_wrapHandler(handler) {
 		let me = this;
 		return function() {
@@ -118,6 +121,7 @@ class RowSelectionModel {
 				rows.push(j);
 			}
 		}
+
 		return rows;
 	}
 
@@ -127,16 +131,20 @@ class RowSelectionModel {
 		for (let i = 0; i < rows.length; i++) {
 			ranges.push(new Range(rows[i], 0, rows[i], lastCell));
 		}
+
 		return ranges;
 	}
+
 	_getRowsRange(from, to) {
 		let i, rows = [];
 		for (i = from; i <= to; i++) {
 			rows.push(i);
 		}
+
 		for (i = to; i < from; i++) {
 			rows.push(i);
 		}
+
 		return rows;
 	}
 

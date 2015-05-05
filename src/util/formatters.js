@@ -3,6 +3,7 @@ function PercentComplete(row, cell, value, columnDef, dataContext) {
 	if (value == null) {
 		return '';
 	}
+
 	if (value < 50) {
 		className = 'spark-bad';
 	} else {
@@ -34,6 +35,7 @@ function YesNo(row, cell, value, columnDef, dataContext) {
 	if (value == null) {
 		return '';
 	}
+
 	return value ? 'Yes' : 'No';
 }
 

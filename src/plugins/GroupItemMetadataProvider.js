@@ -86,6 +86,7 @@ class GroupItemMetadataProvider {
 			} else {
 				dataView.collapseGroup(0, item.groupingKey);
 			}
+
 			e.preventDefault();
 		}
 	}

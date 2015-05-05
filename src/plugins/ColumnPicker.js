@@ -147,6 +147,7 @@ class ColumnPicker {
 				ordered[i] = current.shift();
 			}
 		}
+
 		this._columns = ordered;
 	}
 
@@ -158,6 +159,7 @@ class ColumnPicker {
 			} else {
 				this._grid.setOptions({forceFitColumns: false});
 			}
+
 			return;
 		}
 
@@ -167,12 +169,13 @@ class ColumnPicker {
 			} else {
 				this._grid.setOptions({syncColumnCellResize: false});
 			}
+
 			return;
 		}
 
 		if (e.target.type === 'checkbox') {
 			let visibleColumns = [];
-			this._columnCheckboxes.forEach(function (c, i) {
+			this._columnCheckboxes.forEach(function(c, i) {
 				if (c.checked) {
 					visibleColumns.push(this._columns[i]);
 				}
@@ -186,6 +189,7 @@ class ColumnPicker {
 			this._grid.setColumns(visibleColumns);
 		}
 	}
+
 	getAllColumns() {
 		return this._columns;
 	}

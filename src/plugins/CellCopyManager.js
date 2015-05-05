@@ -66,6 +66,7 @@ class CellCopyManager {
 				}
 			}
 		}
+
 		this._grid.setCellCssStyles('copy-manager', hash);
 	}
 

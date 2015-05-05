@@ -123,6 +123,7 @@ class RowMoveManager {
 		if (!this._dragging) {
 			return;
 		}
+
 		let e = info.event,
 			dd = info.data;
 
@@ -137,6 +138,7 @@ class RowMoveManager {
 				rows: dd.selectedRows,
 				insertBefore: dd.insertBefore
 			};
+
 			// TODO:  _grid.remapCellCssClasses ?
 			this.onMoveRows.notify(eventData);
 		}

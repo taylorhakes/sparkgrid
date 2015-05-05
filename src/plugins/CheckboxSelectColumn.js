@@ -37,9 +37,11 @@ class CheckboxSelectColumn {
 			lookup[row] = true;
 			this._grid.invalidateRows(row);
 		}
+
 		for (let key in this._selectedRowsLookup) {
 			this._grid.invalidateRows(key);
 		}
+
 		this._selectedRowsLookup = lookup;
 		this._grid.render();
 
@@ -60,6 +62,7 @@ class CheckboxSelectColumn {
 				if (!this._grid.getEditorLock().isActive() || this._grid.getEditorLock().commitCurrentEdit()) {
 					this.toggleRowSelection(data.row);
 				}
+
 				e.preventDefault();
 				e.stopImmediatePropagation();
 			}
@@ -78,13 +81,14 @@ class CheckboxSelectColumn {
 				e.stopImmediatePropagation();
 				return;
 			}
+
 			this.toggleRowSelection(data.row);
 		}
 	}
 
 	toggleRowSelection(row) {
 		if (this._selectedRowsLookup[row]) {
-			this._grid.setSelectedRows(this._grid.getSelectedRows().filter(function (n) {
+			this._grid.setSelectedRows(this._grid.getSelectedRows().filter(function(n) {
 				return n !== row;
 			}));
 		} else {
@@ -109,10 +113,12 @@ class CheckboxSelectColumn {
 				for (let i = 0; i < this._grid.getDataLength(); i++) {
 					rows.push(i);
 				}
+
 				this._grid.setSelectedRows(rows);
 			} else {
 				this._grid.setSelectedRows([]);
 			}
+
 			e.stopPropagation();
 			e.stopImmediatePropagation();
 		}
@@ -138,6 +144,7 @@ class CheckboxSelectColumn {
 				'<input type="checkbox" checked="checked">'
 				: '<input type="checkbox">';
 		}
+
 		return null;
 	}
 }

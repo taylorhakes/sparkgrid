@@ -50,9 +50,7 @@
     "karma-browserify": "^4.0.0",
     "gulp-jshint": "^1.9.4",
     "gulp-babel": "^5.1.0",
-    "aliasify": "^1.7.2"
-  },
-  "dependencies": {
-    "gulp-logger": "0.0.2"
+    "aliasify": "^1.7.2",
+    "jscs": "^1.13.1"
   }
 }

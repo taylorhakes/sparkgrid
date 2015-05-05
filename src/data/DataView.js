@@ -16,6 +16,7 @@ let groupingInfoDefaults = {
 		if (a.value === b.value) {
 			return 0;
 		}
+
 		return a.value > b.value ? 1 : -1;
 	},
 	predefinedValues: [],
@@ -68,6 +69,7 @@ class DataView {
 		// Call refresh at the next event loop
 		this.refresh = throttle(this.refresh);
 	}
+
 	_updateIdxById(startingIndex) {
 		startingIndex = startingIndex || 0;
 		for (let i = startingIndex, l = this._items.length; i < l; i++) {
@@ -75,6 +77,7 @@ class DataView {
 			if (id === undefined) {
 				throw new Error('Each data element must implement a unique `id` property');
 			}
+
 			this._idxById[id] = i;
 		}
 	}
@@ -87,6 +90,7 @@ class DataView {
 			}
 		}
 	}
+
 	_ensureRowsByIdCache() {
 		if (!this._rowsById) {
 			this._rowsById = {};
@@ -95,6 +99,7 @@ class DataView {
 			}
 		}
 	}
+
 	_extractGroups(rows, parentGroup) {
 		let group,
 			val,
@@ -144,6 +149,7 @@ class DataView {
 
 		return groups;
 	}
+
 	_calculateTotals(totals) {
 		let group = totals.group,
 			gi = this._groupingInfos[group.level],
@@ -169,10 +175,13 @@ class DataView {
 			} else {
 				agg.accumulate.call(agg, group.rows);
 			}
+
 			agg.storeResult(totals);
 		}
+
 		totals.initialized = true;
 	}
+
 	_addGroupTotals(group) {
 		let gi = this._groupingInfos[group.level],
 			totals = new GroupTotals();
@@ -183,6 +192,7 @@ class DataView {
 			this._calculateTotals(totals);
 		}
 	}
+
 	_addTotals(groups, level) {
 		level = level || 0;
 		let gi = this._groupingInfos[level],
@@ -212,9 +222,9 @@ class DataView {
 			g.title = gi.formatter ? gi.formatter(g) : g.value;
 		}
 	}
+
 	_flattenGroupedRows(groups, level) {
 		level = level || 0;
-
 
 		let gi = this._groupingInfos[level];
 		let groupedRows = [], rows, gl = 0, g;
@@ -234,6 +244,7 @@ class DataView {
 				groupedRows[gl++] = g.totals;
 			}
 		}
+
 		return groupedRows;
 	}
 
@@ -248,6 +259,7 @@ class DataView {
 
 		return filteredItems;
 	}
+
 	_getFilteredAndPagedItems(items) {
 		if (this._filter) {
 			this._filteredItems = this._wrappedFilter(items, this._filterArgs);
@@ -264,6 +276,7 @@ class DataView {
 			if (this._filteredItems.length < this._pageNum * this._pageSize) {
 				this._pageNum = Math.floor(this._filteredItems.length / this._pageSize);
 			}
+
 			paged = this._filteredItems.slice(this._pageSize * this._pageNum, this._pageSize * this._pageNum + this._pageSize);
 		} else {
 			paged = this._filteredItems;
@@ -274,6 +287,7 @@ class DataView {
 			rows: paged
 		};
 	}
+
 	_getRowDiffs(rows, newRows) {
 		let item, r, eitherIsNonData, diff = [],
 			from = 0, to = newRows.length;
@@ -293,8 +307,10 @@ class DataView {
 				}
 			}
 		}
+
 		return diff;
 	}
+
 	_recalc(items) {
 		this._rowsById = null;
 
@@ -325,6 +341,7 @@ class DataView {
 				ids[ids.length] = this._rows[rowArray[i]][this._idProperty];
 			}
 		}
+
 		return ids;
 	}
 
@@ -337,6 +354,7 @@ class DataView {
 				rows[rows.length] = row;
 			}
 		}
+
 		return rows;
 	}
 
@@ -347,17 +365,17 @@ class DataView {
 	init(grid) {
 
 		// wire up model events to drive the grid
-		this.onRowCountChanged.subscribe(function () {
+		this.onRowCountChanged.subscribe(function() {
 			grid.updateRowCount();
 		});
 
-		this.onRowsChanged.subscribe(function (info) {
+		this.onRowsChanged.subscribe(function(info) {
 			var args = info.data;
 			grid.invalidateRows(args.rows);
 			grid.render();
 		});
 
-		this.onPagingInfoChanged.subscribe(function (info) {
+		this.onPagingInfoChanged.subscribe(function(info) {
 			var pagingInfo = info.data;
 			var isLastPage = pagingInfo.pageNum === pagingInfo.totalPages - 1;
 			var enableAddRow = isLastPage || pagingInfo.pageSize === 0;
@@ -384,8 +402,6 @@ class DataView {
 		this._filterArgs = args;
 	}
 
-
-
 	/**
 	 * Get all the items without filters
 	 * @returns {Array}
@@ -403,6 +419,7 @@ class DataView {
 		if (objectIdProperty !== undefined) {
 			this._idProperty = objectIdProperty;
 		}
+
 		this._items = this._filteredItems = data;
 		this._idxById = {};
 		this._updateIdxById();
@@ -454,10 +471,12 @@ class DataView {
 		if (ascending === false) {
 			this._items.reverse();
 		}
+
 		this._items.sort(compareFn);
 		if (ascending === false) {
 			this._items.reverse();
 		}
+
 		this._idxById = {};
 		this._updateIdxById();
 		this.refresh();
@@ -564,6 +583,7 @@ class DataView {
 				rows.push(row);
 			}
 		}
+
 		return rows;
 	}
 
@@ -579,6 +599,7 @@ class DataView {
 				ids[ids.length] = this._rows[rowArray[i]][this._idProperty];
 			}
 		}
+
 		return ids;
 	}
 
@@ -591,10 +612,12 @@ class DataView {
 		if (this._idxById[id] === undefined || id !== item[this._idProperty]) {
 			throw new Error('Invalid or non-matching id');
 		}
+
 		this._items[this._idxById[id]] = item;
 		if (!this._updated) {
 			this._updated = {};
 		}
+
 		this._updated[id] = true;
 		this.refresh();
 	}
@@ -629,6 +652,7 @@ class DataView {
 		if (idx === undefined) {
 			throw new Error('Invalid id');
 		}
+
 		delete this._idxById[id];
 		this._items.splice(idx, 1);
 		this._updateIdxById(idx);
@@ -659,6 +683,7 @@ class DataView {
 				item.title = gi.formatter ? gi.formatter(item) : item.value;
 			}
 		}
+
 		// if this is a totals row, make sure it's calculated
 		else if (item && item.__groupTotals && !item.initialized) {
 			this._calculateTotals(item);
@@ -706,6 +731,7 @@ class DataView {
 			this._toggledGroupsByLevel[level] = {};
 			this._groupingInfos[level].collapsed = collapse;
 		}
+
 		this.refresh();
 	}
 
@@ -794,12 +820,15 @@ class DataView {
 		if (totalRowsBefore !== this._totalRows) {
 			this.onPagingInfoChanged.notify(this.getPagingInfo(), null, this);
 		}
+
 		if (countBefore !== this._rows.length) {
 			this.onRowCountChanged.notify({previous: countBefore, current: this._rows.length}, null, this);
 		}
+
 		if (diff.length > 0) {
 			this.onRowsChanged.notify({rows: diff}, null, this);
 		}
+
 		this.onRefresh.notify(null, null, this);
 	}
 
@@ -834,6 +863,7 @@ class DataView {
 				if (!preserveHidden) {
 					setSelectedRowIds(this._mapRowsToIds(selectedRows));
 				}
+
 				grid.setSelectedRows(selectedRows);
 				inHandler = false;
 			}
@@ -843,6 +873,7 @@ class DataView {
 			if (inHandler) {
 				return;
 			}
+
 			let newSelectedRowIds = this._mapRowsToIds(grid.getSelectedRows());
 			if (!preserveHiddenOnSelectionChange || !grid.getOptions().multiSelect) {
 				setSelectedRowIds(newSelectedRowIds);
@@ -851,6 +882,7 @@ class DataView {
 				let existing = selectedRowIds.filter((id) => {
 					return this.getRowById(id) === undefined;
 				});
+
 				// add the newly selected ones
 				setSelectedRowIds(existing.concat(newSelectedRowIds));
 			}
@@ -891,6 +923,7 @@ class DataView {
 						newHash[row] = hashById[id];
 					}
 				}
+
 				grid.setCellCssStyles(key, newHash);
 				inHandler = false;
 			}
@@ -900,14 +933,16 @@ class DataView {
 		// get the existing ones right away
 		storeCellCssStyles(grid.getCellCssStyles(key));
 
-		grid.onCellCssStylesChanged.subscribe(function (info) {
+		grid.onCellCssStylesChanged.subscribe(function(info) {
 			let args = info.data;
 			if (inHandler) {
 				return;
 			}
+
 			if (key !== args.key) {
 				return;
 			}
+
 			if (args.hash) {
 				storeCellCssStyles(args.hash);
 			}

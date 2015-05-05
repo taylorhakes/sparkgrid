@@ -10,7 +10,7 @@ class Text {
 			type: this._options.type || 'text',
 			className: 'editor-text'
 		});
-		this._inputEl.addEventListener('keydown', function (e) {
+		this._inputEl.addEventListener('keydown', function(e) {
 			if (e.keyCode === KEYCODES.LEFT || e.keyCode === KEYCODES.RIGHT) {
 				e.stopPropagation();
 			}
@@ -89,6 +89,7 @@ class Number extends Text {
 			msg: null
 		};
 	}
+
 	serializeValue() {
 		return parseFloat(this.inputEl.value) || 0;
 	}

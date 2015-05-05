@@ -125,6 +125,7 @@ class EventHandler {
 		while (i--) {
 			this._handlers[i].event.unsubscribe(this._handlers[i].handler);
 		}
+
 		this._handlers = [];
 
 		return this;  // allow chaining

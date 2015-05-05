@@ -32,15 +32,19 @@ class EditorLock {
 		if (editController === this._activeEditController) { // already activated?
 			return;
 		}
+
 		if (this._activeEditController !== null) {
 			throw new Error('SlickGrid.EditorLock.activate: an editController is still active, can\'t activate another editController');
 		}
+
 		if (!editController.commitCurrentEdit) {
 			throw new Error('SlickGrid.EditorLock.activate: editController must implement .commitCurrentEdit()');
 		}
+
 		if (!editController.cancelCurrentEdit) {
 			throw new Error('SlickGrid.EditorLock.activate: editController must implement .cancelCurrentEdit()');
 		}
+
 		this._activeEditController = editController;
 	}
 
@@ -54,6 +58,7 @@ class EditorLock {
 		if (this._activeEditController !== editController) {
 			throw new Error('SlickGrid.EditorLock.deactivate: specified editController is not the currently active one');
 		}
+
 		this._activeEditController = null;
 	}
 

@@ -25,6 +25,7 @@ module.exports = function (config) {
 		},
 
 		browserify: {
+			insertGlobals: false,
 			debug: true,
 			transform: [ 'babelify', [ 'aliasify', {
 				aliases: {

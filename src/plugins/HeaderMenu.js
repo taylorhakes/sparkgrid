@@ -7,7 +7,6 @@ var defaults = {
 	headerActiveClass: 'spark-header-column-active'
 };
 
-
 /***
  * A plugin to add drop-down menus to column headers.
  *
@@ -104,19 +103,16 @@ class HeaderMenu {
 		document.body.addEventListener('mousedown', this._boundHandleBodyMouseDown);
 	}
 
-
 	destroy() {
 		this._handler.unsubscribeAll();
 		document.body.removeEventListener('mousedown', this._boundHandleBodyMouseDown);
 	}
-
 
 	_handleBodyMouseDown(e) {
 		if (this._menu !== e.target && !closest(e.target, this._menu)) {
 			this.hideMenu();
 		}
 	}
-
 
 	hideMenu() {
 		if (this._menu) {
@@ -155,7 +151,6 @@ class HeaderMenu {
 		}
 	}
 
-
 	_handleBeforeHeaderCellDestroy(info) {
 		let column = info.data.column;
 
@@ -163,7 +158,6 @@ class HeaderMenu {
 			removeEl(info.data.node.querySelector('.spark-header-menubutton'));
 		}
 	}
-
 
 	_showMenu(e) {
 		let menuButton = e.currentTarget,
@@ -180,7 +174,6 @@ class HeaderMenu {
 			return;
 		}
 
-
 		if (!menu) {
 			menu = createEl({
 				tag: 'div',
@@ -188,8 +181,8 @@ class HeaderMenu {
 			});
 			this._grid.getEl().appendChild(menu);
 		}
-		menu.innerHTML = '';
 
+		menu.innerHTML = '';
 
 		// Construct the menu items.
 		for (let i = 0; i < menu.items.length; i++) {
@@ -222,7 +215,7 @@ class HeaderMenu {
 			}
 
 			if (item.iconImage) {
-				icon.style.backgroundImage= 'url(" + item.iconImage + ")';
+				icon.style.backgroundImage = 'url(" + item.iconImage + ")';
 			}
 
 			let span = createEl({
@@ -233,11 +226,9 @@ class HeaderMenu {
 			li.appendChild(li);
 		}
 
-
 		// Position the menu.
 		setPx(menu, 'top', menuButton.offsetTop + menuButton.offsetHeight);
 		setPx(menu, 'left', menuButton.offsetLeft);
-
 
 		// Mark the header as active to keep the highlighting.
 		this._activeHeaderColumn = closest(menuButton, '.spark-header-column');

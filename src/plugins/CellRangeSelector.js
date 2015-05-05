@@ -50,6 +50,7 @@ class CellRangeSelector {
 				e.stopImmediatePropagation();
 			}
 		}
+
 		if (!this._dragging) {
 			return;
 		}
@@ -70,6 +71,7 @@ class CellRangeSelector {
 		if (!this._dragging) {
 			return;
 		}
+
 		e.stopImmediatePropagation();
 
 		let end = this._grid.getCellFromPoint(
