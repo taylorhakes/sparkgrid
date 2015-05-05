@@ -2213,8 +2213,13 @@ class Grid {
 	 * @param {Object} model
 	 */
 	setSelectionModel(model) {
+		if (!this._boundHandleSelectedRangesChanged) {
+			this._boundHandleSelectedRangesChanged = this._handleSelectedRangesChanged.bind(this);
+		}
+
+
 		if (this._selectionModel) {
-			this._selectionModel.onSelectedRangesChanged.unsubscribe(this._handleSelectedRangesChanged.bind(this));
+			this._selectionModel.onSelectedRangesChanged.unsubscribe(this._boundHandleSelectedRangesChanged);
 			if (this._selectionModel.destroy) {
 				this._selectionModel.destroy();
 			}
@@ -2223,7 +2228,7 @@ class Grid {
 		this._selectionModel = model;
 		if (this._selectionModel) {
 			this._selectionModel.init(this);
-			this._selectionModel.onSelectedRangesChanged.subscribe(this._handleSelectedRangesChanged.bind(this));
+			this._selectionModel.onSelectedRangesChanged.subscribe(this._boundHandleSelectedRangesChanged);
 		}
 	}
 
@@ -2408,7 +2413,10 @@ class Grid {
 	 */
 	setSortColumn(columnId, ascending) {
 		this.setSortColumns([
-			{columnId: columnId, sortAsc: ascending}
+			{
+				columnId: columnId,
+				sortAsc: ascending
+			}
 		]);
 	}
 

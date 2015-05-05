@@ -1,9 +1,18 @@
 import Grid from 'spark/Grid';
 import { q, ThrottleMock } from './util';
+import SelectionModelMock from './mocks/SelectionModel';
+import EditorLock from './mocks/EditorLock';
 
 (function(jas, describe, it, expect, beforeEach) {
 	function newEl() {
 		return document.createElement('div');
+	}
+
+	function gridInit(context) {
+		context.grid = new Grid({
+			el: newEl(),
+			columns: []
+		});
 	}
 
 	describe('Grid', function() {
@@ -314,7 +323,6 @@ import { q, ThrottleMock } from './util';
 					columns: []
 				});
 			});
-
 			it('setOptions', function() {
 				this.grid.setOptions(changedOptions);
 				expect(this.grid.getOptions()).toEqual(jas.objectContaining(changedOptions));
@@ -389,14 +397,65 @@ import { q, ThrottleMock } from './util';
 				expect(this.grid.getData()).toEqual(newData);
 			});
 		});
-		describe('getEl', function() {
-			it('returns correct element', function() {
+		describe('get elements', function() {
+			it('root element', function() {
 				var el = newEl();
 				this.grid = new Grid({
 					el: el,
 					columns: []
 				});
 				expect(this.grid.getEl()).toBe(el);
+			});
+			it('canvas', function() {
+				this.grid = new Grid({
+					el: newEl(),
+					columns: []
+				});
+				expect(this.grid.getCanvasEl().tagName.toLowerCase()).toBe('div');
+			});
+			it('header row', function() {
+				this.grid = new Grid({
+					el: newEl(),
+					columns: []
+				});
+				expect(this.grid.getHeaderRow().tagName.toLowerCase()).toBe('div');
+			});
+			it('header column', function() {
+				this.grid = new Grid({
+					el: newEl(),
+					columns: [
+						{
+							id: '1',
+							field: 'a',
+							name: 'a'
+						}
+					],
+					showHeaderRow: true
+				});
+				expect(this.grid.getHeaderRowColumn(1).tagName.toLowerCase()).toBe('div');
+			});
+		});
+		describe('top panel', function() {
+			it('top panel element', function() {
+				gridInit(this);
+				expect(this.grid.getTopPanel().tagName.toLowerCase()).toBe('div');
+			});
+			it('top panel visibility', function() {
+				gridInit(this);
+				expect(this.grid.getTopPanel().style.display).toBe('none');
+			});
+			it('top panel change visibility', function() {
+				gridInit(this);
+				this.grid.setTopPanelVisibility(true);
+				expect(this.grid.getTopPanel().style.display).toBe('');
+			});
+			it('top panel change visibility change options', function() {
+				this.grid = new Grid({
+					el: newEl(),
+					columns: [],
+					showTopPanel: true
+				});
+				expect(this.grid.getTopPanel().style.display).toBe('');
 			});
 		});
 		describe('getUid', function() {
@@ -414,6 +473,59 @@ import { q, ThrottleMock } from './util';
 					columns: []
 				});
 				expect(grid1.getUid() !== grid2.getUid() && grid2.getUid() !== grid3.getUid() && grid1.getUid() !== grid3.getUid()).toBe(true);
+			});
+		});
+		describe('selection model', function() {
+			beforeEach(function() {
+				this.grid = new Grid({
+					el: newEl(),
+					columns: []
+				});
+			});
+			it('setSelectionModel no previous', function() {
+				let sModel = new SelectionModelMock();
+				this.grid.setSelectionModel(sModel);
+				expect(sModel.init).toHaveBeenCalledWith(this.grid);
+				expect(sModel.onSelectedRangesChanged.subscribe).toHaveBeenCalled()
+			});
+			it('setSelectionModel change model', function() {
+				let oldModel = new SelectionModelMock(),
+					newModel = new SelectionModelMock();
+				this.grid.setSelectionModel(oldModel);
+				this.grid.setSelectionModel(newModel);
+				expect(oldModel.onSelectedRangesChanged.unsubscribe).toHaveBeenCalledWith(
+					oldModel.onSelectedRangesChanged.subscribe.calls.argsFor(0)[0]);
+				expect(oldModel.destroy).toHaveBeenCalled();
+				expect(newModel.init).toHaveBeenCalledWith(this.grid);
+				expect(newModel.onSelectedRangesChanged.subscribe).toHaveBeenCalled()
+			});
+			it('getSelectionModel', function() {
+				let sModel = new SelectionModelMock();
+				this.grid.setSelectionModel(sModel);
+				expect(this.grid.getSelectionModel()).toBe(sModel);
+			});
+		});
+		describe('editor lock', function() {
+			it('getEditorLock default', function() {
+				gridInit(this);
+				expect(this.grid.getEditorLock()).toBe(Grid.GlobalEditorLock);
+			});
+			it('new editor lock', function() {
+				let eLock = new EditorLock();
+				this.grid = new Grid({
+					el: newEl(),
+					columns: [],
+					editorLock: eLock
+				});
+				expect(this.grid.getEditorLock()).toBe(eLock);
+			});
+		});
+		describe('edit controller', function() {
+			it('getEditController', function() {
+				gridInit(this);
+				let eController = this.grid.getEditController();
+				expect(typeof eController.commitCurrentEdit).toBe('function');
+				expect(typeof eController.cancelCurrentEdit).toBe('function');
 			});
 		});
 		describe('functional tests', function() {
