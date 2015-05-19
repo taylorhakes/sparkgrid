@@ -22,7 +22,7 @@ class CellSelectionModel {
 
 	init(grid) {
 		this._grid = grid;
-		this._canvas = this._grid.getCanvasEl();
+		this._canvas = this._grid.getCanvasNode();
 
 		this._boundHandleActiveCellChange = this._handleActiveCellChange.bind(this);
 		this._boundHandleKeyDown = this._handleKeyDown.bind(this);

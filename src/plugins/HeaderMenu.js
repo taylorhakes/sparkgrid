@@ -179,7 +179,7 @@ class HeaderMenu {
 				tag: 'div',
 				className: 'spark-header-menu'
 			});
-			this._grid.getEl().appendChild(menu);
+			this._grid.getContainerNode().appendChild(menu);
 		}
 
 		menu.innerHTML = '';

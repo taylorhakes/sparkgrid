@@ -94,6 +94,7 @@ class Grid {
 		this._vScrollDir = 1;
 
 		// private
+		this._columns = null;
 		this._initialized = false;
 		this._uid = 'sparkgrid_' + uidIndex++;
 		this._focusSink = null;
@@ -947,7 +948,7 @@ class Grid {
 		let newScrollTop = y - this._offset;
 
 		if (this._offset !== oldOffset) {
-			let range = this.getVisibleRange(newScrollTop);
+			let range = this.getViewport(newScrollTop);
 			this._cleanupRows(range);
 			this._updateRowPositions();
 		}
@@ -1565,7 +1566,7 @@ class Grid {
 			// don't steal it back - keyboard events will still bubble up
 			// IE9+ seems to default DIVs to tabIndex=0 instead of -1, so check for cell clicks directly.
 			if (e.target !== document.activeElement || e.target.classList.contains('spark-cell')) {
-				this.setFocus();
+				this.focus();
 			}
 		}
 
@@ -1780,7 +1781,7 @@ class Grid {
 		// if the commit fails, it would do so due to a validation error
 		// if so, do not steal the focus from the editor
 		if (this.getEditorLock().commitCurrentEdit()) {
-			this.setFocus();
+			this.focus();
 			if (this._options.autoEdit) {
 				this.navigateDown();
 			}
@@ -1789,7 +1790,7 @@ class Grid {
 
 	_cancelEditAndSetFocus() {
 		if (this.getEditorLock().cancelCurrentEdit()) {
-			this.setFocus();
+			this.focus();
 		}
 	}
 
@@ -2117,7 +2118,7 @@ class Grid {
 			return true;
 		}
 
-		this.setFocus();
+		this.focus();
 
 		let tabbingDirections = {
 			up: -1,
@@ -2344,105 +2345,32 @@ class Grid {
 	}
 
 	/**
-	 * Set selection model plugin for row & cell selection
-	 * @method setSelectionModel
-	 * @param {Object} model
+	 * Get columns visible on grid
+	 * @method getColumns
+	 * @returns {Array}
 	 */
-	setSelectionModel(model) {
-		if (!this._boundHandleSelectedRangesChanged) {
-			this._boundHandleSelectedRangesChanged = this._handleSelectedRangesChanged.bind(this);
+	getColumns() {
+		return this._columns;
+	}
+
+	/**
+	 * Override existing columns with new columns
+	 * @method setColumns
+	 * @param {Array} columns
+	 */
+	setColumns(columns) {
+		this._updateColumnCache(columns);
+		this._updateColumnSizeInfo();
+
+		if (this._initialized) {
+			this.invalidateAllRows();
+			this._createColumnHeaders();
+			this._removeCssRules();
+			this._createCssRules();
+			this.resizeCanvas();
+			this._applyColumnWidths();
+			this._handleScroll();
 		}
-
-		if (this._selectionModel) {
-			this._selectionModel.onSelectedRangesChanged.unsubscribe(this._boundHandleSelectedRangesChanged);
-			if (this._selectionModel.destroy) {
-				this._selectionModel.destroy();
-			}
-		}
-
-		this._selectionModel = model;
-		if (this._selectionModel) {
-			this._selectionModel.init(this);
-			this._selectionModel.onSelectedRangesChanged.subscribe(this._boundHandleSelectedRangesChanged);
-		}
-	}
-
-	/**
-	 * Get selection model plugin
-	 * @method getSelectionModel
-	 * @returns {Object}
-	 */
-	getSelectionModel() {
-		return this._selectionModel;
-	}
-
-	/**
-	 * Get the grid canvas
-	 * @method getCanvasEl
-	 * @returns {HTMLElement}
-	 */
-	getCanvasEl() {
-		return this._canvas;
-	}
-
-	/**
-	 * Get the header row DOM element
-	 * @method getHeaderRow
-	 * @returns {HTMLElement}
-	 */
-	getHeaderRow() {
-		return this._headerRow;
-	}
-
-	/**
-	 * Get the header row by column ID
-	 * @method getHeaderRowColumn
-	 * @param {string} columnId
-	 * @returns {HTMLElement}
-	 */
-	getHeaderRowColumn(columnId) {
-		let index = this.getColumnIndex(columnId);
-		return this._headerRow.children[index];
-	}
-
-	/**
-	 * Destroy the grid. Remove the HTML element and remove events
-	 * @method destroy
-	 */
-	destroy() {
-		this.getEditorLock().cancelCurrentEdit();
-
-		this._trigger('onBeforeDestroy', {});
-
-		let i = this._plugins.length;
-		while (i--) {
-			this.unregisterPlugin(this._plugins[i]);
-		}
-
-		this._unbindAncestorScrollEvents();
-		this._removeCssRules();
-
-		//canvas.unbind('draginit dragstart dragend drag');
-		this._container.innerHTML = '';
-		this._container.classList.remove(this._uid, 'sparkgrid');
-	}
-
-	/**
-	 * Get the editor lock, semaphore for all grid editors
-	 * @method getEditorLock
-	 * @returns {Object}
-	 */
-	getEditorLock() {
-		return this._options.editorLock;
-	}
-
-	/**
-	 * Get the edit controller. Manages canceling and committing grid editing
-	 * @method getEditController
-	 * @returns {Object}
-	 */
-	getEditController() {
-		return this._editController;
 	}
 
 	/**
@@ -2455,94 +2383,43 @@ class Grid {
 	}
 
 	/**
-	 * Autosize columns to fill the available width
-	 * @method autosizeColumns
+	 * Update a column header with title and tooltip
+	 * @param {string} columnId
+	 * @param {string} title
+	 * @param {string} toolTip
 	 */
-	autosizeColumns() {
-		let i,
-			c,
-			widths = [],
-			shrinkLeeway = 0,
-			total = 0,
-			prevTotal,
-			availWidth = this._viewportHasVScroll ? this._viewportW - scrollbarDimensions.width : this._viewportW;
-
-		for (i = 0; i < this._columns.length; i++) {
-			c = this._columns[i];
-			widths.push(c.width);
-			total += c.width;
-			if (c.resizable) {
-				shrinkLeeway += c.width - c.minWidth;
-			}
+	updateColumnHeader(columnId, title, toolTip) {
+		if (!this._initialized) {
+			return;
+		}
+		let idx = this.getColumnIndex(columnId);
+		if (idx == null) {
+			return;
 		}
 
-		// shrink
-		prevTotal = total;
-		while (total > availWidth && shrinkLeeway) {
-			let shrinkProportion = (total - availWidth) / shrinkLeeway;
-			for (i = 0; i < this._columns.length && total > availWidth; i++) {
-				c = this._columns[i];
-				let width = widths[i];
-				if (!c.resizable || width <= c.minWidth) {
-					continue;
-				}
+		let columnDef = this._columns[idx],
+			header = this._headers.children[idx];
 
-				let absMinWidth = c.minWidth,
-					shrinkSize = Math.floor(shrinkProportion * (width - absMinWidth)) || 1;
-				shrinkSize = Math.min(shrinkSize, width - absMinWidth);
-				total -= shrinkSize;
-				shrinkLeeway -= shrinkSize;
-				widths[i] -= shrinkSize;
+		if (header) {
+			if (title !== undefined) {
+				this._columns[idx].name = title;
+			}
+			if (toolTip !== undefined) {
+				this._columns[idx].toolTip = toolTip;
 			}
 
-			if (prevTotal <= total) {  // avoid infinite loop
-				break;
-			}
+			this._trigger('onBeforeHeaderCellDestroy', {
+				node: header[0],
+				column: columnDef
+			});
 
-			prevTotal = total;
-		}
+			header.setAttribute('title', toolTip || '');
+			header.children[0].innerHTML = title;
 
-		// grow
-		prevTotal = total;
-		while (total < availWidth) {
-			let growProportion = availWidth / total;
-			for (i = 0; i < this._columns.length && total < availWidth; i++) {
-				c = this._columns[i];
-				let currentWidth = widths[i],
-					growSize;
-
-				if (!c.resizable || c.maxWidth <= currentWidth) {
-					growSize = 0;
-				} else {
-					growSize = Math.min(Math.floor(growProportion * currentWidth) - currentWidth,
-						(c.maxWidth - currentWidth) || 1000000) || 1;
-				}
-
-				total += growSize;
-				widths[i] += growSize;
-			}
-
-			if (prevTotal >= total) {  // avoid infinite loop
-				break;
-			}
-
-			prevTotal = total;
-		}
-
-		let reRender = false;
-		for (i = 0; i < this._columns.length; i++) {
-			if (this._columns[i].rerenderOnResize && this._columns[i].width !== widths[i]) {
-				reRender = true;
-			}
-
-			this._columns[i].width = widths[i];
-		}
-
-		this._applyColumnHeaderWidths();
-		this._updateCanvasWidth(true);
-		if (reRender) {
-			this.invalidateAllRows();
-			this.render();
+			this._trigger('onHeaderCellRendered', {
+				node: header,
+				column: columnDef
+			});
 		}
 	}
 
@@ -2620,31 +2497,94 @@ class Grid {
 	}
 
 	/**
-	 * Get columns visible on grid
-	 * @method getColumns
-	 * @returns {Array}
+	 * Autosize columns to fill the available width
+	 * @method autosizeColumns
 	 */
-	getColumns() {
-		return this._columns;
-	}
+	autosizeColumns() {
+		let i,
+			c,
+			widths = [],
+			shrinkLeeway = 0,
+			total = 0,
+			prevTotal,
+			availWidth = this._viewportHasVScroll ? this._viewportW - scrollbarDimensions.width : this._viewportW;
 
-	/**
-	 * Override existing columns with new columns
-	 * @method setColumns
-	 * @param {Array} columns
-	 */
-	setColumns(columns) {
-		this._updateColumnCache(columns);
-		this._updateColumnSizeInfo();
+		for (i = 0; i < this._columns.length; i++) {
+			c = this._columns[i];
+			widths.push(c.width);
+			total += c.width;
+			if (c.resizable) {
+				shrinkLeeway += c.width - c.minWidth;
+			}
+		}
 
-		if (this._initialized) {
+		// shrink
+		prevTotal = total;
+		while (total > availWidth && shrinkLeeway) {
+			let shrinkProportion = (total - availWidth) / shrinkLeeway;
+			for (i = 0; i < this._columns.length && total > availWidth; i++) {
+				c = this._columns[i];
+				let width = widths[i];
+				if (!c.resizable || width <= c.minWidth) {
+					continue;
+				}
+
+				let absMinWidth = c.minWidth,
+					shrinkSize = Math.floor(shrinkProportion * (width - absMinWidth)) || 1;
+				shrinkSize = Math.min(shrinkSize, width - absMinWidth);
+				total -= shrinkSize;
+				shrinkLeeway -= shrinkSize;
+				widths[i] -= shrinkSize;
+			}
+
+			if (prevTotal <= total) {  // avoid infinite loop
+				break;
+			}
+
+			prevTotal = total;
+		}
+
+		// grow
+		prevTotal = total;
+		while (total < availWidth) {
+			let growProportion = availWidth / total;
+			for (i = 0; i < this._columns.length && total < availWidth; i++) {
+				c = this._columns[i];
+				let currentWidth = widths[i],
+					growSize;
+
+				if (!c.resizable || c.maxWidth <= currentWidth) {
+					growSize = 0;
+				} else {
+					growSize = Math.min(Math.floor(growProportion * currentWidth) - currentWidth,
+							(c.maxWidth - currentWidth) || 1000000) || 1;
+				}
+
+				total += growSize;
+				widths[i] += growSize;
+			}
+
+			if (prevTotal >= total) {  // avoid infinite loop
+				break;
+			}
+
+			prevTotal = total;
+		}
+
+		let reRender = false;
+		for (i = 0; i < this._columns.length; i++) {
+			if (this._columns[i].rerenderOnResize && this._columns[i].width !== widths[i]) {
+				reRender = true;
+			}
+
+			this._columns[i].width = widths[i];
+		}
+
+		this._applyColumnHeaderWidths();
+		this._updateCanvasWidth(true);
+		if (reRender) {
 			this.invalidateAllRows();
-			this._createColumnHeaders();
-			this._removeCssRules();
-			this._createCssRules();
-			this.resizeCanvas();
-			this._applyColumnWidths();
-			this._handleScroll();
+			this.render();
 		}
 	}
 
@@ -2676,23 +2616,6 @@ class Grid {
 		this._options = extend(this._options, options);
 
 		this._viewport.style.overflowY = this._options.autoHeight ? 'hidden' : 'auto';
-		this.render();
-	}
-
-	/**
-	 * Overwrite data
-	 * @method setData
-	 * @param {Object} newData
-	 * @param {boolean} scrollToTop
-	 */
-	setData(newData, scrollToTop) {
-		this._data = newData;
-		this.invalidateAllRows();
-		this.updateRowCount();
-		if (scrollToTop) {
-			this._scrollTo(0);
-		}
-
 		this.render();
 	}
 
@@ -2733,82 +2656,135 @@ class Grid {
 	}
 
 	/**
-	 * Get the top panel DOM element
-	 * @method getTopPanel
-	 * @returns {HTMLElement}
+	 * Overwrite data
+	 * @method setData
+	 * @param {Object} newData
+	 * @param {boolean} scrollToTop
 	 */
-	getTopPanel() {
-		return this._topPanel;
+	setData(newData, scrollToTop) {
+		this._data = newData;
+		this.invalidateAllRows();
+		this.updateRowCount();
+		if (scrollToTop) {
+			this._scrollTo(0);
+		}
+
+		this.render();
 	}
 
 	/**
-	 * Show or hide the top panel
-	 * @method setTopPanelVisibility
-	 * @param {boolean} visible
+	 * Get selection model plugin
+	 * @method getSelectionModel
+	 * @returns {Object}
 	 */
-	setTopPanelVisibility(visible) {
-		if (this._options.showTopPanel !== visible) {
-			this._options.showTopPanel = visible;
-			if (visible) {
-				this._topPanelScroller.style.display = '';
-				this.resizeCanvas();
-			} else {
-				this._topPanelScroller.style.display = 'none';
-				this.resizeCanvas();
+	getSelectionModel() {
+		return this._selectionModel;
+	}
+
+	/**
+	 * Set selection model plugin for row & cell selection
+	 * @method setSelectionModel
+	 * @param {Object} model
+	 */
+	setSelectionModel(model) {
+		if (!this._boundHandleSelectedRangesChanged) {
+			this._boundHandleSelectedRangesChanged = this._handleSelectedRangesChanged.bind(this);
+		}
+
+		if (this._selectionModel) {
+			this._selectionModel.onSelectedRangesChanged.unsubscribe(this._boundHandleSelectedRangesChanged);
+			if (this._selectionModel.destroy) {
+				this._selectionModel.destroy();
 			}
+		}
+
+		this._selectionModel = model;
+		if (this._selectionModel) {
+			this._selectionModel.init(this);
+			this._selectionModel.onSelectedRangesChanged.subscribe(this._boundHandleSelectedRangesChanged);
 		}
 	}
 
 	/**
-	 * Show or hide the header row
-	 * @method setHeaderRowVisibility
-	 * @param {boolean} visible
+	 * Get the selected rows in the grid
+	 * @returns {Array<number>}
 	 */
-	setHeaderRowVisibility(visible) {
-		if (this._options.showHeaderRow !== visible) {
-			this._options.showHeaderRow = visible;
-			if (visible) {
-				this._headerRowScroller.style.display = '';
-				this.resizeCanvas();
-			} else {
-				this._headerRowScroller.style.display = 'none';
-				this.resizeCanvas();
-			}
+	getSelectedRows() {
+		if (!this._selectionModel) {
+			throw new Error('Selection model is not set');
 		}
+
+		return this._selectedRows;
+	}
+
+	/**
+	 * Set the selected rows in the grid
+	 * @param {Array<number>} rows
+	 */
+	setSelectedRows(rows) {
+		if (!this._selectionModel) {
+			throw new Error('Selection model is not set');
+		}
+
+		this._selectionModel.setSelectedRanges(this._rowsToRanges(rows));
 	}
 
 	/**
 	 * Get the main grid element
-	 * @method getEl
+	 * @method getContainerNode
 	 * @returns {HTMLElement}
 	 */
-	getEl() {
+	getContainerNode() {
 		return this._container;
+	}
+
+	/**
+	 * Render the grid. Normally called after some invalidation.
+	 * @method render
+	 */
+	render() {
+		if (!this._initialized) {
+			return;
+		}
+
+		let vRange = this.getViewport(),
+			rRange = this.getRenderedRange();
+
+		// remove rows no longer in the viewport
+		this._cleanupRows(rRange);
+
+		// add new rows & missing cells in existing rows
+		if (this._lastRenderedScrollLeft !== this._scrollLeft) {
+			this._cleanUpAndRenderCells(rRange);
+		}
+
+		// render missing rows
+		this._renderRows(rRange);
+
+		this._postProcessFromRow = vRange.top;
+		this._postProcessToRow = Math.min(this._getDataLengthIncludingAddNew() - 1, vRange.bottom);
+		this._startPostProcessing();
+
+		this._lastRenderedScrollTop = this._scrollTop;
+		this._lastRenderedScrollLeft = this._scrollLeft;
+		this._h_render = null;
 	}
 
 	/**
 	 * Invalidate all rows and rerender the grid
 	 * @method invalidate
 	 */
-	refresh() {
+	invalidate() {
 		this.updateRowCount();
 		this.invalidateAllRows();
 	}
 
 	/**
-	 * Invalidate all rows in the grid
-	 * @method invalidateAllRows
+	 * Invalidate single row
+	 * @param {number} row
 	 */
-	invalidateAllRows() {
-		if (this._currentEditor) {
-			this._makeActiveCellNormal();
-		}
-
-		for (let row in this._rowsCache) {
-			this._removeRowFromCache(row);
-		}
-
-		this.render();
+	invalidateRow(row) {
+		return this.invalidateRows([row]);
 	}
 
 	/**
@@ -2830,6 +2806,22 @@ class Grid {
 			if (this._rowsCache[rows[i]]) {
 				this._removeRowFromCache(rows[i]);
 			}
+		}
+
+		this.render();
+	}
+
+	/**
+	 * Invalidate all rows in the grid
+	 * @method invalidateAllRows
+	 */
+	invalidateAllRows() {
+		if (this._currentEditor) {
+			this._makeActiveCellNormal();
+		}
+
+		for (let row in this._rowsCache) {
+			this._removeRowFromCache(row);
 		}
 
 		this.render();
@@ -2890,6 +2882,57 @@ class Grid {
 		}
 
 		this._invalidatePostProcessingResults(row);
+	}
+
+	/**
+	 * Get the visible cell information based on viewport
+	 * @method getViewport
+	 * @param {number} viewportTop
+	 * @param {number} viewportLeft
+	 * @returns {{top: number, bottom: number, leftPx: number, rightPx: number}}
+	 */
+	getViewport(viewportTop = this._scrollTop, viewportLeft  = this._scrollLeft) {
+		return {
+			top: this._getRowFromPosition(viewportTop),
+			bottom: this._getRowFromPosition(viewportTop + this._viewportH) + 1,
+			leftPx: viewportLeft,
+			rightPx: viewportLeft + this._viewportW
+		};
+	}
+
+	/**
+	 * Get the rendered range. Visible range plus any buffer
+	 * @method getRenderedRange
+	 * @param {number} viewportTop
+	 * @param {number} viewportLeft
+	 * @returns {{top: number, bottom: number, leftPx: number, rightPx: number}}
+	 */
+	getRenderedRange(viewportTop, viewportLeft) {
+		let range = this.getViewport(viewportTop, viewportLeft),
+			buffer = Math.round(this._viewportH / this._options.rowHeight),
+			minBuffer = 3;
+
+		if (this._vScrollDir === -1) {
+			range.top -= buffer;
+			range.bottom += minBuffer;
+		} else if (this._vScrollDir === 1) {
+			range.top -= minBuffer;
+			range.bottom += buffer;
+		} else {
+			range.top -= minBuffer;
+			range.bottom += minBuffer;
+		}
+
+		range.top = Math.max(0, range.top);
+		range.bottom = Math.min(this._getDataLengthIncludingAddNew() - 1, range.bottom);
+
+		range.leftPx -= this._viewportW;
+		range.rightPx += this._viewportW;
+
+		range.leftPx = Math.max(0, range.leftPx);
+		range.rightPx = Math.min(this._canvasWidth, range.rightPx);
+
+		return range;
 	}
 
 	/**
@@ -3000,86 +3043,228 @@ class Grid {
 	}
 
 	/**
-	 * Get the visible cell information based on viewport
-	 * @method getVisibleRange
-	 * @param {number} viewportTop
-	 * @param {number} viewportLeft
-	 * @returns {{top: number, bottom: number, leftPx: number, rightPx: number}}
+	 * Sroll a row into view
+	 * @param {number} row
+	 * @param {boolean} doPaging Go to the next page if necessary
 	 */
-	getVisibleRange(viewportTop = this._scrollTop, viewportLeft  = this._scrollLeft) {
-		return {
-			top: this._getRowFromPosition(viewportTop),
-			bottom: this._getRowFromPosition(viewportTop + this._viewportH) + 1,
-			leftPx: viewportLeft,
-			rightPx: viewportLeft + this._viewportW
-		};
+	scrollRowIntoView(row, doPaging) {
+		let rowAtTop = row * this._options.rowHeight,
+			rowAtBottom = (row + 1) * this._options.rowHeight - this._viewportH + (this._viewportHasHScroll ? scrollbarDimensions.height : 0);
+
+		// need to page down?
+		if ((row + 1) * this._options.rowHeight > this._scrollTop + this._viewportH + this._offset) {
+			this._scrollTo(doPaging ? rowAtTop : rowAtBottom);
+			this.render();
+		}
+
+		// or page up?
+		else if (row * this._options.rowHeight < this._scrollTop + this._offset) {
+			this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
+			this.render();
+		}
 	}
 
 	/**
-	 * Get the rendered range. Visible range plus any buffer
-	 * @method getRenderedRange
-	 * @param {number} viewportTop
-	 * @param {number} viewportLeft
-	 * @returns {{top: number, bottom: number, leftPx: number, rightPx: number}}
+	 * Scroll a row to the top of the grid
+	 * @param {number} row
 	 */
-	getRenderedRange(viewportTop, viewportLeft) {
-		let range = this.getVisibleRange(viewportTop, viewportLeft),
-			buffer = Math.round(this._viewportH / this._options.rowHeight),
-			minBuffer = 3;
+	scrollRowToTop(row) {
+		this._scrollTo(row * this._options.rowHeight);
+		this.render();
+	}
 
-		if (this._vScrollDir === -1) {
-			range.top -= buffer;
-			range.bottom += minBuffer;
-		} else if (this._vScrollDir === 1) {
-			range.top -= minBuffer;
-			range.bottom += buffer;
+	/**
+	 * Scroll a specific cell info view and render
+	 * @param {number} row
+	 * @param {number} cell
+	 * @param {boolean} doPaging
+	 */
+	scrollCellIntoView(row, cell, doPaging) {
+		this.scrollRowIntoView(row, doPaging);
+
+		let colspan = this._getColspan(row, cell),
+			left = this._columnPosLeft[cell], right = this._columnPosRight[cell + (colspan > 1 ? colspan - 1 : 0)], scrollRight = this._scrollLeft + this._viewportW;
+
+		if (left < this._scrollLeft) {
+			this._viewport.scrollLeft = left;
+			this._handleScroll();
+			this.render();
+		} else if (right > scrollRight) {
+			this._viewport.scrollLeft = Math.min(left, right - this._viewport.clientWidth);
+			this._handleScroll();
+			this.render();
+		}
+	}
+
+	/**
+	 * Get the grid canvas
+	 * @method getCanvasEl
+	 * @returns {HTMLElement}
+	 */
+	getCanvasNode() {
+		return this._canvas;
+	}
+
+	/**
+	 * Focus the grid
+	 */
+	focus() {
+		if (this._tabbingDirection === -1) {
+			this._focusSink.focus();
 		} else {
-			range.top -= minBuffer;
-			range.bottom += minBuffer;
+			this._focusSink2.focus();
 		}
-
-		range.top = Math.max(0, range.top);
-		range.bottom = Math.min(this._getDataLengthIncludingAddNew() - 1, range.bottom);
-
-		range.leftPx -= this._viewportW;
-		range.rightPx += this._viewportW;
-
-		range.leftPx = Math.max(0, range.leftPx);
-		range.rightPx = Math.min(this._canvasWidth, range.rightPx);
-
-		return range;
 	}
 
 	/**
-	 * Render the grid. Normally called after some invalidation.
-	 * @method render
+	 * Get the cell at a specific x,y coordinate
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {{row: *, cell: number}}
 	 */
-	render() {
-		if (!this._initialized) {
-			return;
+	getCellFromPoint(x, y) {
+		let row = this._getRowFromPosition(y),
+			cell = 0,
+			w = 0;
+		for (let i = 0; i < this._columns.length && w < x; i++) {
+			w += this._columns[i].width;
+			cell++;
 		}
 
-		let vRange = this.getVisibleRange(),
-			rRange = this.getRenderedRange();
-
-		// remove rows no longer in the viewport
-		this._cleanupRows(rRange);
-
-		// add new rows & missing cells in existing rows
-		if (this._lastRenderedScrollLeft !== this._scrollLeft) {
-			this._cleanUpAndRenderCells(rRange);
+		if (cell < 0) {
+			cell = 0;
 		}
 
-		// render missing rows
-		this._renderRows(rRange);
+		return {row: row, cell: cell - 1};
+	}
 
-		this._postProcessFromRow = vRange.top;
-		this._postProcessToRow = Math.min(this._getDataLengthIncludingAddNew() - 1, vRange.bottom);
-		this._startPostProcessing();
+	/**
+	 * Get the cell associate with an event
+	 * @param {Event} e
+	 * @returns {Object}
+	 */
+	getCellFromEvent(e) {
+		let cell = closest(e.target, '.spark-cell');
+		if (!cell) {
+			return null;
+		}
 
-		this._lastRenderedScrollTop = this._scrollTop;
-		this._lastRenderedScrollLeft = this._scrollLeft;
-		this._h_render = null;
+		let row = this._getRowFromNode(cell.parentNode);
+		cell = this._getCellFromNode(cell);
+
+		if (row == null || cell == null) {
+			return null;
+		} else {
+			return {
+				row: row,
+				cell: cell
+			};
+		}
+	}
+
+	/**
+	 * Get the header row DOM element
+	 * @method getHeaderRow
+	 * @returns {HTMLElement}
+	 */
+	getHeaderRow() {
+		return this._headerRow;
+	}
+
+	/**
+	 * Get the header row by column ID
+	 * @method getHeaderRowColumn
+	 * @param {string} columnId
+	 * @returns {HTMLElement}
+	 */
+	getHeaderRowColumn(columnId) {
+		let index = this.getColumnIndex(columnId);
+		return this._headerRow.children[index];
+	}
+
+	/**
+	 * Destroy the grid. Remove the HTML element and remove events
+	 * @method destroy
+	 */
+	destroy() {
+		this.getEditorLock().cancelCurrentEdit();
+
+		this._trigger('onBeforeDestroy', {});
+
+		let i = this._plugins.length;
+		while (i--) {
+			this.unregisterPlugin(this._plugins[i]);
+		}
+
+		this._unbindAncestorScrollEvents();
+		this._removeCssRules();
+
+		//canvas.unbind('draginit dragstart dragend drag');
+		this._container.innerHTML = '';
+		this._container.classList.remove(this._uid, 'sparkgrid');
+	}
+
+	/**
+	 * Get the editor lock, semaphore for all grid editors
+	 * @method getEditorLock
+	 * @returns {Object}
+	 */
+	getEditorLock() {
+		return this._options.editorLock;
+	}
+
+	/**
+	 * Get the edit controller. Manages canceling and committing grid editing
+	 * @method getEditController
+	 * @returns {Object}
+	 */
+	getEditController() {
+		return this._editController;
+	}
+
+	/**
+	 * Get the top panel DOM element
+	 * @method getTopPanel
+	 * @returns {HTMLElement}
+	 */
+	getTopPanel() {
+		return this._topPanel;
+	}
+
+	/**
+	 * Show or hide the top panel
+	 * @method setTopPanelVisibility
+	 * @param {boolean} visible
+	 */
+	setTopPanelVisibility(visible) {
+		if (this._options.showTopPanel !== visible) {
+			this._options.showTopPanel = visible;
+			if (visible) {
+				this._topPanelScroller.style.display = '';
+				this.resizeCanvas();
+			} else {
+				this._topPanelScroller.style.display = 'none';
+				this.resizeCanvas();
+			}
+		}
+	}
+
+	/**
+	 * Show or hide the header row
+	 * @method setHeaderRowVisibility
+	 * @param {boolean} visible
+	 */
+	setHeaderRowVisibility(visible) {
+		if (this._options.showHeaderRow !== visible) {
+			this._options.showHeaderRow = visible;
+			if (visible) {
+				this._headerRowScroller.style.display = '';
+				this.resizeCanvas();
+			} else {
+				this._headerRowScroller.style.display = 'none';
+				this.resizeCanvas();
+			}
+		}
 	}
 
 	/**
@@ -3141,52 +3326,6 @@ class Grid {
 	}
 
 	/**
-	 * Get the cell at a specific x,y coordinate
-	 * @param {number} x
-	 * @param {number} y
-	 * @returns {{row: *, cell: number}}
-	 */
-	getCellFromPoint(x, y) {
-		let row = this._getRowFromPosition(y),
-			cell = 0,
-			w = 0;
-		for (let i = 0; i < this._columns.length && w < x; i++) {
-			w += this._columns[i].width;
-			cell++;
-		}
-
-		if (cell < 0) {
-			cell = 0;
-		}
-
-		return {row: row, cell: cell - 1};
-	}
-
-	/**
-	 * Get the cell associate with an event
-	 * @param {Event} e
-	 * @returns {Object}
-	 */
-	getCellFromEvent(e) {
-		let cell = closest(e.target, '.spark-cell');
-		if (!cell) {
-			return null;
-		}
-
-		let row = this._getRowFromNode(cell.parentNode);
-		cell = this._getCellFromNode(cell);
-
-		if (row == null || cell == null) {
-			return null;
-		} else {
-			return {
-				row: row,
-				cell: cell
-			};
-		}
-	}
-
-	/**
 	 * Get the node from row and cell
 	 * @param {number} row
 	 * @param {number} cell
@@ -3226,39 +3365,7 @@ class Grid {
 		this._setActiveCellInternal(null, false);
 	}
 
-	/**
-	 * Focus the grid
-	 */
-	setFocus() {
-		if (this._tabbingDirection === -1) {
-			this._focusSink.focus();
-		} else {
-			this._focusSink2.focus();
-		}
-	}
 
-	/**
-	 * Scroll a specific cell info view and render
-	 * @param {number} row
-	 * @param {number} cell
-	 * @param {boolean} doPaging
-	 */
-	scrollCellIntoView(row, cell, doPaging) {
-		this.scrollRowIntoView(row, doPaging);
-
-		let colspan = this._getColspan(row, cell),
-			left = this._columnPosLeft[cell], right = this._columnPosRight[cell + (colspan > 1 ? colspan - 1 : 0)], scrollRight = this._scrollLeft + this._viewportW;
-
-		if (left < this._scrollLeft) {
-			this._viewport.scrollLeft = left;
-			this._handleScroll();
-			this.render();
-		} else if (right > scrollRight) {
-			this._viewport.scrollLeft = Math.min(left, right - this._viewport.clientWidth);
-			this._handleScroll();
-			this.render();
-		}
-	}
 
 	/**
 	 * Edit the active cell with a specific editor class
@@ -3285,7 +3392,7 @@ class Grid {
 
 		if (!this._trigger('onBeforeEditCell',
 				{row: this._activeRow, cell: this._activeCell, item: item, column: columnDef})) {
-			this.setFocus();
+			this.focus();
 			return;
 		}
 
@@ -3363,37 +3470,6 @@ class Grid {
 	 */
 	getActiveCellNode() {
 		return this._activeCellNode;
-	}
-
-	/**
-	 * Sroll a row into view
-	 * @param {number} row
-	 * @param {boolean} doPaging Go to the next page if necessary
-	 */
-	scrollRowIntoView(row, doPaging) {
-		let rowAtTop = row * this._options.rowHeight,
-			rowAtBottom = (row + 1) * this._options.rowHeight - this._viewportH + (this._viewportHasHScroll ? scrollbarDimensions.height : 0);
-
-		// need to page down?
-		if ((row + 1) * this._options.rowHeight > this._scrollTop + this._viewportH + this._offset) {
-			this._scrollTo(doPaging ? rowAtTop : rowAtBottom);
-			this.render();
-		}
-
-		// or page up?
-		else if (row * this._options.rowHeight < this._scrollTop + this._offset) {
-			this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
-			this.render();
-		}
-	}
-
-	/**
-	 * Scroll a row to the top of the grid
-	 * @param {number} row
-	 */
-	scrollRowToTop(row) {
-		this._scrollTo(row * this._options.rowHeight);
-		this.render();
 	}
 
 	/**
@@ -3591,32 +3667,8 @@ class Grid {
 
 		// if no editor was created, set the focus back on the grid
 		if (!this._currentEditor) {
-			this.setFocus();
+			this.focus();
 		}
-	}
-
-	/**
-	 * Get the selected rows in the grid
-	 * @returns {Array<number>}
-	 */
-	getSelectedRows() {
-		if (!this._selectionModel) {
-			throw new Error('Selection model is not set');
-		}
-
-		return this._selectedRows;
-	}
-
-	/**
-	 * Set the selected rows in the grid
-	 * @param {Array<number>} rows
-	 */
-	setSelectedRows(rows) {
-		if (!this._selectionModel) {
-			throw new Error('Selection model is not set');
-		}
-
-		this._selectionModel.setSelectedRanges(this._rowsToRanges(rows));
 	}
 }
 

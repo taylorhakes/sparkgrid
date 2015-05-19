@@ -136,7 +136,7 @@
     grid.registerPlugin(new Slick.AutoTooltips());
 
     // set keyboard focus on the grid
-    grid.getCanvasEl().focus();
+    grid.getCanvasNode().focus();
 
     var copyManager = new Slick.CellCopyManager();
     grid.registerPlugin(copyManager);

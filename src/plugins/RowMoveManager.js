@@ -17,7 +17,7 @@ class RowMoveManager {
 
 	init(grid) {
 		this._grid = grid;
-		this._canvas = this._grid.getCanvasEl();
+		this._canvas = this._grid.getCanvasNode();
 		this._handler
 			.subscribe(this._grid.onDragInit, this.handleDragInit.bind(this))
 			.subscribe(this._grid.onDragStart, this.handleDragStart.bind(this))

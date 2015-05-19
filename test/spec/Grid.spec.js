@@ -404,14 +404,14 @@ import EditorLock from './mocks/EditorLock';
 					el: el,
 					columns: []
 				});
-				expect(this.grid.getEl()).toBe(el);
+				expect(this.grid.getContainerNode()).toBe(el);
 			});
 			it('canvas', function() {
 				this.grid = new Grid({
 					el: newEl(),
 					columns: []
 				});
-				expect(this.grid.getCanvasEl().tagName.toLowerCase()).toBe('div');
+				expect(this.grid.getCanvasNode().tagName.toLowerCase()).toBe('div');
 			});
 			it('header row', function() {
 				this.grid = new Grid({
@@ -575,7 +575,7 @@ import EditorLock from './mocks/EditorLock';
 						expect(el.children[1].innerHTML).toBe('name' + index);
 					});
 					expect(rowEls.length).toBe(15);
-					expect(this.grid.getVisibleRange()).toEqual(jas.objectContaining({
+					expect(this.grid.getViewport()).toEqual(jas.objectContaining({
 						top: 0,
 						bottom: 7
 					}));

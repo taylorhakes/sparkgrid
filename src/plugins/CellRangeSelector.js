@@ -25,7 +25,7 @@ class CellRangeSelector {
 		this._decorator = new CellRangeDecorator(this._options);
 		this._decorator.init(grid);
 		this._grid = grid;
-		this._canvas = this._grid.getCanvasEl();
+		this._canvas = this._grid.getCanvasNode();
 		this._handler
 			.subscribe(this._grid.onDragInit, this._handleDragInit.bind(this))
 			.subscribe(this._grid.onDragStart, this._handleDragStart.bind(this))
