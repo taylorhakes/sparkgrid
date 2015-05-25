@@ -1,12 +1,11 @@
-import { extend, throttle }  from '../util/misc';
+import { extend }  from '../util/misc';
 import Group from '../grouping/Group';
 import GroupTotals from '../grouping/GroupTotals';
 import { Event, EventControl } from '../util/events';
 import GroupItemMetadataProvider from '../plugins/GroupItemMetadataProvider';
 
 let defaults = {
-	groupItemMetadataProvider: null,
-	inlineFilters: false
+	groupItemMetadataProvider: null
 };
 
 let groupingInfoDefaults = {
@@ -45,6 +44,7 @@ class DataView {
 		this._sortComparer = null;
 		this._filterArgs = null;
 		this._filteredItems = [];
+		this._suspend = false;
 
 		// Grouping
 		this._groupingInfos = [];
@@ -65,9 +65,6 @@ class DataView {
 		this.onRefresh = new Event();
 
 		this._options = extend({}, defaults, options);
-
-		// Call refresh at the next event loop
-		this.refresh = throttle(this.refresh);
 	}
 
 	_updateIdxById(startingIndex) {
@@ -221,6 +218,25 @@ class DataView {
 			g.collapsed = groupCollapsed ^ toggledGroups[g.groupingKey];
 			g.title = gi.formatter ? gi.formatter(g) : g.value;
 		}
+	}
+
+	_toggleGroup(level, groupingKey, collapse) {
+		this._toggledGroupsByLevel[level][groupingKey] = this._groupingInfos[level].collapsed ^ collapse;
+		this.refresh();
+	}
+
+	_toggleAllGroups(level, collapse) {
+		if (level == null) {
+			for (let i = 0; i < this._groupingInfos.length; i++) {
+				this._toggledGroupsByLevel[i] = {};
+				this._groupingInfos[i].collapsed = collapse;
+			}
+		} else {
+			this._toggledGroupsByLevel[level] = {};
+			this._groupingInfos[level].collapsed = collapse;
+		}
+
+		this.refresh();
 	}
 
 	_flattenGroupedRows(groups, level) {
@@ -388,42 +404,17 @@ class DataView {
 	}
 
 	/**
-	 * Destroy the view
+	 * Call before multiple view updates to avoid multiple refreshes
 	 */
-	destroy() {
-
+	beginUpdate() {
+		this._suspend = true;
 	}
 
 	/**
-	 * Set the view filter
-	 * @param {Object} args Object with field as property and filter value
+	 * Call after multiple updates to refresh view with all changes
 	 */
-	setFilterArgs(args) {
-		this._filterArgs = args;
-	}
-
-	/**
-	 * Get all the items without filters
-	 * @returns {Array}
-	 */
-	getItems() {
-		return this._items;
-	}
-
-	/**
-	 * Set the data
-	 * @param {Array} data
-	 * @param {string} [objectIdProperty]
-	 */
-	setItems(data, objectIdProperty) {
-		if (objectIdProperty !== undefined) {
-			this._idProperty = objectIdProperty;
-		}
-
-		this._items = this._filteredItems = data;
-		this._idxById = {};
-		this._updateIdxById();
-		this._ensureIdUniqueness();
+	endUpdate() {
+		this._suspend = false;
 		this.refresh();
 	}
 
@@ -461,6 +452,36 @@ class DataView {
 	}
 
 	/**
+	 * Get all the items without filters
+	 * @returns {Array}
+	 */
+	getItems() {
+		return this._items;
+	}
+
+	/**
+	 * Set the data
+	 * @param {Array} data
+	 * @param {string} [objectIdProperty]
+	 */
+	setItems(data, objectIdProperty) {
+		if (objectIdProperty !== undefined) {
+			this._idProperty = objectIdProperty;
+		}
+
+		this._items = this._filteredItems = data;
+		this._idxById = {};
+		this._updateIdxById();
+		this._ensureIdUniqueness();
+		this.refresh();
+	}
+
+	setFilter(filterFn) {
+		this._filter = filterFn;
+		this.refresh();
+	}
+
+	/**
 	 * Sort the grid with a custom compare function
 	 * @param {function} compareFn
 	 * @param {boolean} ascending
@@ -489,15 +510,6 @@ class DataView {
 		if (this._sortComparer) {
 			this.sort(this._sortComparer, this._sortAsc);
 		}
-	}
-
-	/**
-	 * Set the filter function
-	 * @param {function} filterFn
-	 */
-	setFilter(filterFn) {
-		this._filter = filterFn;
-		this.refresh();
 	}
 
 	/**
@@ -533,12 +545,45 @@ class DataView {
 	}
 
 	/**
-	 * Get item by index
-	 * @param {number} index
-	 * @returns {Object}
+	 * Collapse all groups at a level
+	 * @param {string} level
 	 */
-	getItemByIdx(index) {
-		return this._items[index];
+	collapseAllGroups(level) {
+		this._toggleAllGroups(level, true);
+	}
+
+	/**
+	 * Expand all groups at level
+	 * @param {string} level
+	 */
+	expandAllGroups(level) {
+		this._toggleAllGroups(level, false);
+	}
+
+	/**
+	 * Collapse single group
+	 * @param {string} level
+	 * @param {string} groupingKey
+	 */
+	collapseGroup(level, groupingKey) {
+		this._toggleGroup(level, groupingKey, true);
+	}
+
+	/**
+	 * Expand single group
+	 * @param {string} level
+	 * @param {string} groupingKey
+	 */
+	expandGroup(level, groupingKey) {
+		this._toggleGroup(level, groupingKey, false);
+	}
+
+	/**
+	 * Get all groups
+	 * @returns {Array}
+	 */
+	getGroups() {
+		return this._groups;
 	}
 
 	/**
@@ -570,11 +615,20 @@ class DataView {
 	}
 
 	/**
-	 * Get rows by an arry of IDs
+	 * Get item by index
+	 * @param {number} index
+	 * @returns {Object}
+	 */
+	getItemByIdx(index) {
+		return this._items[index];
+	}
+
+	/**
+	 * Get rows by an array of IDs
 	 * @param {Array<string>} idArray
 	 * @returns {Array<Object>}
 	 */
-	getRowsByIds(idArray) {
+	mapIdsToRows(idArray) {
 		let rows = [];
 		this._ensureRowsByIdCache();
 		for (let i = 0, l = idArray.length; i < l; i++) {
@@ -592,7 +646,7 @@ class DataView {
 	 * @param {Array<Object>} rowArray
 	 * @returns {Array<string>}
 	 */
-	getIdsByRows(rowArray) {
+	mapRowsToIds(rowArray) {
 		let ids = [];
 		for (let i = 0, l = rowArray.length; i < l; i++) {
 			if (rowArray[i] < this._rows.length) {
@@ -601,6 +655,54 @@ class DataView {
 		}
 
 		return ids;
+	}
+
+	/**
+	 * Set the view filter
+	 * @param {Object} args Object with field as property and filter value
+	 */
+	setFilterArgs(args) {
+		this._filterArgs = args;
+	}
+
+	/**
+	 * Refresh the view after data change
+	 */
+	refresh() {
+		if (this._suspend) {
+			return;
+		}
+
+		let countBefore = this._rows.length,
+			totalRowsBefore = this._totalRows,
+			diff = this._recalc(this._items, this._filter); // pass as direct refs to avoid closure perf hit
+
+		if (this._tempPageNum) {
+			this._pageNum = this._pageSize ? Math.min(this._tempPageNum, Math.max(0, Math.ceil(this._totalRows / this._pageSize) - 1)) : 0;
+		}
+
+		// if the current page is no longer valid, go to last page and recalc
+		// we suffer a performance penalty here, but the main loop (recalc) remains highly optimized
+		if (this._pageSize && this._totalRows < this._pageNum * this._pageSize) {
+			this._pageNum = Math.max(0, Math.ceil(this._totalRows / this._pageSize) - 1);
+			diff = this._recalc(this._items, this._filter);
+		}
+
+		this._updated = null;
+
+		if (totalRowsBefore !== this._totalRows) {
+			this.onPagingInfoChanged.notify(this.getPagingInfo(), null, this);
+		}
+
+		if (countBefore !== this._rows.length) {
+			this.onRowCountChanged.notify({previous: countBefore, current: this._rows.length}, null, this);
+		}
+
+		if (diff.length > 0) {
+			this.onRowsChanged.notify({rows: diff}, null, this);
+		}
+
+		this.onRefresh.notify(null, null, this);
 	}
 
 	/**
@@ -657,6 +759,13 @@ class DataView {
 		this._items.splice(idx, 1);
 		this._updateIdxById(idx);
 		this.refresh();
+	}
+
+	/**
+	 * Destroy the view
+	 */
+	destroy() {
+
 	}
 
 	/**
@@ -717,119 +826,11 @@ class DataView {
 	}
 
 	/**
-	 * Toggle collapsing all groups at a level
-	 * @param {string} level
-	 * @param {boolean} collapse
-	 */
-	toggleAllGroups(level, collapse) {
-		if (level == null) {
-			for (let i = 0; i < this._groupingInfos.length; i++) {
-				this._toggledGroupsByLevel[i] = {};
-				this._groupingInfos[i].collapsed = collapse;
-			}
-		} else {
-			this._toggledGroupsByLevel[level] = {};
-			this._groupingInfos[level].collapsed = collapse;
-		}
-
-		this.refresh();
-	}
-
-	/**
-	 * Collapse all groups at a level
-	 * @param {string} level
-	 */
-	collapseAllGroups(level) {
-		this.toggleAllGroups(level, true);
-	}
-
-	/**
-	 * Expand all groups at level
-	 * @param {string} level
-	 */
-	expandAllGroups(level) {
-		this.toggleAllGroups(level, false);
-	}
-
-	/**
-	 * Toggle single group
-	 * @param {string} level
-	 * @param {string} groupingKey
-	 * @param {boolean} collapse
-	 */
-	toggleGroup(level, groupingKey, collapse) {
-		this._toggledGroupsByLevel[level][groupingKey] = this._groupingInfos[level].collapsed ^ collapse;
-		this.refresh();
-	}
-
-	/**
-	 * Collapse single group
-	 * @param {string} level
-	 * @param {string} groupingKey
-	 */
-	collapseGroup(level, groupingKey) {
-		this.toggleGroup(level, groupingKey, true);
-	}
-
-	/**
-	 * Expand single group
-	 * @param {string} level
-	 * @param {string} groupingKey
-	 */
-	expandGroup(level, groupingKey) {
-		this.toggleGroup(level, groupingKey, false);
-	}
-
-	/**
-	 * Get all groups
-	 * @returns {Array}
-	 */
-	getGroups() {
-		return this._groups;
-	}
-
-	/**
 	 * Get items after filter function
 	 * @returns {Array}
 	 */
 	getFilteredItems() {
 		return this._filteredItems;
-	}
-
-	/**
-	 * Refresh the view after data change
-	 */
-	refresh() {
-		let countBefore = this._rows.length,
-			totalRowsBefore = this._totalRows,
-			diff = this._recalc(this._items, this._filter); // pass as direct refs to avoid closure perf hit
-
-		if (this._tempPageNum) {
-			this._pageNum = this._pageSize ? Math.min(this._tempPageNum, Math.max(0, Math.ceil(this._totalRows / this._pageSize) - 1)) : 0;
-		}
-
-		// if the current page is no longer valid, go to last page and recalc
-		// we suffer a performance penalty here, but the main loop (recalc) remains highly optimized
-		if (this._pageSize && this._totalRows < this._pageNum * this._pageSize) {
-			this._pageNum = Math.max(0, Math.ceil(this._totalRows / this._pageSize) - 1);
-			diff = this._recalc(this._items, this._filter);
-		}
-
-		this._updated = null;
-
-		if (totalRowsBefore !== this._totalRows) {
-			this.onPagingInfoChanged.notify(this.getPagingInfo(), null, this);
-		}
-
-		if (countBefore !== this._rows.length) {
-			this.onRowCountChanged.notify({previous: countBefore, current: this._rows.length}, null, this);
-		}
-
-		if (diff.length > 0) {
-			this.onRowsChanged.notify({rows: diff}, null, this);
-		}
-
-		this.onRefresh.notify(null, null, this);
 	}
 
 	/**
@@ -859,6 +860,7 @@ class DataView {
 
 		let update = () => {
 			if (selectedRowIds.length > 0) {
+				inHandler = true;
 				let selectedRows = this._mapIdsToRows(selectedRowIds);
 				if (!preserveHidden) {
 					setSelectedRowIds(this._mapRowsToIds(selectedRows));
@@ -912,6 +914,10 @@ class DataView {
 			}
 		};
 
+		// since this method can be called after the cell styles have been set,
+		// get the existing ones right away
+		storeCellCssStyles(grid.getCellCssStyles(key));
+
 		let update = () => {
 			if (hashById) {
 				inHandler = true;
@@ -928,10 +934,6 @@ class DataView {
 				inHandler = false;
 			}
 		};
-
-		// since this method can be called after the cell styles have been set,
-		// get the existing ones right away
-		storeCellCssStyles(grid.getCellCssStyles(key));
 
 		grid.onCellCssStylesChanged.subscribe(function(info) {
 			let args = info.data;
