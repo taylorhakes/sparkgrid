@@ -539,13 +539,11 @@ import EditorLock from './mocks/EditorLock';
 				beforeEach(function() {
 					this.el = newEl();
 					document.body.appendChild(this.el);
-					ThrottleMock.install();
 				});
 				afterEach(function() {
 					if (this.el.parentNode) {
 						this.el.parentNode.removeChild(this.el);
 					}
-					ThrottleMock.uninstall();
 				});
 				it('basic data', function() {
 					let el = this.el;
@@ -568,7 +566,6 @@ import EditorLock from './mocks/EditorLock';
 						],
 						data: data
 					});
-					ThrottleMock.tick();
 					var rowEls = q('.spark-canvas .spark-row');
 					rowEls.forEach(function(el, index) {
 						expect(el.children[0].innerHTML).toBe('id' + index);
