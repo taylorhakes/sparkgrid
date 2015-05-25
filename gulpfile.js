@@ -6,9 +6,13 @@ var babel = require('gulp-babel');
 var watch = require('gulp-watch');
 var logger = require('gulp-logger');
 var jshint = require('gulp-jshint');
+var runSequence = require('run-sequence');
+var concat = require('gulp-concat');
+var rimraf = require('rimraf');
 
 var path = {
 	source:'src/**/*.js',
+	outputFiles: 'dist/**/*.js',
 	output:'dist/',
 	doc:'./doc'
 };
@@ -24,9 +28,26 @@ gulp.task('watch', function() {
 		.pipe(babel(babelOptions))
 		.pipe(gulp.dest(path.output));
 });
-gulp.task('build', function () {
+gulp.task('build', function(callback) {
+	runSequence(
+		'cleanBuild',
+		'buildFiles',
+		'buildConcat',
+		callback);
+});
+
+gulp.task('cleanBuild', function (cb) {
+	rimraf(path.output, cb);
+});
+gulp.task('buildFiles', function () {
 	return gulp.src(path.source)
 		.pipe(babel(babelOptions))
+		.pipe(gulp.dest(path.output));
+});
+
+gulp.task('buildConcat', function () {
+	return gulp.src(path.outputFiles)
+		.pipe(concat('SparkGrid.js'))
 		.pipe(gulp.dest(path.output));
 });
 
