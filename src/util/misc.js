@@ -218,32 +218,6 @@ function toggleClass(el, className) {
 	}
 }
 
-function throttle(fn) {
-	var timer = null,
-		lastThis = null,
-		lastArgs = null;
-
-	return function() {
-		lastThis = this;
-		lastArgs = arguments;
-
-		if (timer) {
-			return;
-		}
-
-		timer = throttle._throttleFn(executeFn);
-
-	};
-	function executeFn() {
-		timer = null;
-		fn.apply(lastThis, lastArgs);
-	}
-}
-
-// For testing
-throttle._throttleFn = (window.requestAnimationFrame && window.requestAnimationFrame.bind(window)) ||
-	(window.setImmediate && window.setImmediate.bind(window)) || ((fn) => window.setTimeout(fn, 0));
-
 export {
 	slice,
 	createEl,
@@ -259,6 +233,5 @@ export {
 	closest,
 	extend,
 	deepExtend,
-	query,
-	throttle
+	query
 };

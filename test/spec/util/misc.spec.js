@@ -354,26 +354,6 @@ import { extend, deepExtend, query, closest, delegate, throttle,
 				expect(el.classList.contains('a')).toBe(true);
 			});
 		});
-		describe('throttle', function() {
-			beforeEach(function() {
-				jas.clock().install();
-			});
-			afterEach(function() {
-				jas.clock().uninstall();
-			});
-			it('basic', function(done) {
-				var me = {},
-					dbFn = throttle(function() {
-						expect(arguments[0]).toEqual('hello');
-						expect(arguments[1]).toEqual(123);
-						expect(this).toBe(me);
-						done();
-					}, 1);
-				dbFn.call(me, 'hello', 123);
-				jas.clock().tick(1);
-			});
-		});
-
 	});
 
 })(jasmine);
