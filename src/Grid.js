@@ -1,5 +1,5 @@
 import { extend, createEl, delegate, getPx, setPx,
-	slice, closest, toggleClass, removeEl, throttle } from './util/misc';
+	slice, closest, toggleClass, removeEl } from './util/misc';
 import Range from './selection/Range';
 import { Event }  from './util/events';
 import EditorLock from './editing/EditorLock';
@@ -204,9 +204,6 @@ class Grid {
 		this._zombieRowNodeFromLastMouseWheelEvent = null;  // node that was hidden instead of getting deleted
 
 		this._data = options.data || [];
-
-		// Throttle the render function so it can be called multiple times
-		this.render = throttle(this.render);
 
 		this._updateColumnCache(this._options.columns);
 		this._createGrid();
@@ -2668,8 +2665,6 @@ class Grid {
 		if (scrollToTop) {
 			this._scrollTo(0);
 		}
-
-		this.render();
 	}
 
 	/**
@@ -2777,6 +2772,7 @@ class Grid {
 	invalidate() {
 		this.updateRowCount();
 		this.invalidateAllRows();
+		this.render();
 	}
 
 	/**
@@ -2807,8 +2803,6 @@ class Grid {
 				this._removeRowFromCache(rows[i]);
 			}
 		}
-
-		this.render();
 	}
 
 	/**
@@ -2823,8 +2817,6 @@ class Grid {
 		for (let row in this._rowsCache) {
 			this._removeRowFromCache(row);
 		}
-
-		this.render();
 	}
 
 	/**
@@ -3163,199 +3155,53 @@ class Grid {
 	}
 
 	/**
-	 * Get the header row DOM element
-	 * @method getHeaderRow
-	 * @returns {HTMLElement}
+	 * Get the active cell element
+	 * @returns {null|{ row: number, cell: number }}
 	 */
-	getHeaderRow() {
-		return this._headerRow;
-	}
-
-	/**
-	 * Get the header row by column ID
-	 * @method getHeaderRowColumn
-	 * @param {string} columnId
-	 * @returns {HTMLElement}
-	 */
-	getHeaderRowColumn(columnId) {
-		let index = this.getColumnIndex(columnId);
-		return this._headerRow.children[index];
-	}
-
-	/**
-	 * Destroy the grid. Remove the HTML element and remove events
-	 * @method destroy
-	 */
-	destroy() {
-		this.getEditorLock().cancelCurrentEdit();
-
-		this._trigger('onBeforeDestroy', {});
-
-		let i = this._plugins.length;
-		while (i--) {
-			this.unregisterPlugin(this._plugins[i]);
-		}
-
-		this._unbindAncestorScrollEvents();
-		this._removeCssRules();
-
-		//canvas.unbind('draginit dragstart dragend drag');
-		this._container.innerHTML = '';
-		this._container.classList.remove(this._uid, 'sparkgrid');
-	}
-
-	/**
-	 * Get the editor lock, semaphore for all grid editors
-	 * @method getEditorLock
-	 * @returns {Object}
-	 */
-	getEditorLock() {
-		return this._options.editorLock;
-	}
-
-	/**
-	 * Get the edit controller. Manages canceling and committing grid editing
-	 * @method getEditController
-	 * @returns {Object}
-	 */
-	getEditController() {
-		return this._editController;
-	}
-
-	/**
-	 * Get the top panel DOM element
-	 * @method getTopPanel
-	 * @returns {HTMLElement}
-	 */
-	getTopPanel() {
-		return this._topPanel;
-	}
-
-	/**
-	 * Show or hide the top panel
-	 * @method setTopPanelVisibility
-	 * @param {boolean} visible
-	 */
-	setTopPanelVisibility(visible) {
-		if (this._options.showTopPanel !== visible) {
-			this._options.showTopPanel = visible;
-			if (visible) {
-				this._topPanelScroller.style.display = '';
-				this.resizeCanvas();
-			} else {
-				this._topPanelScroller.style.display = 'none';
-				this.resizeCanvas();
-			}
+	getActiveCell() {
+		if (!this._activeCellNode) {
+			return null;
+		} else {
+			return {row: this._activeRow, cell: this._activeCell};
 		}
 	}
 
 	/**
-	 * Show or hide the header row
-	 * @method setHeaderRowVisibility
-	 * @param {boolean} visible
+	 * Set the active cell by row and cell number
+	 * @param {number} row
+	 * @param {number} cell
 	 */
-	setHeaderRowVisibility(visible) {
-		if (this._options.showHeaderRow !== visible) {
-			this._options.showHeaderRow = visible;
-			if (visible) {
-				this._headerRowScroller.style.display = '';
-				this.resizeCanvas();
-			} else {
-				this._headerRowScroller.style.display = 'none';
-				this.resizeCanvas();
-			}
-		}
-	}
-
-	/**
-	 * Add css class to a group of cells
-	 * @method addCellCssStyles
-	 * @param {string} key Unique key to group and possibly later delete the styles
-	 * @param hash Hash of rows to cells { <row_num>: { <column_id> : <css_class> } }
-	 */
-	addCellCssStyles(key, hash) {
-		if (this._cellCssClasses[key]) {
-			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');
-		}
-
-		this._cellCssClasses[key] = hash;
-		this._updateCellCssStylesOnRenderedRows(hash, null);
-
-		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
-	}
-
-	/**
-	 * Remove css class from a group of cell
-	 * @method removeCellCssStyles
-	 * @param {string} key Unique key to remove CSS class
-	 */
-	removeCellCssStyles(key) {
-		if (!this._cellCssClasses[key]) {
+	setActiveCell(row, cell) {
+		if (!this._initialized) {
 			return;
 		}
 
-		this._updateCellCssStylesOnRenderedRows(null, this._cellCssClasses[key]);
-		delete this._cellCssClasses[key];
-
-		this._trigger('onCellCssStylesChanged', {key: key, hash: null});
-	}
-
-	/**
-	 * Update css class to a group of cells
-	 * @method setCellCssStyles
-	 * @param {string} key Unique key to group and possibly later delete the styles
-	 * @param hash Hash of rows to cells { <row_num>: { <column_id> : <css_class> } }
-	 */
-	setCellCssStyles(key, hash) {
-		let prevHash = this._cellCssClasses[key];
-
-		this._cellCssClasses[key] = hash;
-		this._updateCellCssStylesOnRenderedRows(hash, prevHash);
-
-		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
-	}
-
-	/**
-	 * Get the CSS styles associated with a specific key
-	 * @method getCssStyles
-	 * @param {string} key Unique key associated with CSS classes
-	 * @returns {Object}
-	 */
-	getCellCssStyles(key) {
-		return this._cellCssClasses[key];
-	}
-
-	/**
-	 * Get the node from row and cell
-	 * @param {number} row
-	 * @param {number} cell
-	 * @returns {{
-	 * 	top: number,
-	 * 	left: number,
-	 * 	bottom: number,
-	 * 	right: number
-	 * }}
-	 */
-	getCellNodeBox(row, cell) {
-		if (!this._cellExists(row, cell)) {
-			return null;
+		if (row > this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
+			return;
 		}
 
-		let y1 = this._getRowTop(row),
-			y2 = y1 + this._options.rowHeight - 1,
-			x1 = 0;
-		for (let i = 0; i < cell; i++) {
-			x1 += this._columns[i].width;
+		if (!this._options.enableCellNavigation) {
+			return;
 		}
 
-		let x2 = x1 + this._columns[cell].width;
+		this.scrollCellIntoView(row, cell, false);
+		this._setActiveCellInternal(this.getCellNode(row, cell), false);
+	}
 
-		return {
-			top: y1,
-			left: x1,
-			bottom: y2,
-			right: x2
-		};
+	/**
+	 * Get the active cell HTMLElement
+	 * @returns {null|HTMLELement}
+	 */
+	getActiveCellNode() {
+		return this._activeCellNode;
+	}
+
+	/**
+	 * Get the coordinates of the active cell
+	 * @returns {*}
+	 */
+	getActiveCellPosition() {
+		return this._absBox(this._activeCellNode);
 	}
 
 	/**
@@ -3364,8 +3210,6 @@ class Grid {
 	resetActiveCell() {
 		this._setActiveCellInternal(null, false);
 	}
-
-
 
 	/**
 	 * Edit the active cell with a specific editor class
@@ -3429,125 +3273,11 @@ class Grid {
 	}
 
 	/**
-	 * Get the coordinates of the active cell
-	 * @returns {*}
-	 */
-	getActiveCellPosition() {
-		return this._absBox(this._activeCellNode);
-	}
-
-	/**
-	 * Get the coordinates of the grid
-	 * @returns {*}
-	 */
-	getGridPosition() {
-		return this._absBox(this._container);
-	}
-
-	/**
 	 * Get the current editor if there is one
 	 * @returns {null|Editor|*}
 	 */
 	getCellEditor() {
 		return this._currentEditor;
-	}
-
-	/**
-	 * Get the active cell element
-	 * @returns {null|{ row: number, cell: number }}
-	 */
-	getActiveCell() {
-		if (!this._activeCellNode) {
-			return null;
-		} else {
-			return {row: this._activeRow, cell: this._activeCell};
-		}
-	}
-
-	/**
-	 * Get the active cell HTMLElement
-	 * @returns {null|HTMLELement}
-	 */
-	getActiveCellNode() {
-		return this._activeCellNode;
-	}
-
-	/**
-	 * Navigate to the next page
-	 */
-	navigatePageDown() {
-		this._scrollPage(1);
-	}
-
-	/**
-	 * Navigate to the previous page
-	 */
-	navigatePageUp() {
-		this._scrollPage(-1);
-	}
-
-	/**
-	 * Get the header HTMLElement
-	 * @returns {null|Element}
-	 */
-	getHeader() {
-		return this._headers;
-	}
-
-	/**
-	 * The unique ID associated with the grid. Used for CSS
-	 * @returns {string}
-	 */
-	getUid() {
-		return this._uid;
-	}
-
-	/**
-	 * Navigate to the cell to the right
-	 * @returns {boolean}
-	 */
-	navigateRight() {
-		return this._navigate('right');
-	}
-
-	/**
-	 * Navigate to the cell to the left
-	 * @returns {boolean}
-	 */
-	navigateLeft() {
-		return this._navigate('left');
-	}
-
-	/**
-	 * Navigate to the cell below
-	 * @returns {boolean}
-	 */
-	navigateDown() {
-		return this._navigate('down');
-	}
-
-	/**
-	 * Navigate to the cell above
-	 * @returns {boolean}
-	 */
-	navigateUp() {
-		return this._navigate('up');
-	}
-
-	/**
-	 * Navigate to the next cell
-	 * @returns {boolean}
-	 */
-	navigateNext() {
-		return this._navigate('next');
-	}
-
-	/**
-	 * Navigate to the previous cell
-	 * @returns {boolean}
-	 */
-	navigatePrev() {
-		return this._navigate('prev');
 	}
 
 	/**
@@ -3566,25 +3296,60 @@ class Grid {
 	}
 
 	/**
-	 * Set the active cell by row and cell number
+	 * Get the node from row and cell
 	 * @param {number} row
 	 * @param {number} cell
+	 * @returns {{
+	 * 	top: number,
+	 * 	left: number,
+	 * 	bottom: number,
+	 * 	right: number
+	 * }}
 	 */
-	setActiveCell(row, cell) {
-		if (!this._initialized) {
-			return;
+	getCellNodeBox(row, cell) {
+		if (!this._cellExists(row, cell)) {
+			return null;
 		}
 
-		if (row > this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
-			return;
+		let y1 = this._getRowTop(row),
+			y2 = y1 + this._options.rowHeight - 1,
+			x1 = 0;
+		for (let i = 0; i < cell; i++) {
+			x1 += this._columns[i].width;
 		}
 
-		if (!this._options.enableCellNavigation) {
-			return;
+		let x2 = x1 + this._columns[cell].width;
+
+		return {
+			top: y1,
+			left: x1,
+			bottom: y2,
+			right: x2
+		};
+	}
+
+	/**
+	 * Can the row and celll number be selected
+	 * @param {number} row
+	 * @param {number} cell
+	 * @returns {boolean}
+	 */
+	canCellBeSelected(row, cell) {
+		if (row >= this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
+			return false;
 		}
 
-		this.scrollCellIntoView(row, cell, false);
-		this._setActiveCellInternal(this.getCellNode(row, cell), false);
+		let rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
+		if (rowMetadata && typeof rowMetadata.selectable === 'boolean') {
+			return rowMetadata.selectable;
+		}
+
+		let columnMetadata = rowMetadata && rowMetadata.columns && (rowMetadata.columns[this._columns[cell].id] || rowMetadata.columns[cell]);
+		if (columnMetadata && typeof columnMetadata.selectable === 'boolean') {
+			return columnMetadata.selectable;
+		}
+
+		return this._columns[cell].selectable;
 	}
 
 	/**
@@ -3616,27 +3381,65 @@ class Grid {
 	}
 
 	/**
-	 * Can the row and celll number be selected
-	 * @param {number} row
-	 * @param {number} cell
+	 * Navigate to the previous cell
 	 * @returns {boolean}
 	 */
-	canCellBeSelected(row, cell) {
-		if (row >= this.getDataLength() || row < 0 || cell >= this._columns.length || cell < 0) {
-			return false;
-		}
+	navigatePrev() {
+		return this._navigate('prev');
+	}
 
-		let rowMetadata = this._data.getItemMetadata && this._data.getItemMetadata(row);
-		if (rowMetadata && typeof rowMetadata.selectable === 'boolean') {
-			return rowMetadata.selectable;
-		}
+	/**
+	 * Navigate to the next cell
+	 * @returns {boolean}
+	 */
+	navigateNext() {
+		return this._navigate('next');
+	}
 
-		let columnMetadata = rowMetadata && rowMetadata.columns && (rowMetadata.columns[this._columns[cell].id] || rowMetadata.columns[cell]);
-		if (columnMetadata && typeof columnMetadata.selectable === 'boolean') {
-			return columnMetadata.selectable;
-		}
+	/**
+	 * Navigate to the cell above
+	 * @returns {boolean}
+	 */
+	navigateUp() {
+		return this._navigate('up');
+	}
 
-		return this._columns[cell].selectable;
+	/**
+	 * Navigate to the cell below
+	 * @returns {boolean}
+	 */
+	navigateDown() {
+		return this._navigate('down');
+	}
+
+	/**
+	 * Navigate to the cell to the left
+	 * @returns {boolean}
+	 */
+	navigateLeft() {
+		return this._navigate('left');
+	}
+
+	/**
+	 * Navigate to the cell to the right
+	 * @returns {boolean}
+	 */
+	navigateRight() {
+		return this._navigate('right');
+	}
+
+	/**
+	 * Navigate to the previous page
+	 */
+	navigatePageUp() {
+		this._scrollPage(-1);
+	}
+
+	/**
+	 * Navigate to the next page
+	 */
+	navigatePageDown() {
+		this._scrollPage(1);
 	}
 
 	/**
@@ -3669,6 +3472,194 @@ class Grid {
 		if (!this._currentEditor) {
 			this.focus();
 		}
+	}
+
+	/**
+	 * Get the top panel DOM element
+	 * @method getTopPanel
+	 * @returns {HTMLElement}
+	 */
+	getTopPanel() {
+		return this._topPanel;
+	}
+
+	/**
+	 * Show or hide the top panel
+	 * @method setTopPanelVisibility
+	 * @param {boolean} visible
+	 */
+	setTopPanelVisibility(visible) {
+		if (this._options.showTopPanel !== visible) {
+			this._options.showTopPanel = visible;
+			if (visible) {
+				this._topPanelScroller.style.display = '';
+				this.resizeCanvas();
+			} else {
+				this._topPanelScroller.style.display = 'none';
+				this.resizeCanvas();
+			}
+		}
+	}
+
+	/**
+	 * Show or hide the header row
+	 * @method setHeaderRowVisibility
+	 * @param {boolean} visible
+	 */
+	setHeaderRowVisibility(visible) {
+		if (this._options.showHeaderRow !== visible) {
+			this._options.showHeaderRow = visible;
+			if (visible) {
+				this._headerRowScroller.style.display = '';
+				this.resizeCanvas();
+			} else {
+				this._headerRowScroller.style.display = 'none';
+				this.resizeCanvas();
+			}
+		}
+	}
+
+
+	/**
+	 * Get the header row DOM element
+	 * @method getHeaderRow
+	 * @returns {HTMLElement}
+	 */
+	getHeaderRow() {
+		return this._headerRow;
+	}
+
+	/**
+	 * Get the header row by column ID
+	 * @method getHeaderRowColumn
+	 * @param {string} columnId
+	 * @returns {HTMLElement}
+	 */
+	getHeaderRowColumn(columnId) {
+		let index = this.getColumnIndex(columnId);
+		return this._headerRow.children[index];
+	}
+
+	/**
+	 * Get the coordinates of the grid
+	 * @returns {*}
+	 */
+	getGridPosition() {
+		return this._absBox(this._container);
+	}
+
+	/**
+	 * Add css class to a group of cells
+	 * @method addCellCssStyles
+	 * @param {string} key Unique key to group and possibly later delete the styles
+	 * @param hash Hash of rows to cells { <row_num>: { <column_id> : <css_class> } }
+	 */
+	addCellCssStyles(key, hash) {
+		if (this._cellCssClasses[key]) {
+			throw new Error('addCellCssStyles: cell CSS hash with key `' + key + '` already exists.');
+		}
+
+		this._cellCssClasses[key] = hash;
+		this._updateCellCssStylesOnRenderedRows(hash, null);
+
+		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
+	}
+
+	/**
+	 * Update css class to a group of cells
+	 * @method setCellCssStyles
+	 * @param {string} key Unique key to group and possibly later delete the styles
+	 * @param hash Hash of rows to cells { <row_num>: { <column_id> : <css_class> } }
+	 */
+	setCellCssStyles(key, hash) {
+		let prevHash = this._cellCssClasses[key];
+
+		this._cellCssClasses[key] = hash;
+		this._updateCellCssStylesOnRenderedRows(hash, prevHash);
+
+		this._trigger('onCellCssStylesChanged', {key: key, hash: hash});
+	}
+
+	/**
+	 * Remove css class from a group of cell
+	 * @method removeCellCssStyles
+	 * @param {string} key Unique key to remove CSS class
+	 */
+	removeCellCssStyles(key) {
+		if (!this._cellCssClasses[key]) {
+			return;
+		}
+
+		this._updateCellCssStylesOnRenderedRows(null, this._cellCssClasses[key]);
+		delete this._cellCssClasses[key];
+
+		this._trigger('onCellCssStylesChanged', {key: key, hash: null});
+	}
+
+	/**
+	 * Get the CSS styles associated with a specific key
+	 * @method getCssStyles
+	 * @param {string} key Unique key associated with CSS classes
+	 * @returns {Object}
+	 */
+	getCellCssStyles(key) {
+		return this._cellCssClasses[key];
+	}
+
+	/**
+	 * Get the header HTMLElement
+	 * @returns {null|Element}
+	 */
+	getHeader() {
+		return this._headers;
+	}
+
+	/**
+	 * The unique ID associated with the grid. Used for CSS
+	 * @returns {string}
+	 */
+	getUid() {
+		return this._uid;
+	}
+
+	/**
+	 * Destroy the grid. Remove the HTML element and remove events
+	 * @method destroy
+	 */
+	destroy() {
+		this.getEditorLock().cancelCurrentEdit();
+
+		this._trigger('onBeforeDestroy', {});
+
+		let i = this._plugins.length;
+		while (i--) {
+			this.unregisterPlugin(this._plugins[i]);
+		}
+
+		this._unbindAncestorScrollEvents();
+		this._removeCssRules();
+
+		//canvas.unbind('draginit dragstart dragend drag');
+		this._container.innerHTML = '';
+		this._container.classList.remove(this._uid, 'sparkgrid');
+	}
+
+	/**
+	 * Get the editor lock, semaphore for all grid editors
+	 * @method getEditorLock
+	 * @returns {Object}
+	 */
+	getEditorLock() {
+		return this._options.editorLock;
+	}
+
+	/**
+	 * Get the edit controller. Manages canceling and committing grid editing
+	 * @method getEditController
+	 * @returns {Object}
+	 */
+	getEditController() {
+		return this._editController;
 	}
 }
 
