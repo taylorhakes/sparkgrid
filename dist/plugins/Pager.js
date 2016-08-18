@@ -13,13 +13,13 @@
 })(this, function (exports, module, _utilMisc, _Grid) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Grid2 = _interopRequire(_Grid);
+	var _Grid2 = _interopRequireDefault(_Grid);
 
-	var GlobalEditorLock = _Grid2.GlobalEditorLock;
+	var GlobalEditorLock = _Grid2['default'].GlobalEditorLock;
 
 	var Pager = (function () {
 		function Pager(options) {

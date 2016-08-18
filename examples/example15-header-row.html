@@ -60,7 +60,7 @@
     });
   }
 
-  require(['./Grid', './DataView', './core'], function(SparkGrid, DataView, core) {
+  require(['./Grid', './data/DataView', './util/misc'], function(SparkGrid, DataView, miscUtil) {
       function filter(item) {
           for (var columnId in columnFilters) {
               if (columnId !== undefined && columnFilters[columnId] !== "") {
@@ -104,7 +104,7 @@
       });
 
 
-      core.delegate(grid.getHeaderRow(), "change keyup", 'input', function (e) {
+      miscUtil.delegate(grid.getHeaderRow(), "change keyup", 'input', function (e) {
           var columnId = e.target.dataset.columnId;
           if (columnId != null) {
               columnFilters[columnId] = this.value.trim();
@@ -115,7 +115,7 @@
       grid.onHeaderRowCellRendered.subscribe(function(info) {
           var data = info.data;
           data.node.innerHTML = '';
-          var input = core.createEl({
+          var input = miscUtil.createEl({
               tag: 'input',
               type: 'text'
           });

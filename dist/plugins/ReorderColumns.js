@@ -11,17 +11,17 @@
 		global.ReorderColumns = mod.exports;
 	}
 })(this, function (exports, module, _sortablejs, _utilEvents) {
-	'use strict';
-
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 	/**
   * This file needs Sortable `npm install html5-sortable`
   */
 
-	var _Sortable = _interopRequire(_sortablejs);
+	'use strict';
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	var _Sortable = _interopRequireDefault(_sortablejs);
 
 	var ReorderColumns = (function () {
 		function ReorderColumns(options) {
@@ -32,7 +32,7 @@
 			this._sortable = null;
 			this.onColumnsReordered = new _utilEvents.Event();
 			this._boundMovableInit = this.movableInit.bind(this);
-			this._boundHandDragEnd = this.handleDragEnd.bind(this);
+			this._boundHandleDragEnd = this.handleDragEnd.bind(this);
 		}
 
 		ReorderColumns.prototype.init = function init(grid) {
@@ -48,8 +48,8 @@
 				this._sortable.destroy();
 			}
 
-			this._sortable = new _Sortable(this._header, {
-				onUpdate: this.boundHandleDragEnd,
+			this._sortable = new _Sortable['default'](this._header, {
+				onUpdate: this._boundHandleDragEnd,
 				animation: 300
 			});
 		};

@@ -13,11 +13,11 @@
 })(this, function (exports, module, _utilMisc, _utilEvents, _selectionRange) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
 	var defaults = {
 		selectActiveRow: true
@@ -39,7 +39,7 @@
 		RowSelectionModel.prototype._handleActiveCellChange = function _handleActiveCellChange(info) {
 			var data = info.data;
 			if (this._options.selectActiveRow && data.row != null) {
-				this.setSelectedRanges([new _Range(data.row, 0, data.row, this._grid.getColumns().length - 1)]);
+				this.setSelectedRanges([new _Range['default'](data.row, 0, data.row, this._grid.getColumns().length - 1)]);
 			}
 		};
 
@@ -147,7 +147,7 @@
 			var ranges = [],
 			    lastCell = this._grid.getColumns().length - 1;
 			for (var i = 0; i < rows.length; i++) {
-				ranges.push(new _Range(rows[i], 0, rows[i], lastCell));
+				ranges.push(new _Range['default'](rows[i], 0, rows[i], lastCell));
 			}
 
 			return ranges;

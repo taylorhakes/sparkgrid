@@ -13,20 +13,20 @@
 })(this, function (exports, module, _utilMisc, _selectionRange, _utilEvents, _editingEditorLock) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
-	var _EditorLock = _interopRequire(_editingEditorLock);
+	var _EditorLock = _interopRequireDefault(_editingEditorLock);
 
 	// shared across all grids on the page
 	var scrollbarDimensions = undefined,
 	    maxSupportedCssHeight = undefined,
 	    // browser's breaking point
 	uidIndex = 1,
-	    GlobalEditorLock = new _EditorLock();
+	    GlobalEditorLock = new _EditorLock['default']();
 
 	var defaults = {
 		explicitInitialization: false,
@@ -228,6 +228,10 @@
 			this._updateColumnCache(this._options.columns);
 			this._createGrid();
 		}
+
+		/**
+   * Singleton editor lock for allowing only one cell on any grid to be editable
+   */
 
 		Grid.prototype._createGrid = function _createGrid() {
 			var container = this._container;
@@ -2269,7 +2273,7 @@
 			var ranges = [],
 			    lastCell = this._columns.length - 1;
 			for (var i = 0; i < rows.length; i++) {
-				ranges.push(new _Range(rows[i], 0, rows[i], lastCell));
+				ranges.push(new _Range['default'](rows[i], 0, rows[i], lastCell));
 			}
 
 			return ranges;
@@ -2943,8 +2947,8 @@
    */
 
 		Grid.prototype.getViewport = function getViewport() {
-			var viewportTop = arguments[0] === undefined ? this._scrollTop : arguments[0];
-			var viewportLeft = arguments[1] === undefined ? this._scrollLeft : arguments[1];
+			var viewportTop = arguments.length <= 0 || arguments[0] === undefined ? this._scrollTop : arguments[0];
+			var viewportLeft = arguments.length <= 1 || arguments[1] === undefined ? this._scrollLeft : arguments[1];
 
 			return {
 				top: this._getRowFromPosition(viewportTop),
@@ -3117,9 +3121,9 @@
 
 			// or page up?
 			else if (row * this._options.rowHeight < this._scrollTop + this._offset) {
-				this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
-				this.render();
-			}
+					this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
+					this.render();
+				}
 		};
 
 		/**
@@ -3772,9 +3776,6 @@
 		return Grid;
 	})();
 
-	/**
-  * Singleton editor lock for allowing only one cell on any grid to be editable
-  */
 	Grid.GlobalEditorLock = GlobalEditorLock;
 
 	module.exports = Grid;
@@ -3794,15 +3795,15 @@
 })(this, function (exports, module, _utilMisc, _groupingGroup, _groupingGroupTotals, _utilEvents, _pluginsGroupItemMetadataProvider) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Group = _interopRequire(_groupingGroup);
+	var _Group = _interopRequireDefault(_groupingGroup);
 
-	var _GroupTotals = _interopRequire(_groupingGroupTotals);
+	var _GroupTotals = _interopRequireDefault(_groupingGroupTotals);
 
-	var _GroupItemMetadataProvider = _interopRequire(_pluginsGroupItemMetadataProvider);
+	var _GroupItemMetadataProvider = _interopRequireDefault(_pluginsGroupItemMetadataProvider);
 
 	var defaults = {
 		groupItemMetadataProvider: null
@@ -3911,7 +3912,7 @@
 				val = gi.predefinedValues[i];
 				group = groupsByVal[val];
 				if (!group) {
-					group = new _Group();
+					group = new _Group['default']();
 					group.value = val;
 					group.level = level;
 					group.groupingKey = (parentGroup ? parentGroup.groupingKey + this._groupingDelimiter : '') + val;
@@ -3925,7 +3926,7 @@
 				val = gi.getterIsAFn ? gi.getter(r) : r[gi.getter];
 				group = groupsByVal[val];
 				if (!group) {
-					group = new _Group();
+					group = new _Group['default']();
 					group.value = val;
 					group.level = level;
 					group.groupingKey = (parentGroup ? parentGroup.groupingKey + this._groupingDelimiter : '') + val;
@@ -3982,7 +3983,7 @@
 
 		DataView.prototype._addGroupTotals = function _addGroupTotals(group) {
 			var gi = this._groupingInfos[group.level],
-			    totals = new _GroupTotals();
+			    totals = new _GroupTotals['default']();
 
 			totals.group = group;
 			group.totals = totals;
@@ -4072,7 +4073,7 @@
 
 			for (var i = 0, len = items.length; i < len; i++) {
 				if (this._filter(items[i], args)) {
-					filteredItems[i] = items[i];
+					filteredItems.push(items[i]);
 				}
 			}
 
@@ -4122,7 +4123,10 @@
 					item = newRows[i];
 					r = rows[i];
 
-					if (this._groupingInfos.length && (eitherIsNonData = item.__nonDataRow || r.__nonDataRow) && item.__group !== r.__group || item.__group && !item.equals(r) || eitherIsNonData && (item.__groupTotals || r.__groupTotals) || item[this._idProperty] !== r[this._idProperty] || this._updated && this._updated[item[this._idProperty]]) {
+					if (this._groupingInfos.length && (eitherIsNonData = item.__nonDataRow || r.__nonDataRow) && item.__group !== r.__group || item.__group && !item.equals(r) || eitherIsNonData && ( // no good way to compare totals since they are arbitrary DTOs
+					// deep object comparison is pretty expensive
+					// always considering them 'dirty' seems easier for the time being
+					item.__groupTotals || r.__groupTotals) || item[this._idProperty] !== r[this._idProperty] || this._updated && this._updated[item[this._idProperty]]) {
 						diff[diff.length] = i;
 					}
 				}
@@ -4343,7 +4347,7 @@
 
 		DataView.prototype.setGrouping = function setGrouping(groupingInfo) {
 			if (!this._options.groupItemMetadataProvider) {
-				this._options.groupItemMetadataProvider = new _GroupItemMetadataProvider();
+				this._options.groupItemMetadataProvider = new _GroupItemMetadataProvider['default']();
 			}
 
 			this._groups = [];
@@ -4630,8 +4634,8 @@
 
 			// if this is a totals row, make sure it's calculated
 			else if (item && item.__groupTotals && !item.initialized) {
-				this._calculateTotals(item);
-			}
+					this._calculateTotals(item);
+				}
 
 			return item;
 		};
@@ -4681,7 +4685,7 @@
 		DataView.prototype.syncGridSelection = function syncGridSelection(grid, preserveHidden) {
 			var _this = this;
 
-			var preserveHiddenOnSelectionChange = arguments[2] === undefined ? false : arguments[2];
+			var preserveHiddenOnSelectionChange = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
 
 			var inHandler = undefined,
 			    selectedRowIds = this._mapRowsToIds(grid.getSelectedRows()),
@@ -4804,10 +4808,6 @@
 
 	module.exports = DataView;
 });
-
-// no good way to compare totals since they are arbitrary DTOs
-// deep object comparison is pretty expensive
-// always considering them 'dirty' seems easier for the time being
 (function (global, factory) {
 	if (typeof define === 'function' && define.amd) {
 		define(['exports', 'module'], factory);
@@ -4821,10 +4821,6 @@
 		global.EditorLock = mod.exports;
 	}
 })(this, function (exports, module) {
-	'use strict';
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 	/***
   * A locking helper to track the active edit controller and ensure that only a single controller
   * can be active at a time.  This prevents a whole class of state and validation synchronization
@@ -4833,6 +4829,9 @@
   * @class EditorLock
   * @constructor
   */
+	'use strict';
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 	var EditorLock = (function () {
 		function EditorLock() {
@@ -4943,7 +4942,7 @@
 
 	exports.__esModule = true;
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -5021,13 +5020,13 @@
 	})();
 
 	var Number = (function (_Text) {
+		_inherits(Number, _Text);
+
 		function Number(options) {
 			_classCallCheck(this, Number);
 
 			_Text.call(this, _utilMisc.extend({ type: 'number' }, options));
 		}
-
-		_inherits(Number, _Text);
 
 		Number.prototype.validate = function validate() {
 			if (isNaN(this._inputEl.value)) {
@@ -5119,6 +5118,12 @@
 			options.container.appendChild(this._select);
 		}
 
+		/*
+   * An example of a 'detached' editor.
+   * The UI is added onto document BODY and .position(), .show() and .hide() are implemented.
+   * KeyDown events are also handled to provide handling for Tab, Shift-Tab, Esc and Ctrl-Enter.
+   */
+
 		Checkbox.prototype.destroy = function destroy() {
 			_utilMisc.removeEl(this._select);
 		};
@@ -5152,12 +5157,6 @@
 
 		return Checkbox;
 	})();
-
-	/*
-  * An example of a 'detached' editor.
-  * The UI is added onto document BODY and .position(), .show() and .hide() are implemented.
-  * KeyDown events are also handled to provide handling for Tab, Shift-Tab, Esc and Ctrl-Enter.
-  */
 
 	var LongText = (function () {
 		function LongText(options) {
@@ -5235,10 +5234,10 @@
 			this._wrapper.style.display = '';
 		};
 
-		LongText.prototype.position = function position(position) {
+		LongText.prototype.position = function position(_position) {
 			_utilMisc.setStyle(this._wrapper, {
-				top: position.top - 5 + 'px',
-				left: position.left - 5 + 'px'
+				top: _position.top - 5 + 'px',
+				left: _position.left - 5 + 'px'
 			});
 		};
 
@@ -5298,13 +5297,13 @@
 })(this, function (exports, module, _NonDataItem2) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _NonDataItem3 = _interopRequire(_NonDataItem2);
+	var _NonDataItem3 = _interopRequireDefault(_NonDataItem2);
 
 	/***
   * Information about a group of rows.
@@ -5314,6 +5313,8 @@
   */
 
 	var Group = (function (_NonDataItem) {
+		_inherits(Group, _NonDataItem);
+
 		function Group() {
 			_classCallCheck(this, Group);
 
@@ -5386,8 +5387,6 @@
 			this.groupingKey = null;
 		}
 
-		_inherits(Group, _NonDataItem);
-
 		/***
    * Compares two Group instances.
    * @method equals
@@ -5400,7 +5399,7 @@
 		};
 
 		return Group;
-	})(_NonDataItem3);
+	})(_NonDataItem3['default']);
 
 	module.exports = Group;
 });
@@ -5419,13 +5418,13 @@
 })(this, function (exports, module, _NonDataItem2) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _NonDataItem3 = _interopRequire(_NonDataItem2);
+	var _NonDataItem3 = _interopRequireDefault(_NonDataItem2);
 
 	/***
   * Information about group totals.
@@ -5438,6 +5437,8 @@
   */
 
 	var GroupTotals = (function (_NonDataItem) {
+		_inherits(GroupTotals, _NonDataItem);
+
 		function GroupTotals() {
 			_classCallCheck(this, GroupTotals);
 
@@ -5461,10 +5462,8 @@
 			this.initialized = false;
 		}
 
-		_inherits(GroupTotals, _NonDataItem);
-
 		return GroupTotals;
-	})(_NonDataItem3);
+	})(_NonDataItem3['default']);
 
 	module.exports = GroupTotals;
 });
@@ -5481,15 +5480,14 @@
     global.NonDataItem = mod.exports;
   }
 })(this, function (exports, module) {
-  "use strict";
-
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
   /***
    * A base class that all special / non-data rows (like Group and GroupTotals) derive from.
    * @class NonDataItem
    * @constructor
    */
+  "use strict";
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
   var NonDataItem = function NonDataItem() {
     _classCallCheck(this, NonDataItem);
@@ -5951,13 +5949,13 @@
 })(this, function (exports, module, _utilMisc, _utilEvents, _selectionRange, _CellRangeDecorator) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
-	var _CellRangeDecorator2 = _interopRequire(_CellRangeDecorator);
+	var _CellRangeDecorator2 = _interopRequireDefault(_CellRangeDecorator);
 
 	var CellRangeSelector = (function () {
 		function CellRangeSelector(options) {
@@ -5980,7 +5978,7 @@
 		}
 
 		CellRangeSelector.prototype.init = function init(grid) {
-			this._decorator = new _CellRangeDecorator2(this._options);
+			this._decorator = new _CellRangeDecorator2['default'](this._options);
 			this._decorator.init(grid);
 			this._grid = grid;
 			this._canvas = this._grid.getCanvasNode();
@@ -6015,7 +6013,7 @@
 
 			dd.range = { start: start, end: {} };
 
-			return this._decorator.show(new _Range(start.row, start.cell));
+			return this._decorator.show(new _Range['default'](start.row, start.cell));
 		};
 
 		CellRangeSelector.prototype._handleDrag = function _handleDrag(e, dd) {
@@ -6032,7 +6030,7 @@
 			}
 
 			dd.range.end = end;
-			this._decorator.show(new _Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
+			this._decorator.show(new _Range['default'](dd.range.start.row, dd.range.start.cell, end.row, end.cell));
 		};
 
 		CellRangeSelector.prototype._handleDragEnd = function _handleDragEnd(e, dd) {
@@ -6045,14 +6043,14 @@
 
 			_utilMisc.hide(this._decorator);
 			this.onCellRangeSelected.notify({
-				range: new _Range(dd.range.start.row, dd.range.start.cell, dd.range.end.row, dd.range.end.cell)
+				range: new _Range['default'](dd.range.start.row, dd.range.start.cell, dd.range.end.row, dd.range.end.cell)
 			});
 		};
 
 		return CellRangeSelector;
 	})();
 
-	module.exports = _CellRangeDecorator2;
+	module.exports = _CellRangeDecorator2['default'];
 });
 (function (global, factory) {
 	if (typeof define === 'function' && define.amd) {
@@ -6069,13 +6067,13 @@
 })(this, function (exports, module, _utilMisc, _utilEvents, _selectionRange, _CellRangeSelector) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
-	var _CellRangeSelector2 = _interopRequire(_CellRangeSelector);
+	var _CellRangeSelector2 = _interopRequireDefault(_CellRangeSelector);
 
 	var CellSelectionModel = (function () {
 		function CellSelectionModel(options) {
@@ -6088,7 +6086,7 @@
 			this._grid = null;
 			this._canvas = null;
 			this._ranges = [];
-			this._selector = new _CellRangeSelector2({
+			this._selector = new _CellRangeSelector2['default']({
 				selectionCss: {
 					border: '2px solid black'
 				}
@@ -6159,7 +6157,7 @@
 		CellSelectionModel.prototype._handleActiveCellChange = function _handleActiveCellChange(info) {
 			var e = info.event;
 			if (this._options.selectActiveCell && e.data.row != null && e.data.cell != null) {
-				this.setSelectedRanges([new _Range(e.data.row, e.data.cell)]);
+				this.setSelectedRanges([new _Range['default'](e.data.row, e.data.cell)]);
 			}
 		};
 
@@ -6177,13 +6175,13 @@
 			if (active && e.shiftKey && !e.ctrlKey && !e.altKey && (e.which === _utilEvents.KEYCODES.LEFT || e.which === _utilEvents.KEYCODES.UP || e.which === _utilEvents.KEYCODES.RIGHT || e.which === _utilEvents.KEYCODES.DOWN)) {
 
 				var ranges = this.getSelectedRanges();
-				if (!ranges.length) ranges.push(new _Range(active.row, active.cell));
+				if (!ranges.length) ranges.push(new _Range['default'](active.row, active.cell));
 
 				// keyboard can work with last range only
 				var last = ranges.pop();
 
 				// can't handle selection out of active cell
-				if (!last.contains(active.row, active.cell)) last = new _Range(active.row, active.cell);
+				if (!last.contains(active.row, active.cell)) last = new _Range['default'](active.row, active.cell);
 
 				var dRow = last.toRow - last.fromRow,
 				    dCell = last.toCell - last.fromCell,
@@ -6204,7 +6202,7 @@
 				}
 
 				// define new selection range
-				var new_last = new _Range(active.row, active.cell, active.row + dirRow * dRow, active.cell + dirCell * dCell);
+				var new_last = new _Range['default'](active.row, active.cell, active.row + dirRow * dRow, active.cell + dirCell * dCell);
 				if (this.removeInvalidRanges([new_last]).length) {
 					ranges.push(new_last);
 					var viewRow = dirRow > 0 ? new_last.toRow : new_last.fromRow,
@@ -6225,7 +6223,7 @@
 		return CellSelectionModel;
 	})();
 
-	module.exports = _CellRangeSelector2;
+	module.exports = _CellRangeSelector2['default'];
 });
 (function (global, factory) {
 	if (typeof define === 'function' && define.amd) {
@@ -6813,11 +6811,11 @@
 })(this, function (exports, module, _utilMisc, _groupingGroup, _utilEvents) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Group = _interopRequire(_groupingGroup);
+	var _Group = _interopRequireDefault(_groupingGroup);
 
 	var defaults = {
 		groupCssClass: 'spark-group',
@@ -6885,7 +6883,7 @@
 
 		GroupItemMetadataProvider.prototype.toggleGroup = function toggleGroup(e, cell) {
 			var item = this._grid.getDataItem(cell.row);
-			if (item && item instanceof _Group) {
+			if (item && item instanceof _Group['default']) {
 				var range = this._grid.getRenderedRange(),
 				    dataView = this._grid.getData();
 
@@ -6909,7 +6907,7 @@
 			    e = info.event,
 			    item = this._grid.getDataItem(data.row);
 
-			if (item && item instanceof _Group && e.target.classList.contains(this._options.toggleCssClass)) {
+			if (item && item instanceof _Group['default'] && e.target.classList.contains(this._options.toggleCssClass)) {
 				this.toggleGroup(e, data);
 			}
 		};
@@ -6969,6 +6967,59 @@
 		global.HeaderButtons = mod.exports;
 	}
 })(this, function (exports, module, _utilMisc, _utilEvents) {
+	/***
+  * A plugin to add custom buttons to column headers.
+  *
+  * USAGE:
+  *
+  * Add the plugin .js & .css files and register it with the grid.
+  *
+  * To specify a custom button in a column header, extend the column definition like so:
+  *
+  *   var columns = [
+  *     {
+    *       id: 'myColumn',
+    *       name: 'My column',
+    *
+    *       // This is the relevant part
+    *       header: {
+    *          buttons: [
+    *              {
+    *                // button options
+    *              },
+    *              {
+    *                // button options
+    *              }
+    *          ]
+    *       }
+    *     }
+  *   ];
+  *
+  * Available button options:
+  *    cssClass:     CSS class to add to the button.
+  *    image:        Relative button image path.
+  *    tooltip:      Button tooltip.
+  *    showOnHover:  Only show the button on hover.
+  *    handler:      Button click handler.
+  *    command:      A command identifier to be passed to the onCommand event handlers.
+  *
+  * The plugin exposes the following events:
+  *    onCommand:    Fired on button click for buttons with 'command' specified.
+  *        Event args:
+  *            grid:     Reference to the grid.
+  *            column:   Column definition.
+  *            command:  Button command identified.
+  *            button:   Button options.  Note that you can change the button options in your
+  *                      event handler, and the column header will be automatically updated to
+  *                      reflect them.  This is useful if you want to implement something like a
+  *                      toggle button.
+  *
+  *
+  * @param options {Object} Options:
+  *    buttonCssClass:   a CSS class to use for buttons (default 'slick-header-button')
+  * @class Slick.Plugins.HeaderButtons
+  * @constructor
+  */
 	'use strict';
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -7090,60 +7141,6 @@
 
 	module.exports = HeaderButtons;
 });
-
-/***
- * A plugin to add custom buttons to column headers.
- *
- * USAGE:
- *
- * Add the plugin .js & .css files and register it with the grid.
- *
- * To specify a custom button in a column header, extend the column definition like so:
- *
- *   var columns = [
- *     {
-   *       id: 'myColumn',
-   *       name: 'My column',
-   *
-   *       // This is the relevant part
-   *       header: {
-   *          buttons: [
-   *              {
-   *                // button options
-   *              },
-   *              {
-   *                // button options
-   *              }
-   *          ]
-   *       }
-   *     }
- *   ];
- *
- * Available button options:
- *    cssClass:     CSS class to add to the button.
- *    image:        Relative button image path.
- *    tooltip:      Button tooltip.
- *    showOnHover:  Only show the button on hover.
- *    handler:      Button click handler.
- *    command:      A command identifier to be passed to the onCommand event handlers.
- *
- * The plugin exposes the following events:
- *    onCommand:    Fired on button click for buttons with 'command' specified.
- *        Event args:
- *            grid:     Reference to the grid.
- *            column:   Column definition.
- *            command:  Button command identified.
- *            button:   Button options.  Note that you can change the button options in your
- *                      event handler, and the column header will be automatically updated to
- *                      reflect them.  This is useful if you want to implement something like a
- *                      toggle button.
- *
- *
- * @param options {Object} Options:
- *    buttonCssClass:   a CSS class to use for buttons (default 'slick-header-button')
- * @class Slick.Plugins.HeaderButtons
- * @constructor
- */
 (function (global, factory) {
 	if (typeof define === 'function' && define.amd) {
 		define(['exports', 'module', '../util/misc'], factory);
@@ -7446,13 +7443,13 @@
 })(this, function (exports, module, _utilMisc, _Grid) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Grid2 = _interopRequire(_Grid);
+	var _Grid2 = _interopRequireDefault(_Grid);
 
-	var GlobalEditorLock = _Grid2.GlobalEditorLock;
+	var GlobalEditorLock = _Grid2['default'].GlobalEditorLock;
 
 	var Pager = (function () {
 		function Pager(options) {
@@ -7661,17 +7658,17 @@
 		global.ReorderColumns = mod.exports;
 	}
 })(this, function (exports, module, _sortablejs, _utilEvents) {
-	'use strict';
-
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 	/**
   * This file needs Sortable `npm install html5-sortable`
   */
 
-	var _Sortable = _interopRequire(_sortablejs);
+	'use strict';
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	var _Sortable = _interopRequireDefault(_sortablejs);
 
 	var ReorderColumns = (function () {
 		function ReorderColumns(options) {
@@ -7682,7 +7679,7 @@
 			this._sortable = null;
 			this.onColumnsReordered = new _utilEvents.Event();
 			this._boundMovableInit = this.movableInit.bind(this);
-			this._boundHandDragEnd = this.handleDragEnd.bind(this);
+			this._boundHandleDragEnd = this.handleDragEnd.bind(this);
 		}
 
 		ReorderColumns.prototype.init = function init(grid) {
@@ -7698,8 +7695,8 @@
 				this._sortable.destroy();
 			}
 
-			this._sortable = new _Sortable(this._header, {
-				onUpdate: this.boundHandleDragEnd,
+			this._sortable = new _Sortable['default'](this._header, {
+				onUpdate: this._boundHandleDragEnd,
 				animation: 300
 			});
 		};
@@ -7912,11 +7909,11 @@
 })(this, function (exports, module, _utilMisc, _utilEvents, _selectionRange) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
 	var defaults = {
 		selectActiveRow: true
@@ -7938,7 +7935,7 @@
 		RowSelectionModel.prototype._handleActiveCellChange = function _handleActiveCellChange(info) {
 			var data = info.data;
 			if (this._options.selectActiveRow && data.row != null) {
-				this.setSelectedRanges([new _Range(data.row, 0, data.row, this._grid.getColumns().length - 1)]);
+				this.setSelectedRanges([new _Range['default'](data.row, 0, data.row, this._grid.getColumns().length - 1)]);
 			}
 		};
 
@@ -8046,7 +8043,7 @@
 			var ranges = [],
 			    lastCell = this._grid.getColumns().length - 1;
 			for (var i = 0; i < rows.length; i++) {
-				ranges.push(new _Range(rows[i], 0, rows[i], lastCell));
+				ranges.push(new _Range['default'](rows[i], 0, rows[i], lastCell));
 			}
 
 			return ranges;
@@ -8112,10 +8109,6 @@
 		global.Range = mod.exports;
 	}
 })(this, function (exports, module) {
-	'use strict';
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 	/***
   * A structure containing a range of cells.
   * @class Range
@@ -8125,6 +8118,9 @@
   * @param toRow {Integer} Optional. Ending row. Defaults to <code>fromRow</code>.
   * @param toCell {Integer} Optional. Ending cell. Defaults to <code>fromCell</code>.
   */
+	'use strict';
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 	var Range = (function () {
 		function Range(fromRow, fromCell, toRow, toCell) {
@@ -8224,12 +8220,6 @@
 		global.events = mod.exports;
 	}
 })(this, function (exports) {
-	"use strict";
-
-	exports.__esModule = true;
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 	/**
   * Created by taylorhakes on 3/13/15.
   */ /***
@@ -8238,6 +8228,11 @@
      * @class EventControl
      * @constructor
      */
+	"use strict";
+
+	exports.__esModule = true;
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var EventControl = (function () {
 		function EventControl() {
@@ -8245,6 +8240,12 @@
 
 			this._isStopped = false;
 		}
+
+		/***
+   * A simple publisher-subscriber implementation.
+   * @class Event
+   * @constructor
+   */
 
 		/***
    * Stops event from propagating up the DOM tree.
@@ -8267,12 +8268,6 @@
 
 		return EventControl;
 	})();
-
-	/***
-  * A simple publisher-subscriber implementation.
-  * @class Event
-  * @constructor
-  */
 
 	var Event = (function () {
 		function Event() {

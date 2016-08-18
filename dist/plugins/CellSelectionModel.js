@@ -13,13 +13,13 @@
 })(this, function (exports, module, _utilMisc, _utilEvents, _selectionRange, _CellRangeSelector) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
-	var _CellRangeSelector2 = _interopRequire(_CellRangeSelector);
+	var _CellRangeSelector2 = _interopRequireDefault(_CellRangeSelector);
 
 	var CellSelectionModel = (function () {
 		function CellSelectionModel(options) {
@@ -32,7 +32,7 @@
 			this._grid = null;
 			this._canvas = null;
 			this._ranges = [];
-			this._selector = new _CellRangeSelector2({
+			this._selector = new _CellRangeSelector2['default']({
 				selectionCss: {
 					border: '2px solid black'
 				}
@@ -103,7 +103,7 @@
 		CellSelectionModel.prototype._handleActiveCellChange = function _handleActiveCellChange(info) {
 			var e = info.event;
 			if (this._options.selectActiveCell && e.data.row != null && e.data.cell != null) {
-				this.setSelectedRanges([new _Range(e.data.row, e.data.cell)]);
+				this.setSelectedRanges([new _Range['default'](e.data.row, e.data.cell)]);
 			}
 		};
 
@@ -121,13 +121,13 @@
 			if (active && e.shiftKey && !e.ctrlKey && !e.altKey && (e.which === _utilEvents.KEYCODES.LEFT || e.which === _utilEvents.KEYCODES.UP || e.which === _utilEvents.KEYCODES.RIGHT || e.which === _utilEvents.KEYCODES.DOWN)) {
 
 				var ranges = this.getSelectedRanges();
-				if (!ranges.length) ranges.push(new _Range(active.row, active.cell));
+				if (!ranges.length) ranges.push(new _Range['default'](active.row, active.cell));
 
 				// keyboard can work with last range only
 				var last = ranges.pop();
 
 				// can't handle selection out of active cell
-				if (!last.contains(active.row, active.cell)) last = new _Range(active.row, active.cell);
+				if (!last.contains(active.row, active.cell)) last = new _Range['default'](active.row, active.cell);
 
 				var dRow = last.toRow - last.fromRow,
 				    dCell = last.toCell - last.fromCell,
@@ -148,7 +148,7 @@
 				}
 
 				// define new selection range
-				var new_last = new _Range(active.row, active.cell, active.row + dirRow * dRow, active.cell + dirCell * dCell);
+				var new_last = new _Range['default'](active.row, active.cell, active.row + dirRow * dRow, active.cell + dirCell * dCell);
 				if (this.removeInvalidRanges([new_last]).length) {
 					ranges.push(new_last);
 					var viewRow = dirRow > 0 ? new_last.toRow : new_last.fromRow,
@@ -169,5 +169,5 @@
 		return CellSelectionModel;
 	})();
 
-	module.exports = _CellRangeSelector2;
+	module.exports = _CellRangeSelector2['default'];
 });

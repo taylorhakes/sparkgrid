@@ -13,15 +13,15 @@
 })(this, function (exports, module, _utilMisc, _groupingGroup, _groupingGroupTotals, _utilEvents, _pluginsGroupItemMetadataProvider) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Group = _interopRequire(_groupingGroup);
+	var _Group = _interopRequireDefault(_groupingGroup);
 
-	var _GroupTotals = _interopRequire(_groupingGroupTotals);
+	var _GroupTotals = _interopRequireDefault(_groupingGroupTotals);
 
-	var _GroupItemMetadataProvider = _interopRequire(_pluginsGroupItemMetadataProvider);
+	var _GroupItemMetadataProvider = _interopRequireDefault(_pluginsGroupItemMetadataProvider);
 
 	var defaults = {
 		groupItemMetadataProvider: null
@@ -130,7 +130,7 @@
 				val = gi.predefinedValues[i];
 				group = groupsByVal[val];
 				if (!group) {
-					group = new _Group();
+					group = new _Group['default']();
 					group.value = val;
 					group.level = level;
 					group.groupingKey = (parentGroup ? parentGroup.groupingKey + this._groupingDelimiter : '') + val;
@@ -144,7 +144,7 @@
 				val = gi.getterIsAFn ? gi.getter(r) : r[gi.getter];
 				group = groupsByVal[val];
 				if (!group) {
-					group = new _Group();
+					group = new _Group['default']();
 					group.value = val;
 					group.level = level;
 					group.groupingKey = (parentGroup ? parentGroup.groupingKey + this._groupingDelimiter : '') + val;
@@ -201,7 +201,7 @@
 
 		DataView.prototype._addGroupTotals = function _addGroupTotals(group) {
 			var gi = this._groupingInfos[group.level],
-			    totals = new _GroupTotals();
+			    totals = new _GroupTotals['default']();
 
 			totals.group = group;
 			group.totals = totals;
@@ -291,7 +291,7 @@
 
 			for (var i = 0, len = items.length; i < len; i++) {
 				if (this._filter(items[i], args)) {
-					filteredItems[i] = items[i];
+					filteredItems.push(items[i]);
 				}
 			}
 
@@ -341,7 +341,10 @@
 					item = newRows[i];
 					r = rows[i];
 
-					if (this._groupingInfos.length && (eitherIsNonData = item.__nonDataRow || r.__nonDataRow) && item.__group !== r.__group || item.__group && !item.equals(r) || eitherIsNonData && (item.__groupTotals || r.__groupTotals) || item[this._idProperty] !== r[this._idProperty] || this._updated && this._updated[item[this._idProperty]]) {
+					if (this._groupingInfos.length && (eitherIsNonData = item.__nonDataRow || r.__nonDataRow) && item.__group !== r.__group || item.__group && !item.equals(r) || eitherIsNonData && ( // no good way to compare totals since they are arbitrary DTOs
+					// deep object comparison is pretty expensive
+					// always considering them 'dirty' seems easier for the time being
+					item.__groupTotals || r.__groupTotals) || item[this._idProperty] !== r[this._idProperty] || this._updated && this._updated[item[this._idProperty]]) {
 						diff[diff.length] = i;
 					}
 				}
@@ -562,7 +565,7 @@
 
 		DataView.prototype.setGrouping = function setGrouping(groupingInfo) {
 			if (!this._options.groupItemMetadataProvider) {
-				this._options.groupItemMetadataProvider = new _GroupItemMetadataProvider();
+				this._options.groupItemMetadataProvider = new _GroupItemMetadataProvider['default']();
 			}
 
 			this._groups = [];
@@ -849,8 +852,8 @@
 
 			// if this is a totals row, make sure it's calculated
 			else if (item && item.__groupTotals && !item.initialized) {
-				this._calculateTotals(item);
-			}
+					this._calculateTotals(item);
+				}
 
 			return item;
 		};
@@ -900,7 +903,7 @@
 		DataView.prototype.syncGridSelection = function syncGridSelection(grid, preserveHidden) {
 			var _this = this;
 
-			var preserveHiddenOnSelectionChange = arguments[2] === undefined ? false : arguments[2];
+			var preserveHiddenOnSelectionChange = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
 
 			var inHandler = undefined,
 			    selectedRowIds = this._mapRowsToIds(grid.getSelectedRows()),
@@ -1023,7 +1026,3 @@
 
 	module.exports = DataView;
 });
-
-// no good way to compare totals since they are arbitrary DTOs
-// deep object comparison is pretty expensive
-// always considering them 'dirty' seems easier for the time being

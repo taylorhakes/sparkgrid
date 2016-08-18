@@ -11,6 +11,59 @@
 		global.HeaderButtons = mod.exports;
 	}
 })(this, function (exports, module, _utilMisc, _utilEvents) {
+	/***
+  * A plugin to add custom buttons to column headers.
+  *
+  * USAGE:
+  *
+  * Add the plugin .js & .css files and register it with the grid.
+  *
+  * To specify a custom button in a column header, extend the column definition like so:
+  *
+  *   var columns = [
+  *     {
+    *       id: 'myColumn',
+    *       name: 'My column',
+    *
+    *       // This is the relevant part
+    *       header: {
+    *          buttons: [
+    *              {
+    *                // button options
+    *              },
+    *              {
+    *                // button options
+    *              }
+    *          ]
+    *       }
+    *     }
+  *   ];
+  *
+  * Available button options:
+  *    cssClass:     CSS class to add to the button.
+  *    image:        Relative button image path.
+  *    tooltip:      Button tooltip.
+  *    showOnHover:  Only show the button on hover.
+  *    handler:      Button click handler.
+  *    command:      A command identifier to be passed to the onCommand event handlers.
+  *
+  * The plugin exposes the following events:
+  *    onCommand:    Fired on button click for buttons with 'command' specified.
+  *        Event args:
+  *            grid:     Reference to the grid.
+  *            column:   Column definition.
+  *            command:  Button command identified.
+  *            button:   Button options.  Note that you can change the button options in your
+  *                      event handler, and the column header will be automatically updated to
+  *                      reflect them.  This is useful if you want to implement something like a
+  *                      toggle button.
+  *
+  *
+  * @param options {Object} Options:
+  *    buttonCssClass:   a CSS class to use for buttons (default 'slick-header-button')
+  * @class Slick.Plugins.HeaderButtons
+  * @constructor
+  */
 	'use strict';
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -132,57 +185,3 @@
 
 	module.exports = HeaderButtons;
 });
-
-/***
- * A plugin to add custom buttons to column headers.
- *
- * USAGE:
- *
- * Add the plugin .js & .css files and register it with the grid.
- *
- * To specify a custom button in a column header, extend the column definition like so:
- *
- *   var columns = [
- *     {
-   *       id: 'myColumn',
-   *       name: 'My column',
-   *
-   *       // This is the relevant part
-   *       header: {
-   *          buttons: [
-   *              {
-   *                // button options
-   *              },
-   *              {
-   *                // button options
-   *              }
-   *          ]
-   *       }
-   *     }
- *   ];
- *
- * Available button options:
- *    cssClass:     CSS class to add to the button.
- *    image:        Relative button image path.
- *    tooltip:      Button tooltip.
- *    showOnHover:  Only show the button on hover.
- *    handler:      Button click handler.
- *    command:      A command identifier to be passed to the onCommand event handlers.
- *
- * The plugin exposes the following events:
- *    onCommand:    Fired on button click for buttons with 'command' specified.
- *        Event args:
- *            grid:     Reference to the grid.
- *            column:   Column definition.
- *            command:  Button command identified.
- *            button:   Button options.  Note that you can change the button options in your
- *                      event handler, and the column header will be automatically updated to
- *                      reflect them.  This is useful if you want to implement something like a
- *                      toggle button.
- *
- *
- * @param options {Object} Options:
- *    buttonCssClass:   a CSS class to use for buttons (default 'slick-header-button')
- * @class Slick.Plugins.HeaderButtons
- * @constructor
- */

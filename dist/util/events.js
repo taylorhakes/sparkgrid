@@ -11,12 +11,6 @@
 		global.events = mod.exports;
 	}
 })(this, function (exports) {
-	"use strict";
-
-	exports.__esModule = true;
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 	/**
   * Created by taylorhakes on 3/13/15.
   */ /***
@@ -25,6 +19,11 @@
      * @class EventControl
      * @constructor
      */
+	"use strict";
+
+	exports.__esModule = true;
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var EventControl = (function () {
 		function EventControl() {
@@ -32,6 +31,12 @@
 
 			this._isStopped = false;
 		}
+
+		/***
+   * A simple publisher-subscriber implementation.
+   * @class Event
+   * @constructor
+   */
 
 		/***
    * Stops event from propagating up the DOM tree.
@@ -54,12 +59,6 @@
 
 		return EventControl;
 	})();
-
-	/***
-  * A simple publisher-subscriber implementation.
-  * @class Event
-  * @constructor
-  */
 
 	var Event = (function () {
 		function Event() {

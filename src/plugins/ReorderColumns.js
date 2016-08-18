@@ -12,7 +12,7 @@ class ReorderColumns {
 		this._sortable = null;
 		this.onColumnsReordered = new Event();
 		this._boundMovableInit = this.movableInit.bind(this);
-		this._boundHandDragEnd = this.handleDragEnd.bind(this);
+		this._boundHandleDragEnd = this.handleDragEnd.bind(this);
 	}
 
 	init(grid) {
@@ -29,7 +29,7 @@ class ReorderColumns {
 		}
 
 		this._sortable = new Sortable(this._header, {
-			onUpdate: this.boundHandleDragEnd,
+			onUpdate: this._boundHandleDragEnd,
 			animation: 300
 		});
 	}

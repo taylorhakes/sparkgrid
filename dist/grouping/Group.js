@@ -13,13 +13,13 @@
 })(this, function (exports, module, _NonDataItem2) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _NonDataItem3 = _interopRequire(_NonDataItem2);
+	var _NonDataItem3 = _interopRequireDefault(_NonDataItem2);
 
 	/***
   * Information about a group of rows.
@@ -29,6 +29,8 @@
   */
 
 	var Group = (function (_NonDataItem) {
+		_inherits(Group, _NonDataItem);
+
 		function Group() {
 			_classCallCheck(this, Group);
 
@@ -101,8 +103,6 @@
 			this.groupingKey = null;
 		}
 
-		_inherits(Group, _NonDataItem);
-
 		/***
    * Compares two Group instances.
    * @method equals
@@ -115,7 +115,7 @@
 		};
 
 		return Group;
-	})(_NonDataItem3);
+	})(_NonDataItem3['default']);
 
 	module.exports = Group;
 });

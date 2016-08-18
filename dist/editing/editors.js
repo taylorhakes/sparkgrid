@@ -15,7 +15,7 @@
 
 	exports.__esModule = true;
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -93,13 +93,13 @@
 	})();
 
 	var Number = (function (_Text) {
+		_inherits(Number, _Text);
+
 		function Number(options) {
 			_classCallCheck(this, Number);
 
 			_Text.call(this, _utilMisc.extend({ type: 'number' }, options));
 		}
-
-		_inherits(Number, _Text);
 
 		Number.prototype.validate = function validate() {
 			if (isNaN(this._inputEl.value)) {
@@ -191,6 +191,12 @@
 			options.container.appendChild(this._select);
 		}
 
+		/*
+   * An example of a 'detached' editor.
+   * The UI is added onto document BODY and .position(), .show() and .hide() are implemented.
+   * KeyDown events are also handled to provide handling for Tab, Shift-Tab, Esc and Ctrl-Enter.
+   */
+
 		Checkbox.prototype.destroy = function destroy() {
 			_utilMisc.removeEl(this._select);
 		};
@@ -224,12 +230,6 @@
 
 		return Checkbox;
 	})();
-
-	/*
-  * An example of a 'detached' editor.
-  * The UI is added onto document BODY and .position(), .show() and .hide() are implemented.
-  * KeyDown events are also handled to provide handling for Tab, Shift-Tab, Esc and Ctrl-Enter.
-  */
 
 	var LongText = (function () {
 		function LongText(options) {
@@ -307,10 +307,10 @@
 			this._wrapper.style.display = '';
 		};
 
-		LongText.prototype.position = function position(position) {
+		LongText.prototype.position = function position(_position) {
 			_utilMisc.setStyle(this._wrapper, {
-				top: position.top - 5 + 'px',
-				left: position.left - 5 + 'px'
+				top: _position.top - 5 + 'px',
+				left: _position.left - 5 + 'px'
 			});
 		};
 

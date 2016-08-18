@@ -13,13 +13,13 @@
 })(this, function (exports, module, _utilMisc, _utilEvents, _selectionRange, _CellRangeDecorator) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
-	var _CellRangeDecorator2 = _interopRequire(_CellRangeDecorator);
+	var _CellRangeDecorator2 = _interopRequireDefault(_CellRangeDecorator);
 
 	var CellRangeSelector = (function () {
 		function CellRangeSelector(options) {
@@ -42,7 +42,7 @@
 		}
 
 		CellRangeSelector.prototype.init = function init(grid) {
-			this._decorator = new _CellRangeDecorator2(this._options);
+			this._decorator = new _CellRangeDecorator2['default'](this._options);
 			this._decorator.init(grid);
 			this._grid = grid;
 			this._canvas = this._grid.getCanvasNode();
@@ -77,7 +77,7 @@
 
 			dd.range = { start: start, end: {} };
 
-			return this._decorator.show(new _Range(start.row, start.cell));
+			return this._decorator.show(new _Range['default'](start.row, start.cell));
 		};
 
 		CellRangeSelector.prototype._handleDrag = function _handleDrag(e, dd) {
@@ -94,7 +94,7 @@
 			}
 
 			dd.range.end = end;
-			this._decorator.show(new _Range(dd.range.start.row, dd.range.start.cell, end.row, end.cell));
+			this._decorator.show(new _Range['default'](dd.range.start.row, dd.range.start.cell, end.row, end.cell));
 		};
 
 		CellRangeSelector.prototype._handleDragEnd = function _handleDragEnd(e, dd) {
@@ -107,12 +107,12 @@
 
 			_utilMisc.hide(this._decorator);
 			this.onCellRangeSelected.notify({
-				range: new _Range(dd.range.start.row, dd.range.start.cell, dd.range.end.row, dd.range.end.cell)
+				range: new _Range['default'](dd.range.start.row, dd.range.start.cell, dd.range.end.row, dd.range.end.cell)
 			});
 		};
 
 		return CellRangeSelector;
 	})();
 
-	module.exports = _CellRangeDecorator2;
+	module.exports = _CellRangeDecorator2['default'];
 });

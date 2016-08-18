@@ -11,10 +11,6 @@
 		global.EditorLock = mod.exports;
 	}
 })(this, function (exports, module) {
-	'use strict';
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 	/***
   * A locking helper to track the active edit controller and ensure that only a single controller
   * can be active at a time.  This prevents a whole class of state and validation synchronization
@@ -23,6 +19,9 @@
   * @class EditorLock
   * @constructor
   */
+	'use strict';
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 	var EditorLock = (function () {
 		function EditorLock() {

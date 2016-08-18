@@ -11,10 +11,6 @@
 		global.Range = mod.exports;
 	}
 })(this, function (exports, module) {
-	'use strict';
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
 	/***
   * A structure containing a range of cells.
   * @class Range
@@ -24,6 +20,9 @@
   * @param toRow {Integer} Optional. Ending row. Defaults to <code>fromRow</code>.
   * @param toCell {Integer} Optional. Ending cell. Defaults to <code>fromCell</code>.
   */
+	'use strict';
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 	var Range = (function () {
 		function Range(fromRow, fromCell, toRow, toCell) {

@@ -8,7 +8,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "gulp lint && ./node_modules/karma/bin/karma start --singleRun=true"
+    "test": "gulp lint && ./node_modules/karma/bin/karma start --singleRun=true",
+    "build": "gulp build"
   },
   "repository": {
     "type": "git",

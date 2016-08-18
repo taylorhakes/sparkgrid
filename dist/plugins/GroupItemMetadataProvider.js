@@ -13,11 +13,11 @@
 })(this, function (exports, module, _utilMisc, _groupingGroup, _utilEvents) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Group = _interopRequire(_groupingGroup);
+	var _Group = _interopRequireDefault(_groupingGroup);
 
 	var defaults = {
 		groupCssClass: 'spark-group',
@@ -85,7 +85,7 @@
 
 		GroupItemMetadataProvider.prototype.toggleGroup = function toggleGroup(e, cell) {
 			var item = this._grid.getDataItem(cell.row);
-			if (item && item instanceof _Group) {
+			if (item && item instanceof _Group['default']) {
 				var range = this._grid.getRenderedRange(),
 				    dataView = this._grid.getData();
 
@@ -109,7 +109,7 @@
 			    e = info.event,
 			    item = this._grid.getDataItem(data.row);
 
-			if (item && item instanceof _Group && e.target.classList.contains(this._options.toggleCssClass)) {
+			if (item && item instanceof _Group['default'] && e.target.classList.contains(this._options.toggleCssClass)) {
 				this.toggleGroup(e, data);
 			}
 		};

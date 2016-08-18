@@ -13,20 +13,20 @@
 })(this, function (exports, module, _utilMisc, _selectionRange, _utilEvents, _editingEditorLock) {
 	'use strict';
 
-	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _Range = _interopRequire(_selectionRange);
+	var _Range = _interopRequireDefault(_selectionRange);
 
-	var _EditorLock = _interopRequire(_editingEditorLock);
+	var _EditorLock = _interopRequireDefault(_editingEditorLock);
 
 	// shared across all grids on the page
 	var scrollbarDimensions = undefined,
 	    maxSupportedCssHeight = undefined,
 	    // browser's breaking point
 	uidIndex = 1,
-	    GlobalEditorLock = new _EditorLock();
+	    GlobalEditorLock = new _EditorLock['default']();
 
 	var defaults = {
 		explicitInitialization: false,
@@ -228,6 +228,10 @@
 			this._updateColumnCache(this._options.columns);
 			this._createGrid();
 		}
+
+		/**
+   * Singleton editor lock for allowing only one cell on any grid to be editable
+   */
 
 		Grid.prototype._createGrid = function _createGrid() {
 			var container = this._container;
@@ -2269,7 +2273,7 @@
 			var ranges = [],
 			    lastCell = this._columns.length - 1;
 			for (var i = 0; i < rows.length; i++) {
-				ranges.push(new _Range(rows[i], 0, rows[i], lastCell));
+				ranges.push(new _Range['default'](rows[i], 0, rows[i], lastCell));
 			}
 
 			return ranges;
@@ -2943,8 +2947,8 @@
    */
 
 		Grid.prototype.getViewport = function getViewport() {
-			var viewportTop = arguments[0] === undefined ? this._scrollTop : arguments[0];
-			var viewportLeft = arguments[1] === undefined ? this._scrollLeft : arguments[1];
+			var viewportTop = arguments.length <= 0 || arguments[0] === undefined ? this._scrollTop : arguments[0];
+			var viewportLeft = arguments.length <= 1 || arguments[1] === undefined ? this._scrollLeft : arguments[1];
 
 			return {
 				top: this._getRowFromPosition(viewportTop),
@@ -3117,9 +3121,9 @@
 
 			// or page up?
 			else if (row * this._options.rowHeight < this._scrollTop + this._offset) {
-				this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
-				this.render();
-			}
+					this._scrollTo(doPaging ? rowAtBottom : rowAtTop);
+					this.render();
+				}
 		};
 
 		/**
@@ -3772,9 +3776,6 @@
 		return Grid;
 	})();
 
-	/**
-  * Singleton editor lock for allowing only one cell on any grid to be editable
-  */
 	Grid.GlobalEditorLock = GlobalEditorLock;
 
 	module.exports = Grid;

@@ -269,7 +269,7 @@ class DataView {
 
 		for (let i = 0, len = items.length; i < len; i++) {
 			if (this._filter(items[i], args)) {
-				filteredItems[i] = items[i];
+				filteredItems.push(items[i]);
 			}
 		}
 
