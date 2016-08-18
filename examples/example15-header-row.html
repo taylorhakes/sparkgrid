@@ -60,7 +60,7 @@
     });
   }
 
-  require(['./Grid', './data/DataView', './util/misc'], function(SparkGrid, DataView, miscUtil) {
+  require(['./Grid', './data/DataView', './util/misc', 'plugins/ReorderColumns'], function(SparkGrid, DataView, miscUtil, MovableColumns) {
       function filter(item) {
           for (var columnId in columnFilters) {
               if (columnId !== undefined && columnFilters[columnId] !== "") {
@@ -125,6 +125,9 @@
 
           data.node.appendChild(input);
       });
+
+			// Add Movable Columns
+			grid.registerPlugin(new MovableColumns());
 
       grid.init();
 

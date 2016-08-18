@@ -514,7 +514,7 @@ class Grid {
 
 	_setupColumnSort() {
 		this._headers.addEventListener('click', (e) => {
-			e.metaKey = e.metaKey || e.ctrlKey;
+			const metaKey = e.metaKey || e.ctrlKey;
 
 			if (e.target.classList.contains('spark-resizable-handle')) {
 				return;
@@ -541,12 +541,12 @@ class Grid {
 					}
 				}
 
-				if (e.metaKey && this._options.multiColumnSort) {
+				if (metaKey && this._options.multiColumnSort) {
 					if (sortOpts) {
 						this._sortColumns.splice(i, 1);
 					}
 				} else {
-					if ((!e.shiftKey && !e.metaKey) || !this._options.multiColumnSort) {
+					if ((!e.shiftKey && !metaKey) || !this._options.multiColumnSort) {
 						this._sortColumns = [];
 					}
 
